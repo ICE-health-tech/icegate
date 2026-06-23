@@ -26170,6 +26170,17 @@ class $QuotesTableTable extends QuotesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _typeQuoteMeta = const VerificationMeta(
+    'typeQuote',
+  );
+  @override
+  late final GeneratedColumn<String> typeQuote = GeneratedColumn<String>(
+    'type_quote',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
   );
@@ -26202,6 +26213,7 @@ class $QuotesTableTable extends QuotesTable
     personID,
     content,
     author,
+    typeQuote,
     isActive,
     createdAt,
   ];
@@ -26248,6 +26260,12 @@ class $QuotesTableTable extends QuotesTable
         author.isAcceptableOrUnknown(data['author']!, _authorMeta),
       );
     }
+    if (data.containsKey('type_quote')) {
+      context.handle(
+        _typeQuoteMeta,
+        typeQuote.isAcceptableOrUnknown(data['type_quote']!, _typeQuoteMeta),
+      );
+    }
     if (data.containsKey('is_active')) {
       context.handle(
         _isActiveMeta,
@@ -26283,6 +26301,10 @@ class $QuotesTableTable extends QuotesTable
         DriftSqlType.string,
         data['${effectivePrefix}author'],
       ),
+      typeQuote: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type_quote'],
+      ),
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
@@ -26311,6 +26333,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
   final String? personID;
   final String content;
   final String? author;
+  final String? typeQuote;
   final bool isActive;
   final DateTime createdAt;
   const QuoteData({
@@ -26319,6 +26342,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
     this.personID,
     required this.content,
     this.author,
+    this.typeQuote,
     required this.isActive,
     required this.createdAt,
   });
@@ -26333,6 +26357,9 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
     map['content'] = Variable<String>(content);
     if (!nullToAbsent || author != null) {
       map['author'] = Variable<String>(author);
+    }
+    if (!nullToAbsent || typeQuote != null) {
+      map['type_quote'] = Variable<String>(typeQuote);
     }
     map['is_active'] = Variable<bool>(isActive);
     {
@@ -26354,6 +26381,9 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
       author: author == null && nullToAbsent
           ? const Value.absent()
           : Value(author),
+      typeQuote: typeQuote == null && nullToAbsent
+          ? const Value.absent()
+          : Value(typeQuote),
       isActive: Value(isActive),
       createdAt: Value(createdAt),
     );
@@ -26370,6 +26400,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
       personID: serializer.fromJson<String?>(json['personID']),
       content: serializer.fromJson<String>(json['content']),
       author: serializer.fromJson<String?>(json['author']),
+      typeQuote: serializer.fromJson<String?>(json['typeQuote']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -26383,6 +26414,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
       'personID': serializer.toJson<String?>(personID),
       'content': serializer.toJson<String>(content),
       'author': serializer.toJson<String?>(author),
+      'typeQuote': serializer.toJson<String?>(typeQuote),
       'isActive': serializer.toJson<bool>(isActive),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -26394,6 +26426,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
     Value<String?> personID = const Value.absent(),
     String? content,
     Value<String?> author = const Value.absent(),
+    Value<String?> typeQuote = const Value.absent(),
     bool? isActive,
     DateTime? createdAt,
   }) => QuoteData(
@@ -26402,6 +26435,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
     personID: personID.present ? personID.value : this.personID,
     content: content ?? this.content,
     author: author.present ? author.value : this.author,
+    typeQuote: typeQuote.present ? typeQuote.value : this.typeQuote,
     isActive: isActive ?? this.isActive,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -26412,6 +26446,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
       personID: data.personID.present ? data.personID.value : this.personID,
       content: data.content.present ? data.content.value : this.content,
       author: data.author.present ? data.author.value : this.author,
+      typeQuote: data.typeQuote.present ? data.typeQuote.value : this.typeQuote,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -26425,6 +26460,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
           ..write('personID: $personID, ')
           ..write('content: $content, ')
           ..write('author: $author, ')
+          ..write('typeQuote: $typeQuote, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -26432,8 +26468,16 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, tenantID, personID, content, author, isActive, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    tenantID,
+    personID,
+    content,
+    author,
+    typeQuote,
+    isActive,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -26443,6 +26487,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
           other.personID == this.personID &&
           other.content == this.content &&
           other.author == this.author &&
+          other.typeQuote == this.typeQuote &&
           other.isActive == this.isActive &&
           other.createdAt == this.createdAt);
 }
@@ -26453,6 +26498,7 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
   final Value<String?> personID;
   final Value<String> content;
   final Value<String?> author;
+  final Value<String?> typeQuote;
   final Value<bool> isActive;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -26462,6 +26508,7 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
     this.personID = const Value.absent(),
     this.content = const Value.absent(),
     this.author = const Value.absent(),
+    this.typeQuote = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -26472,6 +26519,7 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
     this.personID = const Value.absent(),
     required String content,
     this.author = const Value.absent(),
+    this.typeQuote = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -26483,6 +26531,7 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
     Expression<String>? personID,
     Expression<String>? content,
     Expression<String>? author,
+    Expression<String>? typeQuote,
     Expression<bool>? isActive,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -26493,6 +26542,7 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
       if (personID != null) 'person_id': personID,
       if (content != null) 'content': content,
       if (author != null) 'author': author,
+      if (typeQuote != null) 'type_quote': typeQuote,
       if (isActive != null) 'is_active': isActive,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -26505,6 +26555,7 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
     Value<String?>? personID,
     Value<String>? content,
     Value<String?>? author,
+    Value<String?>? typeQuote,
     Value<bool>? isActive,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -26515,6 +26566,7 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
       personID: personID ?? this.personID,
       content: content ?? this.content,
       author: author ?? this.author,
+      typeQuote: typeQuote ?? this.typeQuote,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -26539,6 +26591,9 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
     if (author.present) {
       map['author'] = Variable<String>(author.value);
     }
+    if (typeQuote.present) {
+      map['type_quote'] = Variable<String>(typeQuote.value);
+    }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
@@ -26561,6 +26616,7 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
           ..write('personID: $personID, ')
           ..write('content: $content, ')
           ..write('author: $author, ')
+          ..write('typeQuote: $typeQuote, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -50911,6 +50967,7 @@ typedef $$QuotesTableTableCreateCompanionBuilder =
       Value<String?> personID,
       required String content,
       Value<String?> author,
+      Value<String?> typeQuote,
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -50922,6 +50979,7 @@ typedef $$QuotesTableTableUpdateCompanionBuilder =
       Value<String?> personID,
       Value<String> content,
       Value<String?> author,
+      Value<String?> typeQuote,
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -50958,6 +51016,11 @@ class $$QuotesTableTableFilterComposer
 
   ColumnFilters<String> get author => $composableBuilder(
     column: $table.author,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get typeQuote => $composableBuilder(
+    column: $table.typeQuote,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -51007,6 +51070,11 @@ class $$QuotesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get typeQuote => $composableBuilder(
+    column: $table.typeQuote,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isActive => $composableBuilder(
     column: $table.isActive,
     builder: (column) => ColumnOrderings(column),
@@ -51041,6 +51109,9 @@ class $$QuotesTableTableAnnotationComposer
 
   GeneratedColumn<String> get author =>
       $composableBuilder(column: $table.author, builder: (column) => column);
+
+  GeneratedColumn<String> get typeQuote =>
+      $composableBuilder(column: $table.typeQuote, builder: (column) => column);
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
@@ -51085,6 +51156,7 @@ class $$QuotesTableTableTableManager
                 Value<String?> personID = const Value.absent(),
                 Value<String> content = const Value.absent(),
                 Value<String?> author = const Value.absent(),
+                Value<String?> typeQuote = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -51094,6 +51166,7 @@ class $$QuotesTableTableTableManager
                 personID: personID,
                 content: content,
                 author: author,
+                typeQuote: typeQuote,
                 isActive: isActive,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -51105,6 +51178,7 @@ class $$QuotesTableTableTableManager
                 Value<String?> personID = const Value.absent(),
                 required String content,
                 Value<String?> author = const Value.absent(),
+                Value<String?> typeQuote = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -51114,6 +51188,7 @@ class $$QuotesTableTableTableManager
                 personID: personID,
                 content: content,
                 author: author,
+                typeQuote: typeQuote,
                 isActive: isActive,
                 createdAt: createdAt,
                 rowid: rowid,

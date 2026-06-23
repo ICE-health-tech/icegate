@@ -106,6 +106,15 @@ class DragCanvas extends StatelessWidget {
                               onTap: () =>
                                   context.push('/finance/reports/daily'),
                             ),
+                              const SizedBox(height: 14),
+                            HubEntryCard(
+                              title: l10n.system_monitor_title,
+                              subtitle: l10n.system_monitor_subtitle,
+                              icon: Icons.monitor_heart_outlined,
+                              accent: const Color.fromARGB(255, 255, 106, 72),
+                              onTap: () =>
+                                  context.push('/system/monitor'),
+                            ),
                           ],
                         ),
                       ),

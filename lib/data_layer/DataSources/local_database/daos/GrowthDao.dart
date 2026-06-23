@@ -542,46 +542,55 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
     );
   }
 
+  List<GoalData> _mapGoalSelectRows(List<QueryRow> rows, {String? personId}) {
+    return rows
+        .where((row) => row.data['id'] != null)
+        .map(
+          (row) => GoalData(
+            id: row.data['id'] as String,
+            goalID: row.data['goal_id'] as String?,
+            personID: (row.data['person_id'] as String?) ?? personId ?? '',
+            title: (row.data['title'] as String?) ?? 'Untitled Task',
+            description: row.data['description'] as String?,
+            category: (row.data['category'] as String?) ?? 'personal',
+            priority: (row.data['priority'] as int?) ?? 3,
+            status: (row.data['status'] as String?) ?? 'active',
+            targetDate: row.data['target_date'] != null
+                ? DateTime.tryParse(row.data['target_date'].toString())
+                : null,
+            completionDate: row.data['completion_date'] != null
+                ? DateTime.tryParse(row.data['completion_date'].toString())
+                : null,
+            progressPercentage: (row.data['progress_percentage'] as int?) ?? 0,
+            createdAt: row.data['created_at'] != null
+                ? DateTime.tryParse(row.data['created_at'].toString()) ??
+                      DateTime.now()
+                : DateTime.now(),
+            updatedAt: row.data['updated_at'] != null
+                ? DateTime.tryParse(row.data['updated_at'].toString()) ??
+                      DateTime.now()
+                : DateTime.now(),
+            projectID: row.data['project_id'] as String?,
+          ),
+        )
+        .toList();
+  }
+
   Stream<List<GoalData>> watchGoals(String personId) {
     return customSelect(
       'SELECT * FROM goals WHERE person_id = ?',
       variables: [Variable.withString(personId)],
       readsFrom: {goalsTable},
-    ).watch().map((rows) {
-      return rows
-          .where((row) => row.data['id'] != null)
-          .map(
-            (row) => GoalData(
-              id: row.data['id'] as String,
-              goalID: row.data['goal_id'] as String?,
-              personID: (row.data['person_id'] as String?) ?? personId,
-              title: (row.data['title'] as String?) ?? 'Untitled Task',
-              description: row.data['description'] as String?,
-              category: (row.data['category'] as String?) ?? 'personal',
-              priority: (row.data['priority'] as int?) ?? 3,
-              status: (row.data['status'] as String?) ?? 'active',
-              targetDate: row.data['target_date'] != null
-                  ? DateTime.tryParse(row.data['target_date'].toString())
-                  : null,
-              completionDate: row.data['completion_date'] != null
-                  ? DateTime.tryParse(row.data['completion_date'].toString())
-                  : null,
-              progressPercentage:
-                  (row.data['progress_percentage'] as int?) ?? 0,
+    ).watch().map((rows) => _mapGoalSelectRows(rows, personId: personId));
+  }
 
-              createdAt: row.data['created_at'] != null
-                  ? DateTime.tryParse(row.data['created_at'].toString()) ??
-                        DateTime.now()
-                  : DateTime.now(),
-              updatedAt: row.data['updated_at'] != null
-                  ? DateTime.tryParse(row.data['updated_at'].toString()) ??
-                        DateTime.now()
-                  : DateTime.now(),
-              projectID: row.data['project_id'] as String?,
-            ),
-          )
-          .toList();
-    });
+  /// SDLC board: only goals tagged `sdlc:*` for one project.
+  Stream<List<GoalData>> watchSdlcGoalsForProject(String projectID) {
+    return customSelect(
+      "SELECT * FROM goals WHERE project_id = ? AND category LIKE 'sdlc:%'",
+      variables: [Variable.withString(projectID)],
+      readsFrom: {goalsTable},
+    ).watch().map((rows) => _mapGoalSelectRows(rows));
   }
 
   Stream<List<GoalData>> watchGoalsByProject(String projectID) {
@@ -589,40 +598,7 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
       'SELECT * FROM goals WHERE project_id = ?',
       variables: [Variable.withString(projectID)],
       readsFrom: {goalsTable},
-    ).watch().map((rows) {
-      return rows
-          .where((row) => row.data['id'] != null)
-          .map(
-            (row) => GoalData(
-              id: row.data['id'] as String,
-              goalID: row.data['goal_id'] as String?,
-              personID: (row.data['person_id'] as String?) ?? '',
-              title: (row.data['title'] as String?) ?? 'Untitled Task',
-              description: row.data['description'] as String?,
-              category: (row.data['category'] as String?) ?? 'personal',
-              priority: (row.data['priority'] as int?) ?? 3,
-              status: (row.data['status'] as String?) ?? 'active',
-              targetDate: row.data['target_date'] != null
-                  ? DateTime.tryParse(row.data['target_date'].toString())
-                  : null,
-              completionDate: row.data['completion_date'] != null
-                  ? DateTime.tryParse(row.data['completion_date'].toString())
-                  : null,
-              progressPercentage:
-                  (row.data['progress_percentage'] as int?) ?? 0,
-              createdAt: row.data['created_at'] != null
-                  ? DateTime.tryParse(row.data['created_at'].toString()) ??
-                        DateTime.now()
-                  : DateTime.now(),
-              updatedAt: row.data['updated_at'] != null
-                  ? DateTime.tryParse(row.data['updated_at'].toString()) ??
-                        DateTime.now()
-                  : DateTime.now(),
-              projectID: row.data['project_id'] as String?,
-            ),
-          )
-          .toList();
-    });
+    ).watch().map((rows) => _mapGoalSelectRows(rows));
   }
 
   Future<void> deleteGoalByUuid(String id) async {
@@ -645,6 +621,31 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
         progressPercentage: status == 'done'
             ? const Value(100)
             : const Value.absent(),
+      ),
+    );
+    await _pushGoalById(id);
+  }
+
+  Future<void> updateGoalCategoryByUuid(String id, String category) async {
+    await (update(goalsTable)..where((t) => t.id.equals(id))).write(
+      GoalsTableCompanion(
+        category: Value(category),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    await _pushGoalById(id);
+  }
+
+  Future<void> updateGoalDetailsByUuid(
+    String id, {
+    required String title,
+    required String description,
+  }) async {
+    await (update(goalsTable)..where((t) => t.id.equals(id))).write(
+      GoalsTableCompanion(
+        title: Value(title),
+        description: Value(description),
+        updatedAt: Value(DateTime.now().toUtc()),
       ),
     );
     await _pushGoalById(id);
@@ -843,6 +844,7 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
   }
 
   Future<void> pushAllSkillsToCloud(String personId) async {
+    await _dedupeLocalSkills(personId);
     final rows = await customSelect(
       'SELECT id FROM skills WHERE person_id = ?',
       variables: [Variable.withString(personId)],
@@ -853,30 +855,117 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
     }
   }
 
+  String _skillBusinessKey(String name, String? category) =>
+      '${name.trim().toLowerCase()}|${category ?? ''}';
+
+  /// Collapse duplicate local rows before cloud push (same person + name + category).
+  Future<void> _dedupeLocalSkills(String personId) async {
+    final rows = await (select(skillsTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    final groups = <String, List<SkillData>>{};
+    for (final row in rows) {
+      final key = _skillBusinessKey(row.skillName, row.skillCategory);
+      groups.putIfAbsent(key, () => []).add(row);
+    }
+    for (final group in groups.values) {
+      if (group.length <= 1) continue;
+      group.sort((a, b) {
+        final byPoints = b.point.compareTo(a.point);
+        if (byPoints != 0) return byPoints;
+        return b.updatedAt.compareTo(a.updatedAt);
+      });
+      final keep = group.first;
+      var mergedPoints = keep.point;
+      var mergedAchieved = keep.achievedPoints;
+      for (final dup in group.skip(1)) {
+        mergedPoints += dup.point;
+        mergedAchieved += dup.achievedPoints;
+        await (delete(skillsTable)..where((t) => t.id.equals(dup.id))).go();
+      }
+      if (mergedPoints != keep.point || mergedAchieved != keep.achievedPoints) {
+        await (update(skillsTable)..where((t) => t.id.equals(keep.id))).write(
+          SkillsTableCompanion(
+            point: Value(mergedPoints),
+            achievedPoints: Value(mergedAchieved),
+            proficiencyLevel: Value(
+              skillLevelForPracticePoints(mergedPoints),
+            ),
+            updatedAt: Value(DateTime.now().toUtc()),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<String?> _findRemoteSkillId(
+    String personId,
+    String skillName,
+    String? skillCategory,
+  ) async {
+    try {
+      final targetKey = _skillBusinessKey(skillName, skillCategory);
+      final rows = await Supabase.instance.client
+          .from('skills')
+          .select('id, skill_name, skill_category')
+          .eq('person_id', personId);
+      for (final remote in rows) {
+        final name = (remote['skill_name'] as String?) ?? '';
+        final category = remote['skill_category'] as String?;
+        if (_skillBusinessKey(name, category) == targetKey) {
+          return remote['id'] as String?;
+        }
+      }
+    } catch (e) {
+      debugPrint('GrowthDao: remote skill lookup skipped: $e');
+    }
+    return null;
+  }
+
   Future<void> _pushSkillById(String id) async {
     final row = await (select(skillsTable)..where((t) => t.id.equals(id)))
         .getSingleOrNull();
     if (row == null) return;
 
-    await db.pushToSupabase(
-      table: 'skills',
-      payload: {
-        'id': row.id,
-        'tenant_id': row.tenantID,
-        'skill_id': row.skillID ?? row.id,
-        'person_id': row.personID,
-        'skill_name': row.skillName,
-        'skill_category': row.skillCategory,
-        'proficiency_level': row.proficiencyLevel.name,
-        'point': row.point,
-        'achieved_points': row.achievedPoints,
-        if (row.eventID != null) 'event_id': row.eventID,
-        'description': row.description,
-        'is_featured': row.isFeatured,
-        'created_at': row.createdAt.toUtc().toIso8601String(),
-        'updated_at': row.updatedAt.toUtc().toIso8601String(),
-      },
+    final personId = row.personID;
+    if (personId == null || personId.isEmpty) return;
+
+    var targetId = row.id;
+    final remoteId = await _findRemoteSkillId(
+      personId,
+      row.skillName,
+      row.skillCategory,
     );
+    final localDuplicateOfRemote =
+        remoteId != null && remoteId != row.id;
+
+    if (localDuplicateOfRemote) {
+      targetId = remoteId!;
+    }
+
+    final payload = {
+      'id': targetId,
+      'tenant_id': row.tenantID,
+      'skill_id': row.skillID ?? targetId,
+      'person_id': personId,
+      'skill_name': row.skillName.trim(),
+      'skill_category': row.skillCategory,
+      'proficiency_level': row.proficiencyLevel.name,
+      'point': row.point,
+      'achieved_points': row.achievedPoints,
+      if (row.eventID != null) 'event_id': row.eventID,
+      'description': row.description,
+      'is_featured': row.isFeatured,
+      'created_at': row.createdAt.toUtc().toIso8601String(),
+      'updated_at': row.updatedAt.toUtc().toIso8601String(),
+    };
+
+    await db.pushToSupabase(table: 'skills', payload: payload);
+
+    if (localDuplicateOfRemote) {
+      await (delete(skillsTable)..where((t) => t.id.equals(row.id))).go();
+      await upsertFromSupabaseSkill(payload);
+    }
   }
 
   Stream<List<SkillData>> watchProjectSkills(
@@ -940,8 +1029,25 @@ class EventsDAO extends DatabaseAccessor<AppDatabase> with _$EventsDAOMixin {
   EventsDAO(super.db);
 
   Stream<List<EventData>> watchEventsByPerson(String personId) {
+    return watchEventsInRange(
+      personId,
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.utc(9999),
+    );
+  }
+
+  Stream<List<EventData>> watchEventsInRange(
+    String personId,
+    DateTime rangeStart,
+    DateTime rangeEnd,
+  ) {
     return (select(eventsTable)
-          ..where((t) => t.personID.equals(personId))
+          ..where(
+            (t) =>
+                t.personID.equals(personId) &
+                t.occurredAt.isBiggerOrEqualValue(rangeStart) &
+                t.occurredAt.isSmallerOrEqualValue(rangeEnd),
+          )
           ..orderBy([
             (t) => OrderingTerm(
               expression: t.occurredAt,
@@ -971,6 +1077,35 @@ class EventsDAO extends DatabaseAccessor<AppDatabase> with _$EventsDAOMixin {
   Future<EventData?> getEventById(String id) {
     return (select(eventsTable)..where((t) => t.id.equals(id)))
         .getSingleOrNull();
+  }
+
+  Future<List<EventData>> listEventsForPerson(String personId) {
+    return listEventsForPersonInRange(
+      personId,
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.utc(9999),
+    );
+  }
+
+  Future<List<EventData>> listEventsForPersonInRange(
+    String personId,
+    DateTime rangeStart,
+    DateTime rangeEnd,
+  ) {
+    return (select(eventsTable)
+          ..where(
+            (t) =>
+                t.personID.equals(personId) &
+                t.occurredAt.isBiggerOrEqualValue(rangeStart) &
+                t.occurredAt.isSmallerOrEqualValue(rangeEnd),
+          )
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.occurredAt,
+              mode: OrderingMode.desc,
+            ),
+          ]))
+        .get();
   }
 
   Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
@@ -1055,8 +1190,17 @@ class EventsDAO extends DatabaseAccessor<AppDatabase> with _$EventsDAOMixin {
     await db.pushToSupabase(table: 'events', payload: {'id': id}, isDelete: true);
   }
 
-  Future<void> syncEventsFromCloud(String personId) async {
-    await db.syncTableDown('events', personId);
+  Future<void> syncEventsFromCloud(
+    String personId, {
+    DateTime? rangeStart,
+    DateTime? rangeEnd,
+  }) async {
+    await db.syncTableDown(
+      'events',
+      personId,
+      occurredAfter: rangeStart,
+      occurredBefore: rangeEnd,
+    );
   }
 }
 

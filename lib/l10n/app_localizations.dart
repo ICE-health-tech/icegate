@@ -146,6 +146,12 @@ abstract class AppLocalizations {
   /// **'Calendar'**
   String get projects_tile_calendar;
 
+  /// No description provided for @projects_tile_sdlc.
+  ///
+  /// In en, this message translates to:
+  /// **'SDLC'**
+  String get projects_tile_sdlc;
+
   /// No description provided for @projects_calendar_projects_created.
   ///
   /// In en, this message translates to:
@@ -278,6 +284,12 @@ abstract class AppLocalizations {
   /// **'Event saved to calendar'**
   String get projects_calendar_event_saved;
 
+  /// No description provided for @projects_calendar_event_moved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to {time}'**
+  String projects_calendar_event_moved(String time);
+
   /// No description provided for @projects_calendar_event_deleted.
   ///
   /// In en, this message translates to:
@@ -341,8 +353,26 @@ abstract class AppLocalizations {
   /// No description provided for @projects_calendar_timeline_tap_slot.
   ///
   /// In en, this message translates to:
-  /// **'Tap an hour row to add · tap an event to edit or delete'**
+  /// **'Tap hour to add · tap event to edit · drag to move (↑↓ + Enter on desktop, hold on mobile)'**
   String get projects_calendar_timeline_tap_slot;
+
+  /// No description provided for @projects_calendar_drag_hint_desktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reschedule. Arrow keys adjust time, Enter confirms, Escape cancels.'**
+  String get projects_calendar_drag_hint_desktop;
+
+  /// No description provided for @projects_calendar_drag_hint_mobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Long press, then drag to another time slot.'**
+  String get projects_calendar_drag_hint_mobile;
+
+  /// No description provided for @projects_calendar_drag_move_to.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to {time}'**
+  String projects_calendar_drag_move_to(String time);
 
   /// No description provided for @projects_calendar_timeline_remove.
   ///
@@ -3824,6 +3854,114 @@ abstract class AppLocalizations {
   /// **'+{count} more in Projects'**
   String mind_focus_more_todos(int count);
 
+  /// No description provided for @mind_dashboard_today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get mind_dashboard_today;
+
+  /// No description provided for @mind_dashboard_title.
+  ///
+  /// In en, this message translates to:
+  /// **'My skills'**
+  String get mind_dashboard_title;
+
+  /// No description provided for @mind_dashboard_weekly_topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic this week'**
+  String get mind_dashboard_weekly_topic;
+
+  /// No description provided for @mind_dashboard_edit_topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit topic this week'**
+  String get mind_dashboard_edit_topic;
+
+  /// No description provided for @mind_dashboard_topic_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic title'**
+  String get mind_dashboard_topic_title;
+
+  /// No description provided for @mind_dashboard_topic_title_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Presentation week'**
+  String get mind_dashboard_topic_title_hint;
+
+  /// No description provided for @mind_dashboard_topic_quote_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your weekly focus quote or note'**
+  String get mind_dashboard_topic_quote_hint;
+
+  /// No description provided for @mind_dashboard_topic_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly topic saved to quotes'**
+  String get mind_dashboard_topic_saved;
+
+  /// No description provided for @mind_dashboard_target_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Target skills'**
+  String get mind_dashboard_target_skills;
+
+  /// No description provided for @mind_dashboard_in_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get mind_dashboard_in_progress;
+
+  /// No description provided for @mind_dashboard_focus_week.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus this week'**
+  String get mind_dashboard_focus_week;
+
+  /// No description provided for @mind_dashboard_add_task.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add task'**
+  String get mind_dashboard_add_task;
+
+  /// No description provided for @mind_dashboard_no_linked_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Link target skills to projects to see tasks here.'**
+  String get mind_dashboard_no_linked_projects;
+
+  /// No description provided for @mind_dashboard_status_done.
+  ///
+  /// In en, this message translates to:
+  /// **'DONE'**
+  String get mind_dashboard_status_done;
+
+  /// No description provided for @mind_dashboard_status_waiting.
+  ///
+  /// In en, this message translates to:
+  /// **'WAITING'**
+  String get mind_dashboard_status_waiting;
+
+  /// No description provided for @mind_dashboard_certificates.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill certificates'**
+  String get mind_dashboard_certificates;
+
+  /// No description provided for @mind_dashboard_see_all.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get mind_dashboard_see_all;
+
+  /// No description provided for @mind_dashboard_verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get mind_dashboard_verified;
+
   /// No description provided for @mind_focus_avg_mood.
   ///
   /// In en, this message translates to:
@@ -5204,6 +5342,318 @@ abstract class AppLocalizations {
   /// **'Daily finance on device, email delivery through n8n'**
   String get reports_hub_subtitle;
 
+  /// No description provided for @system_monitor_title.
+  ///
+  /// In en, this message translates to:
+  /// **'System Monitor'**
+  String get system_monitor_title;
+
+  /// No description provided for @system_monitor_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Homelab launcher, dev accounts, DB & sync telemetry — admin only.'**
+  String get system_monitor_subtitle;
+
+  /// No description provided for @system_monitor_denied_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin access required'**
+  String get system_monitor_denied_title;
+
+  /// No description provided for @system_monitor_denied_body.
+  ///
+  /// In en, this message translates to:
+  /// **'This page is restricted to accounts with the admin role.'**
+  String get system_monitor_denied_body;
+
+  /// No description provided for @system_monitor_denied_roles.
+  ///
+  /// In en, this message translates to:
+  /// **'Local: {local} · Remote: {remote}'**
+  String system_monitor_denied_roles(String local, String remote);
+
+  /// No description provided for @system_monitor_denied_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set role to admin in Supabase → Table Editor → user_accounts (not Auth metadata). Then tap Refresh role.'**
+  String get system_monitor_denied_hint;
+
+  /// No description provided for @system_monitor_retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh role'**
+  String get system_monitor_retry;
+
+  /// No description provided for @system_monitor_overview_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get system_monitor_overview_section;
+
+  /// No description provided for @system_monitor_db_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Local database'**
+  String get system_monitor_db_section;
+
+  /// No description provided for @system_monitor_sync_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync engine'**
+  String get system_monitor_sync_section;
+
+  /// No description provided for @system_monitor_app_version.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get system_monitor_app_version;
+
+  /// No description provided for @system_monitor_platform.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get system_monitor_platform;
+
+  /// No description provided for @system_monitor_role.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get system_monitor_role;
+
+  /// No description provided for @system_monitor_auth_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Auth status'**
+  String get system_monitor_auth_status;
+
+  /// No description provided for @system_monitor_supabase_user.
+  ///
+  /// In en, this message translates to:
+  /// **'Supabase user'**
+  String get system_monitor_supabase_user;
+
+  /// No description provided for @system_monitor_running_checks.
+  ///
+  /// In en, this message translates to:
+  /// **'Running diagnostics…'**
+  String get system_monitor_running_checks;
+
+  /// No description provided for @system_monitor_healthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Database healthy'**
+  String get system_monitor_healthy;
+
+  /// No description provided for @system_monitor_issues.
+  ///
+  /// In en, this message translates to:
+  /// **'Issues detected'**
+  String get system_monitor_issues;
+
+  /// No description provided for @system_monitor_smoke_test.
+  ///
+  /// In en, this message translates to:
+  /// **'Smoke test'**
+  String get system_monitor_smoke_test;
+
+  /// No description provided for @system_monitor_sync_active.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync active'**
+  String get system_monitor_sync_active;
+
+  /// No description provided for @system_monitor_sync_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Last status'**
+  String get system_monitor_sync_status;
+
+  /// No description provided for @system_monitor_uptime.
+  ///
+  /// In en, this message translates to:
+  /// **'Session uptime'**
+  String get system_monitor_uptime;
+
+  /// No description provided for @system_monitor_open_sync_engine.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Sync Engine'**
+  String get system_monitor_open_sync_engine;
+
+  /// No description provided for @dev_launcher_web_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Web apps (homelab)'**
+  String get dev_launcher_web_title;
+
+  /// No description provided for @dev_launcher_accounts_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev & cloud accounts'**
+  String get dev_launcher_accounts_title;
+
+  /// No description provided for @dev_launcher_accounts_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Save OPNsense, Supabase, Northflank, n8n logins here. Secrets stay on device.'**
+  String get dev_launcher_accounts_empty;
+
+  /// No description provided for @dev_launcher_add_web.
+  ///
+  /// In en, this message translates to:
+  /// **'Add web app'**
+  String get dev_launcher_add_web;
+
+  /// No description provided for @dev_launcher_add_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Add dev account'**
+  String get dev_launcher_add_account;
+
+  /// No description provided for @dev_launcher_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get dev_launcher_name;
+
+  /// No description provided for @dev_launcher_url.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get dev_launcher_url;
+
+  /// No description provided for @dev_launcher_service.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get dev_launcher_service;
+
+  /// No description provided for @dev_launcher_username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get dev_launcher_username;
+
+  /// No description provided for @dev_launcher_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password / API key'**
+  String get dev_launcher_password;
+
+  /// No description provided for @dev_launcher_copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get dev_launcher_copied;
+
+  /// No description provided for @dev_launcher_pin_canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to Canvas'**
+  String get dev_launcher_pin_canvas;
+
+  /// No description provided for @dev_launcher_pinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to Canvas widgets'**
+  String get dev_launcher_pinned;
+
+  /// No description provided for @dev_launcher_add_from_catalog.
+  ///
+  /// In en, this message translates to:
+  /// **'From plugin catalog'**
+  String get dev_launcher_add_from_catalog;
+
+  /// No description provided for @dev_launcher_pick_plugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Homelab web plugins'**
+  String get dev_launcher_pick_plugin;
+
+  /// No description provided for @infra_api_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Infra API'**
+  String get infra_api_section_title;
+
+  /// No description provided for @infra_api_section_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Cloudflare, Tailscale, Northflank. API tokens stay on this device.'**
+  String get infra_api_section_subtitle;
+
+  /// No description provided for @infra_api_configure.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure {provider}'**
+  String infra_api_configure(String provider);
+
+  /// No description provided for @infra_api_token_label.
+  ///
+  /// In en, this message translates to:
+  /// **'API token / key'**
+  String get infra_api_token_label;
+
+  /// No description provided for @infra_api_tailnet_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailnet name'**
+  String get infra_api_tailnet_label;
+
+  /// No description provided for @infra_api_tailnet_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use - for default tailnet'**
+  String get infra_api_tailnet_hint;
+
+  /// No description provided for @infra_api_clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get infra_api_clear;
+
+  /// No description provided for @infra_api_test.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get infra_api_test;
+
+  /// No description provided for @infra_api_not_configured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get infra_api_not_configured;
+
+  /// No description provided for @infra_api_connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get infra_api_connected;
+
+  /// No description provided for @infra_api_token_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Token saved — tap Test'**
+  String get infra_api_token_saved;
+
+  /// No description provided for @infra_api_test_ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK · {summary}'**
+  String infra_api_test_ok(String summary);
+
+  /// No description provided for @infra_api_test_fail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed · {message}'**
+  String infra_api_test_fail(String message);
+
+  /// No description provided for @island_system_monitor.
+  ///
+  /// In en, this message translates to:
+  /// **'SYSTEM MONITOR'**
+  String get island_system_monitor;
+
   /// No description provided for @reports_mail_section_title.
   ///
   /// In en, this message translates to:
@@ -6091,6 +6541,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Task title'**
   String get project_task_title_hint;
+
+  /// No description provided for @project_sdlc_board_title.
+  ///
+  /// In en, this message translates to:
+  /// **'SDLC board'**
+  String get project_sdlc_board_title;
+
+  /// No description provided for @project_sdlc_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open SDLC board'**
+  String get project_sdlc_open;
+
+  /// No description provided for @project_sdlc_add_task_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add SDLC task'**
+  String get project_sdlc_add_task_title;
+
+  /// No description provided for @project_sdlc_move_phase.
+  ///
+  /// In en, this message translates to:
+  /// **'SDLC phase'**
+  String get project_sdlc_move_phase;
+
+  /// No description provided for @project_sdlc_default_purpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Define what this project must deliver and why.'**
+  String get project_sdlc_default_purpose;
+
+  /// No description provided for @project_sdlc_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No active tasks. Tap + to add one to a phase.'**
+  String get project_sdlc_empty;
+
+  /// No description provided for @project_sdlc_column_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks'**
+  String get project_sdlc_column_empty;
+
+  /// No description provided for @project_sdlc_add_to_phase.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task to this phase'**
+  String get project_sdlc_add_to_phase;
+
+  /// No description provided for @project_sdlc_drop_here.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop to move here'**
+  String get project_sdlc_drop_here;
+
+  /// No description provided for @project_sdlc_task_moved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to {phase}'**
+  String project_sdlc_task_moved(String phase);
+
+  /// No description provided for @project_sdlc_phase_stat.
+  ///
+  /// In en, this message translates to:
+  /// **'P{phase}: {count}'**
+  String project_sdlc_phase_stat(int phase, int count);
+
+  /// No description provided for @project_sdlc_phase_planning_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Planning & requirements'**
+  String get project_sdlc_phase_planning_title;
+
+  /// No description provided for @project_sdlc_phase_planning_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'SRS, feasibility'**
+  String get project_sdlc_phase_planning_hint;
+
+  /// No description provided for @project_sdlc_phase_design_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Architecture & design'**
+  String get project_sdlc_phase_design_title;
+
+  /// No description provided for @project_sdlc_phase_design_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tech stack, UI'**
+  String get project_sdlc_phase_design_hint;
+
+  /// No description provided for @project_sdlc_phase_implementation_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Implementation'**
+  String get project_sdlc_phase_implementation_title;
+
+  /// No description provided for @project_sdlc_phase_implementation_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Code, Git, reviews'**
+  String get project_sdlc_phase_implementation_hint;
+
+  /// No description provided for @project_sdlc_phase_testing_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing & QA'**
+  String get project_sdlc_phase_testing_title;
+
+  /// No description provided for @project_sdlc_phase_testing_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit, integration, UAT'**
+  String get project_sdlc_phase_testing_hint;
+
+  /// No description provided for @project_sdlc_phase_deployment_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Deployment'**
+  String get project_sdlc_phase_deployment_title;
+
+  /// No description provided for @project_sdlc_phase_deployment_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'CI/CD, release'**
+  String get project_sdlc_phase_deployment_hint;
+
+  /// No description provided for @project_sdlc_phase_maintenance_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Operations & maintenance'**
+  String get project_sdlc_phase_maintenance_title;
+
+  /// No description provided for @project_sdlc_phase_maintenance_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor, patches, scale'**
+  String get project_sdlc_phase_maintenance_hint;
+
+  /// No description provided for @project_sdlc_no_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a project first to open the SDLC board.'**
+  String get project_sdlc_no_project;
+
+  /// No description provided for @project_sdlc_pick_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose project for SDLC board'**
+  String get project_sdlc_pick_project;
 
   /// No description provided for @task_delete_tooltip.
   ///

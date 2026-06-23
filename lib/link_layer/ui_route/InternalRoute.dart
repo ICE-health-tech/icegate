@@ -34,6 +34,8 @@ import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodDashboard
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/ExerciseAnalysisPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectNotesPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectDetailsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/sdlc/ProjectSdlcBoardPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/sdlc/ProjectsSdlcHubPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectAnalysisPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:provider/provider.dart';
@@ -70,6 +72,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/user_page/PersonalInformationPage
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/NoteManagerPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/FolderDetailsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/SyncEnginePage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/system_page/SystemMonitorPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/stock_page/StockPage.dart';
 import 'package:ice_gate/utils/app_log.dart';
 
@@ -600,6 +603,10 @@ final GoRouter router = GoRouter(
               builder: (context, state) => const ProjectsCalendarPage(),
             ),
             GoRoute(
+              path: 'sdlc',
+              builder: (context, state) => const ProjectsSdlcHubPage(),
+            ),
+            GoRoute(
               path: ':projectId',
               builder: (context, state) {
                 final projectId = state.pathParameters['projectId'];
@@ -625,6 +632,36 @@ final GoRouter router = GoRouter(
                   }
                 });
               },
+              routes: [
+                GoRoute(
+                  path: 'sdlc',
+                  builder: (context, state) {
+                    final projectId = state.pathParameters['projectId'];
+
+                    return Watch((context) {
+                      final projects =
+                          context.read<ProjectBlock>().projects.value;
+
+                      if (projects.isEmpty) {
+                        return const Scaffold(
+                          body: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      final project =
+                          projects.cast<ProjectProtocol?>().firstWhere(
+                        (p) => p?.id.toString() == projectId,
+                        orElse: () => null,
+                      );
+
+                      if (project != null) {
+                        return ProjectSdlcBoardPage(project: project);
+                      }
+                      return const ProjectsPage();
+                    });
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -672,10 +709,12 @@ final GoRouter router = GoRouter(
 
         GoRoute(
           path: '/webview',
-          builder: (context, state) => const WebViewPage(
-            url: 'https://google.com',
-            title: 'External Widget',
-          ),
+          builder: (context, state) {
+            final url = state.uri.queryParameters['url'] ?? 'about:blank';
+            final title =
+                state.uri.queryParameters['title'] ?? 'External Widget';
+            return WebViewPage(url: url, title: title);
+          },
         ),
         // Route 10: Personal Information
         GoRoute(
@@ -698,6 +737,10 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/sync-engine',
           builder: (context, state) => const SyncEnginePage(),
+        ),
+        GoRoute(
+          path: '/system/monitor',
+          builder: (context, state) => const SystemMonitorPage(),
         ),
       ],
     ),

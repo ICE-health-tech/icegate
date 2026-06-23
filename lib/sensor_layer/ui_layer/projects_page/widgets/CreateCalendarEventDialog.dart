@@ -22,6 +22,7 @@ Future<CalendarEventSaveResult?> showCreateCalendarEventDialog(
   final wide = MediaQuery.sizeOf(context).width >= 600;
   return showDialog<CalendarEventSaveResult>(
     context: context,
+    useRootNavigator: true,
     builder: (ctx) => _CreateCalendarEventDialog(
       initialDay: initialDay,
       initialStart: initialStart,

@@ -18,7 +18,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBl
 import 'package:ice_gate/utils/journal_media.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_log_insights.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindLogInsights.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
@@ -409,7 +409,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      MindActivityTokens.formatActivitiesJson(
+                      MindActivityTokens.formatJournalActivitiesJson(
                         l10n,
                         log.activities,
                         optMap,
@@ -545,8 +545,6 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     }
   }
 
-  static const _moodChartDays = 14;
-
   Widget _buildJournalMoodTrendsPanel(
     BuildContext context,
     String personId,
@@ -561,12 +559,18 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
       stream: notesDao.watchNotesByCategory(personId, 'social'),
       builder: (context, notesSnap) {
         return StreamBuilder<List<MindLogData>>(
-          stream: mindBlock.watchMindLogsRange(personId, _moodChartDays),
+          stream: mindBlock.watchMindLogsRange(
+            personId,
+            MindLogInsights.moodChartDays,
+          ),
           builder: (context, logsSnap) {
+            final journalMindLogs = (logsSnap.data ?? const [])
+                .where((log) => !MindLogInsights.isSkillSessionLog(log))
+                .toList();
             final merged = MindLogInsights.mergeNotesWithMindLogs(
-              mindLogs: logsSnap.data ?? const [],
+              mindLogs: journalMindLogs,
               journalNotes: notesSnap.data ?? const [],
-              days: _moodChartDays,
+              days: MindLogInsights.moodChartDays,
             );
 
             if (merged.isEmpty) {

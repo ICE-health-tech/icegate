@@ -11,7 +11,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_skill_catalog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillCatalog.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -28,20 +28,53 @@ class SkillCertificatePage extends StatelessWidget {
     this.initiallySelected = false,
   });
 
+  /// Element icons aligned with the crystal compass (ice / water / thunder / fire / wind / nature).
   static IconData iconForSkill(String label) {
     return switch (label.toLowerCase()) {
-      'focus' => Icons.center_focus_strong_rounded,
-      'logic' => Icons.functions_rounded,
-      'design' => Icons.brush_rounded,
-      'syntax' => Icons.code_rounded,
-      'growth' => Icons.trending_up_rounded,
-      'health' => Icons.favorite_rounded,
-      'presentation' => Icons.record_voice_over_rounded,
-      'adaptation' => Icons.autorenew_rounded,
-      'meta mental' => Icons.psychology_alt_rounded,
-      'spirit' => Icons.auto_awesome_rounded,
-      _ => Icons.auto_awesome_mosaic_rounded,
+      'focus' => Icons.ac_unit_rounded,
+      'syntax' => Icons.ac_unit_rounded,
+      'health' => Icons.water_drop_rounded,
+      'adaptation' => Icons.air_rounded,
+      'logic' => Icons.bolt_rounded,
+      'meta mental' => Icons.bolt_rounded,
+      'presentation' => Icons.local_fire_department_rounded,
+      'spirit' => Icons.local_fire_department_rounded,
+      'design' => Icons.eco_rounded,
+      'growth' => Icons.eco_rounded,
+      _ => Icons.auto_awesome_rounded,
     };
+  }
+
+  static Color colorForSkill(String label) {
+    switch (label.toLowerCase()) {
+      case 'focus':
+        return const Color(0xFF41E3D0);
+      case 'logic':
+        return const Color(0xFF8C7BFF);
+      case 'design':
+        return const Color(0xFFFF7FD1);
+      case 'syntax':
+        return const Color(0xFF56C0FF);
+      case 'growth':
+        return const Color(0xFF9BE15D);
+      case 'health':
+        return const Color(0xFF5AF2B0);
+      case 'presentation':
+        return const Color(0xFFFFD66B);
+      case 'adaptation':
+        return const Color(0xFF53E1FF);
+      case 'meta mental':
+        return const Color(0xFFB794F4);
+      case 'spirit':
+        return const Color(0xFFFF9A6B);
+      default:
+        var h = 0;
+        for (final c in label.codeUnits) {
+          h = (h * 16777619 + c) & 0x7fffffff;
+        }
+        h = h == 0 ? 1 : h;
+        return HSLColor.fromAHSL(1.0, (h % 360).toDouble(), 0.72, 0.55).toColor();
+    }
   }
 
   @override
@@ -78,19 +111,6 @@ class SkillCertificatePage extends StatelessWidget {
           icon: const Icon(Icons.close_rounded),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          if (skill != null)
-            IconButton(
-              tooltip: l10n.mind_skill_certificate_edit,
-              icon: const Icon(Icons.edit_note_rounded),
-              onPressed: () => _showSkillCertificateEditSheet(
-                context,
-                l10n: l10n,
-                skillName: skillName,
-                skill: skill!,
-              ),
-            ),
-        ],
       ),
       body: StreamBuilder<List<MindLogData>>(
         stream: mindBlock.watchMindLogs(personId),
@@ -482,7 +502,26 @@ class _CertificateBodyState extends State<_CertificateBody> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              if (skill != null)
+                OutlinedButton.icon(
+                  onPressed: () => _showSkillCertificateEditSheet(
+                    context,
+                    l10n: l10n,
+                    skillName: widget.skillName,
+                    skill: skill,
+                  ),
+                  icon: const Icon(Icons.edit_note_rounded, size: 20),
+                  label: Text(l10n.mind_skill_certificate_edit),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(44),
+                    foregroundColor: Colors.white.withValues(alpha: 0.85),
+                    side: BorderSide(
+                      color: widget.accent.withValues(alpha: 0.35),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: () {
                   HapticFeedback.mediumImpact();

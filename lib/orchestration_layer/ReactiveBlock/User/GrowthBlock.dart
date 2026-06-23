@@ -6,7 +6,8 @@ import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_skill_catalog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillCatalog.dart';
+import 'package:ice_gate/data_layer/Protocol/Project/SdlcPhase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GrowthBlock {
@@ -540,6 +541,7 @@ class GrowthBlock {
     String title,
     String description, {
     String? projectID,
+    String category = 'project',
   }) async {
     if (_personId.isEmpty) return;
     await _dao.createGoal(
@@ -549,10 +551,29 @@ class GrowthBlock {
         projectID: Value(projectID),
         description: Value(description),
         status: const Value('active'),
-        category: const Value('project'),
+        category: Value(category),
         createdAt: Value(DateTime.now().toUtc()),
         updatedAt: Value(DateTime.now().toUtc()),
       ),
+    );
+  }
+
+  Future<void> updateGoalSdlcPhase(String id, SdlcPhase phase) async {
+    await _dao.updateGoalCategoryByUuid(
+      id,
+      SdlcPhaseCodec.toCategory(phase),
+    );
+  }
+
+  Future<void> updateGoalDetails(
+    String id, {
+    required String title,
+    required String description,
+  }) async {
+    await _dao.updateGoalDetailsByUuid(
+      id,
+      title: title,
+      description: description,
     );
   }
 

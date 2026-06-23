@@ -339,6 +339,7 @@ const Schema schema = Schema([
     Column.text('person_id'),
     Column.text('content'),
     Column.text('author'),
+    Column.text('type_quote'),
     Column.integer('is_active'),
     Column.text('created_at'),
   ]),

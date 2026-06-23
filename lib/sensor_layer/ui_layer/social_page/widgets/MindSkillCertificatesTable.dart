@@ -7,7 +7,7 @@ import 'package:ice_gate/link_layer/skills/skill_practice_streak.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SkillCertificatePage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_skill_catalog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillCatalog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindSkillsSessionCard.dart';
 import 'package:provider/provider.dart';
 

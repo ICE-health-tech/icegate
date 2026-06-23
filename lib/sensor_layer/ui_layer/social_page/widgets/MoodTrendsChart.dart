@@ -1,8 +1,11 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_log_insights.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindLogInsights.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:intl/intl.dart';
 
@@ -69,140 +72,260 @@ class MoodTrendsChart extends StatelessWidget {
     return DateFormat('MM/dd').format(local);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (logs.isEmpty) return const SizedBox.shrink();
+  static int _moodScoreFromY(double y) => y.round().clamp(1, 5);
 
-    final sortedLogs = List<MindLogData>.from(
-      groupByDay ? MindLogInsights.dailyMoodSeries(logs) : logs,
-    )..sort((a, b) => a.logDate.compareTo(b.logDate));
+  /// fl_chart tints the whole stroke from one [gradient]; per-segment bars + dot layer
+  /// keeps each day’s mood color visible.
+  static List<LineChartBarData> _buildMoodColoredBars({
+    required List<FlSpot> spots,
+    required int n,
+    required bool isDark,
+    required Color mindAccent,
+    required List<double> moodY,
+  }) {
+    final bars = <LineChartBarData>[];
 
-    final recentLogs = sortedLogs.length > 14
-        ? sortedLogs.sublist(sortedLogs.length - 14)
-        : sortedLogs;
-
-    final n = recentLogs.length;
-    final labelAt = _labelIndices(n);
-    final spots = recentLogs.asMap().entries.map((e) {
-      return FlSpot(e.key.toDouble(), e.value.moodScore.toDouble());
-    }).toList();
-
-    final accentColors = recentLogs.map((l) => mindMoodAccent(l.moodScore)).toList();
-    final lineGradientColors = accentColors.length >= 2
-        ? accentColors
-        : [accentColors.first, accentColors.first];
-
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return _lockHorizontalSwipe(
-      Container(
-        height: _chartHeight,
-        padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
-        decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: colorScheme.outline.withValues(alpha: 0.22),
+    if (n >= 2) {
+      for (var i = 0; i < n - 1; i++) {
+        bars.add(
+          LineChartBarData(
+            spots: [spots[i], spots[i + 1]],
+            isCurved: true,
+            curveSmoothness: 0.35,
+            preventCurveOverShooting: true,
+            color: mindMoodAccent(_moodScoreFromY(moodY[i])),
+            barWidth: 2.5,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(show: false),
           ),
+        );
+      }
+    }
+
+    final avgY = moodY.reduce((a, b) => a + b) / n;
+    bars.add(
+      LineChartBarData(
+        spots: spots,
+        color: Colors.transparent,
+        barWidth: 0,
+        dotData: FlDotData(
+          show: true,
+          getDotPainter: (spot, percent, barData, index) {
+            final c = mindMoodAccent(_moodScoreFromY(spot.y));
+            return FlDotCirclePainter(
+              radius: 7,
+              color: c,
+              strokeWidth: 2,
+              strokeColor: Colors.white.withValues(alpha: isDark ? 0.88 : 0.95),
+            );
+          },
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
-          child: LineChart(
-            LineChartData(
-              clipData: const FlClipData.all(),
-              minX: -0.35,
-              maxX: (n - 1 + 0.35).toDouble().clamp(0, double.infinity),
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-              horizontalInterval: 1,
-              getDrawingHorizontalLine: (value) => FlLine(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.12),
-                strokeWidth: 1,
+        belowBarData: BarAreaData(
+          show: true,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.alphaBlend(
+                mindMoodColorAt(avgY).withValues(alpha: 0.18),
+                mindAccent.withValues(alpha: isDark ? 0.1 : 0.06),
               ),
-            ),
-            titlesData: FlTitlesData(
-              leftTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
-              ),
-              rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
-              ),
-              topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
-              ),
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  interval: 1,
-                  reservedSize: 28,
-                  getTitlesWidget: (value, meta) {
-                    final i = value.round();
-                    if (i < 0 || i >= n || !labelAt.contains(i)) {
-                      return const SizedBox.shrink();
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(
-                        _axisLabel(recentLogs[i], groupByDay: groupByDay),
-                        maxLines: 1,
-                        overflow: TextOverflow.fade,
-                        softWrap: false,
-                        style: TextStyle(
-                          fontSize: 10,
-                          letterSpacing: 0.2,
-                          color: colorScheme.onSurface.withValues(
-                            alpha: 0.88,
-                          ),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            borderData: FlBorderData(show: false),
-            minY: 0.5,
-            maxY: 5.5,
-            lineTouchData: const LineTouchData(enabled: false),
-            lineBarsData: [
-              LineChartBarData(
-                spots: spots,
-                isCurved: true,
-                curveSmoothness: 0.35,
-                gradient: LinearGradient(colors: lineGradientColors),
-                barWidth: 3,
-                isStrokeCapRound: true,
-                dotData: FlDotData(
-                  show: true,
-                  getDotPainter: (spot, percent, barData, index) {
-                    final idx = spot.x.round().clamp(0, n - 1);
-                    final c = mindMoodAccent(recentLogs[idx].moodScore);
-                    return FlDotCirclePainter(
-                      radius: 5,
-                      color: c,
-                      strokeWidth: 2,
-                      strokeColor: Colors.white.withValues(alpha: 0.85),
-                    );
-                  },
-                ),
-                belowBarData: BarAreaData(
-                  show: true,
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      mindMoodSoft(recentLogs.last.moodScore),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
+              Colors.transparent,
             ],
           ),
         ),
       ),
+    );
+
+    return bars;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (logs.isEmpty) return const SizedBox.shrink();
+
+    final List<MindLogData> sortedLogs;
+    final List<double> sortedMoodY;
+
+    if (groupByDay) {
+      sortedLogs = MindLogInsights.dailyMoodSeries(logs);
+      sortedMoodY = MindLogInsights.dailyMoodAverages(logs);
+    } else {
+      sortedLogs = List<MindLogData>.from(logs)
+        ..sort((a, b) => a.logDate.compareTo(b.logDate));
+      sortedMoodY = sortedLogs.map((l) => l.moodScore.toDouble()).toList();
+    }
+
+    final window = MindLogInsights.moodChartDays;
+    final recentLogs = sortedLogs.length > window
+        ? sortedLogs.sublist(sortedLogs.length - window)
+        : sortedLogs;
+    final recentMoodY = sortedMoodY.length > window
+        ? sortedMoodY.sublist(sortedMoodY.length - window)
+        : sortedMoodY;
+
+    final n = recentLogs.length;
+    final labelAt = _labelIndices(n);
+    final spots = List<FlSpot>.generate(
+      n,
+      (i) => FlSpot(i.toDouble(), recentMoodY[i]),
+    );
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mindAccent = HealthMetricColors.homePillarAccent('mind');
+    final glassBorder = HealthMetricColors.glassBorder(
+      colorScheme,
+      isDark: isDark,
+      darkAlpha: 0.08,
+    );
+    final axisLabelColor = isDark
+        ? HealthMetricColors.textEtchedStrong
+        : colorScheme.onSurfaceVariant.withValues(alpha: 0.78);
+    final gridColor = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : colorScheme.outlineVariant.withValues(alpha: 0.14);
+
+    return _lockHorizontalSwipe(
+      ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            height: _chartHeight,
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.alphaBlend(
+                    mindAccent.withValues(alpha: isDark ? 0.14 : 0.08),
+                    HealthMetricColors.glassFill(
+                      colorScheme,
+                      isDark: isDark,
+                      darkAlpha: 0.04,
+                    ),
+                  ),
+                  HealthMetricColors.glassFill(
+                    colorScheme,
+                    isDark: isDark,
+                    darkAlpha: 0.025,
+                  ),
+                  Colors.transparent,
+                ],
+                stops: const [0, 0.38, 1],
+              ),
+              border: Border.all(color: glassBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0x000F1E).withValues(
+                    alpha: isDark ? 0.24 : 0.07,
+                  ),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
+                  child: LineChart(
+                LineChartData(
+                  clipData: const FlClipData.all(),
+                  minX: -0.35,
+                  maxX: (n - 1 + 0.35).toDouble().clamp(0, double.infinity),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: 1,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: gridColor,
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 1,
+                        reservedSize: 28,
+                        getTitlesWidget: (value, meta) {
+                          final i = value.round();
+                          if (i < 0 || i >= n || !labelAt.contains(i)) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              _axisLabel(recentLogs[i], groupByDay: groupByDay),
+                              maxLines: 1,
+                              overflow: TextOverflow.fade,
+                              softWrap: false,
+                              style: TextStyle(
+                                fontSize: 10,
+                                letterSpacing: 0.35,
+                                color: axisLabelColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  minY: 0.5,
+                  maxY: 5.5,
+                  lineTouchData: const LineTouchData(enabled: false),
+                  lineBarsData: _buildMoodColoredBars(
+                    spots: spots,
+                    n: n,
+                    isDark: isDark,
+                    mindAccent: mindAccent,
+                    moodY: recentMoodY,
+                  ),
+                ),
+              ),
+                ),
+                // Ice top-edge highlight (uniform border required for radius).
+                Positioned(
+                  top: 0,
+                  left: 12,
+                  right: 12,
+                  child: IgnorePointer(
+                    child: Container(
+                      height: 1,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            HealthMetricColors.borderBright.withValues(
+                              alpha: isDark ? 0.28 : 0.34,
+                            ),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

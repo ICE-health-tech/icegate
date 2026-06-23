@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -147,8 +149,11 @@ class _HealthMetricCardState extends State<HealthMetricCard>
         : widget.metrics.value;
     final cs = colorScheme;
     final radius = BorderRadius.circular(outerR);
-    final borderColor = HealthMetricColors.metricCardBorder(isDark: isDark);
-    final fillColor = HealthMetricColors.metricCardFill(cs, isDark: isDark);
+    final borderColor = HealthMetricColors.glassBorder(
+      cs,
+      isDark: isDark,
+      darkAlpha: 0.1,
+    );
 
     return GestureDetector(
       onTapDown: _onTapDown,
@@ -156,17 +161,68 @@ class _HealthMetricCardState extends State<HealthMetricCard>
       onTapCancel: _onTapCancel,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            color: fillColor,
-            border: Border.all(color: borderColor, width: 1),
-          ),
-          child: ClipRRect(
-              borderRadius: radius,
+        child: ClipRRect(
+          borderRadius: radius,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.alphaBlend(
+                      accent.withValues(alpha: isDark ? 0.14 : 0.09),
+                      HealthMetricColors.glassFill(
+                        cs,
+                        isDark: isDark,
+                        darkAlpha: 0.045,
+                      ),
+                    ),
+                    HealthMetricColors.glassFill(
+                      cs,
+                      isDark: isDark,
+                      darkAlpha: 0.02,
+                    ),
+                  ],
+                  stops: const [0, 0.55],
+                ),
+                border: Border.all(color: borderColor, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0x000F1E).withValues(
+                      alpha: isDark ? 0.22 : 0.07,
+                    ),
+                    blurRadius: 18,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
               child: Stack(
                 clipBehavior: Clip.hardEdge,
                 children: [
+                  Positioned(
+                    top: 0,
+                    left: 12,
+                    right: 12,
+                    child: IgnorePointer(
+                      child: Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              HealthMetricColors.borderBright.withValues(
+                                alpha: isDark ? 0.24 : 0.3,
+                              ),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   Positioned(
                     right: desktopDense ? -10 : -14,
                     bottom: desktopDense ? -10 : -14,
@@ -412,6 +468,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
             ),
           ),
         ),
+      ),
     );
   }
 

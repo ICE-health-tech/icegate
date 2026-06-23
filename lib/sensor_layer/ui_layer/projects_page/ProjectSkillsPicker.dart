@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_skill_catalog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillCatalog.dart';
 import 'package:ice_gate/utils/L10nExtensions.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';

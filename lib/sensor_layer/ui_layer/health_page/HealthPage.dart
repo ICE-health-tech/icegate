@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricsData.dart';
@@ -275,8 +277,10 @@ class _HealthPageState extends State<HealthPage>
     final headerClearance = topSafe + 58;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final healthSubcolor = HealthMetricColors.pillarGreen;
+
     final scaffold = Scaffold(
-      backgroundColor: const Color.fromARGB(0, 24, 160, 90),
+      backgroundColor: Colors.transparent,
       floatingActionButton: QuickActionButton(
           actions: [
             QuickAction(
@@ -512,8 +516,8 @@ class _HealthPageState extends State<HealthPage>
                                   final contentMaxW = maxW > 1200 ? 1200.0 : maxW;
 
                                   late final int crossAxisCount;
-                                  // 1.0 = square metric tiles (width / height).
-                                  const aspect = 1.0;
+                                  // Slightly taller tiles — room for subtitle + progress.
+                                  const aspect = 0.88;
                                   if (contentMaxW >= 1200) {
                                     crossAxisCount = 5;
                                   } else if (contentMaxW >= 960) {
@@ -603,13 +607,16 @@ class _HealthPageState extends State<HealthPage>
     return SwipeablePage(
       onSwipe: () => Navigator.maybePop(context),
       direction: SwipeablePageDirection.leftToRight,
-      child: isDark
-          ? RadialPremiumBackground(
-              baseColor: const Color.fromARGB(255, 27, 128, 64),
-              glowColor: const Color.fromARGB(255, 4, 138, 76),
-              child: scaffold,
-            )
-          : ColoredBox(color: colorScheme.surface, child: scaffold),
+      child: RadialPremiumBackground(
+        glowColor: healthSubcolor,
+        center: const Alignment(0.75, -0.35),
+        radius: 1.35,
+        showGlow: isDark,
+        child: ColoredBox(
+          color: isDark ? Colors.transparent : colorScheme.surface,
+          child: scaffold,
+        ),
+      ),
     );
   }
 
@@ -649,9 +656,8 @@ class _HealthPageState extends State<HealthPage>
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final hubColor = isDark
-        ? const Color.fromARGB(255, 48, 183, 86)
-        : cs.primary;
+    final healthSubcolor = HealthMetricColors.pillarGreen;
+    final hubColor = healthSubcolor;
 
     Widget item(String value, String label, IconData icon, Color color) {
       return Expanded(
@@ -678,7 +684,9 @@ class _HealthPageState extends State<HealthPage>
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
+                      color: isDark
+                          ? HealthMetricColors.textPrimary
+                          : cs.onSurface,
                       letterSpacing: -0.35,
                     ),
                   ),
@@ -688,7 +696,9 @@ class _HealthPageState extends State<HealthPage>
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 10,
-                      color: cs.onSurface.withValues(alpha: 0.55),
+                      color: isDark
+                          ? HealthMetricColors.textEtchedStrong
+                          : cs.onSurface.withValues(alpha: 0.55),
                     ),
                   ),
                 ],
@@ -699,74 +709,102 @@ class _HealthPageState extends State<HealthPage>
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: HealthMetricColors.metricCardFill(cs, isDark: isDark),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: HealthMetricColors.metricCardBorder(isDark: isDark),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          if (onHubTap != null) ...[
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onHubTap,
-                borderRadius: BorderRadius.circular(12),
-                child: Tooltip(
-                  message: l10n.integration_hub_connect,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: hubColor.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.hub_rounded,
-                        color: hubColor,
-                        size: 18,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.alphaBlend(
+                  healthSubcolor.withValues(
+                    alpha: isDark ? 0.12 : 0.08,
+                  ),
+                  HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.04),
+                ),
+                HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.025),
+              ],
+              stops: const [0, 0.5],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: HealthMetricColors.glassBorder(cs, isDark: isDark, darkAlpha: 0.1),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0x000F1E).withValues(alpha: isDark ? 0.2 : 0.06),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              if (onHubTap != null) ...[
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onHubTap,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Tooltip(
+                      message: l10n.integration_hub_connect,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: hubColor.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: hubColor.withValues(alpha: 0.22),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.hub_rounded,
+                            color: hubColor,
+                            size: 18,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
+                Container(
+                  width: 1,
+                  height: 34,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  color: HealthMetricColors.glassBorder(cs, isDark: isDark)
+                      .withValues(alpha: 0.7),
+                ),
+              ],
+              item(
+                '$steps',
+                l10n.steps,
+                Icons.directions_walk_rounded,
+                HealthMetricColors.pillarGreen,
               ),
-            ),
-            Container(
-              width: 1,
-              height: 34,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              color: HealthMetricColors.metricCardBorder(isDark: isDark)
-                  .withValues(alpha: 0.6),
-            ),
-          ],
-          item(
-            '$steps',
-            l10n.steps,
-            Icons.directions_walk_rounded,
-            HealthMetricColors.pillarGreen,
+              item(
+                '$kcal',
+                l10n.kcal_consume,
+                Icons.restaurant_rounded,
+                HealthMetricColors.pillarYellow,
+              ),
+              item(
+                '$waterMl ml',
+                l10n.home_index_water,
+                Icons.water_drop_rounded,
+                HealthMetricColors.pillarBlue,
+              ),
+            ],
           ),
-          item(
-            '$kcal',
-            l10n.kcal_consume,
-            Icons.restaurant_rounded,
-            HealthMetricColors.pillarYellow,
-          ),
-          item(
-            '$waterMl ml',
-            l10n.home_index_water,
-            Icons.water_drop_rounded,
-            HealthMetricColors.pillarBlue,
-          ),
-        ],
+        ),
       ),
     );
   }

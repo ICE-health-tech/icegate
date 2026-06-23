@@ -33,6 +33,7 @@ const _builtInQuickActionPaths = {
   '/social/blocker',
   '/health/block-reminder',
   '/projects/calendar',
+  '/projects/sdlc',
   '/health/focus',
   '/focus-history',
 };
@@ -800,6 +801,12 @@ class ProjectsPage extends StatelessWidget {
           icon: Icons.calendar_month_rounded,
           accent: HealthMetricColors.pillarAccentAt(0),
           onTap: () => context.push('/projects/calendar'),
+        ),
+        QuickActionTileSpec(
+          label: l10n.projects_tile_sdlc,
+          icon: Icons.view_kanban_outlined,
+          accent: HealthMetricColors.pillarAccentAt(3),
+          onTap: () => context.push('/projects/sdlc'),
         ),
         QuickActionTileSpec(
           label: l10n.projects_tile_focus,

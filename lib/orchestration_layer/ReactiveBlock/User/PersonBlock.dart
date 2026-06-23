@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:ice_gate/orchestration_layer/Services/AdminAccess.dart';
 import 'package:ice_gate/orchestration_layer/Services/CustomAuthService.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
@@ -704,15 +705,48 @@ class PersonBlock {
     }
 
     try {
-      // For now, assume a field exists or just default to USER
-      // Role management might be in a separate table or app_metadata
-      final role = user.appMetadata['role'] ?? 'USER';
-      untracked(() => account.value = UserAccount(role: role));
-      appLog("✅ [PersonBlock] User Role: $role");
+      String? role;
+
+      // Primary: public.user_accounts (editable in Supabase Table Editor)
+      final personId = information.value.profiles.id;
+      if (personId != null && personId.isNotEmpty) {
+        final row = await Supabase.instance.client
+            .from('user_accounts')
+            .select('role')
+            .eq('person_id', personId)
+            .maybeSingle();
+        final tableRole = row?['role'];
+        if (tableRole is String && tableRole.trim().isNotEmpty) {
+          role = tableRole;
+        }
+      }
+
+      // Fallback: auth JWT metadata (app_metadata needs service role to set)
+      role ??= AdminAccess.roleFromAuthMetadata(
+        user.appMetadata,
+        user.userMetadata,
+      );
+
+      untracked(() => account.value = UserAccount(role: role ?? 'USER'));
+      appLog("✅ [PersonBlock] User Role: ${role ?? 'USER'}");
     } catch (e) {
       appLog("❌ [PersonBlock] Failed to get user role: $e");
       untracked(() => account.value = const UserAccount(role: 'USER'));
     }
+  }
+
+  /// Re-fetch role from Supabase (e.g. after dashboard role change).
+  Future<void> refreshRole() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    final token = session?.accessToken;
+    if (token == null || token.isEmpty) return;
+    try {
+      await Supabase.instance.client.auth.refreshSession();
+    } catch (e) {
+      appLog("⚠️ [PersonBlock] refreshSession before role refresh: $e");
+    }
+    final refreshed = Supabase.instance.client.auth.currentSession?.accessToken;
+    await getUserRole(refreshed ?? token);
   }
 
   // Fetch Skills from Supabase

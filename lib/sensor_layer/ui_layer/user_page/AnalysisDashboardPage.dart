@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
@@ -45,6 +48,13 @@ class AnalysisDashboardPage extends StatefulWidget {
   State<AnalysisDashboardPage> createState() => _AnalysisDashboardPageState();
 }
 
+typedef _DayHealthStats = ({
+  int steps,
+  double sleepHours,
+  int waterMl,
+  int focusMinutes,
+});
+
 class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
   static const _maxUsageHistoryItems = 4;
 
@@ -52,9 +62,77 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
   bool _isOther = false;
   late DateTime _usageFocusedMonth;
   late DateTime _usageSelectedDay;
+  Map<String, _DayHealthStats> _healthByDay = {};
+  StreamSubscription<List<HealthMetricsLocal>>? _healthMetricsSub;
 
   DateTime _dateOnly(DateTime value) =>
       DateTime(value.year, value.month, value.day);
+
+  String _dateKey(DateTime value) =>
+      '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+
+  bool _isToday(DateTime day) =>
+      _dateOnly(day) == _dateOnly(DateTime.now());
+
+  void _selectDay(DateTime day) {
+    final normalized = _dateOnly(day);
+    setState(() {
+      _usageSelectedDay = normalized;
+      _usageFocusedMonth = DateTime(normalized.year, normalized.month);
+    });
+  }
+
+  Map<String, _DayHealthStats> _aggregateHealthByDay(
+    List<HealthMetricsLocal> metrics,
+  ) {
+    final map = <String, _DayHealthStats>{};
+    for (final m in metrics) {
+      final localDate = m.date.toLocal();
+      final key = _dateKey(localDate);
+      final steps = (m.steps ?? 0).toInt();
+      final sleep = m.sleepHours ?? 0.0;
+      final waterGlasses = m.waterGlasses ?? 0;
+      final focus = m.focusMinutes ?? 0;
+      final existing = map[key];
+      if (existing == null) {
+        map[key] = (
+          steps: steps,
+          sleepHours: sleep,
+          waterMl: waterGlasses * 250,
+          focusMinutes: focus,
+        );
+        continue;
+      }
+      final mergedGlasses = [
+        existing.waterMl ~/ 250,
+        waterGlasses,
+      ].reduce((a, b) => a > b ? a : b);
+      map[key] = (
+        steps: existing.steps + steps,
+        sleepHours: sleep > existing.sleepHours ? sleep : existing.sleepHours,
+        waterMl: mergedGlasses * 250,
+        focusMinutes: existing.focusMinutes + focus,
+      );
+    }
+    return map;
+  }
+
+  void _subscribeHealthMetrics() {
+    _healthMetricsSub?.cancel();
+    final personId = _isOther
+        ? widget.personId
+        : context.read<PersonBlock>().information.value.profiles.id;
+    if (personId == null || personId.isEmpty) return;
+
+    _healthMetricsSub = context
+        .read<AppDatabase>()
+        .healthMetricsDAO
+        .watchAllMetrics(personId)
+        .listen((metrics) {
+      if (!mounted) return;
+      setState(() => _healthByDay = _aggregateHealthByDay(metrics));
+    });
+  }
 
   @override
   void initState() {
@@ -75,6 +153,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
 
   @override
   void dispose() {
+    _healthMetricsSub?.cancel();
     _viewedScoreBlock?.dispose();
     super.dispose();
   }
@@ -107,6 +186,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       _viewedScoreBlock = null;
       personBlock.viewedInformation.value = null;
     }
+    _subscribeHealthMetrics();
   }
 
   @override
@@ -187,6 +267,10 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
               ),
             ),
             const SizedBox(height: 12),
+            if (!_isOther) ...[
+              _buildDayNavigator(context),
+              const SizedBox(height: 16),
+            ],
 
             // --- MINI PROFILE (For others) ---
             if (_isOther) ...[
@@ -244,6 +328,123 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
         ),
       ],
     );
+  }
+
+  Widget _buildDayNavigator(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final selected = _dateOnly(_usageSelectedDay);
+    final isToday = _isToday(selected);
+    final label = isToday
+        ? l10n.date_today
+        : DateFormat.yMMMd().format(selected);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.08)),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Previous day',
+            onPressed: () => _selectDay(
+              selected.subtract(const Duration(days: 1)),
+            ),
+            icon: const Icon(Icons.chevron_left_rounded),
+          ),
+          Expanded(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+            ),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Next day',
+            onPressed: selected.isBefore(_dateOnly(DateTime.now()))
+                ? () => _selectDay(selected.add(const Duration(days: 1)))
+                : null,
+            icon: const Icon(Icons.chevron_right_rounded),
+          ),
+          if (!isToday)
+            TextButton(
+              onPressed: () => _selectDay(DateTime.now()),
+              child: Text(l10n.date_today),
+            ),
+        ],
+      ),
+    );
+  }
+
+  _DayHealthStats _healthStatsForDay(HealthBlock health, DateTime day) {
+    if (_isToday(day)) {
+      return (
+        steps: health.todaySteps.value,
+        sleepHours: health.todaySleep.value,
+        waterMl: health.todayWater.value,
+        focusMinutes: health.todayFocusMinutes.value,
+      );
+    }
+
+    final key = _dateKey(day);
+    final cached = _healthByDay[key];
+    if (cached != null) return cached;
+
+    return (
+      steps: health.dailyStepsLast7Days.value[key] ?? 0,
+      sleepHours: 0.0,
+      waterMl: (health.dailyWaterLast30Days.value[key] ?? 0) * 250,
+      focusMinutes: 0,
+    );
+  }
+
+  double _financeNetWorthOnDay(FinanceBlock finance, DateTime day) {
+    final endOfDay = DateTime(day.year, day.month, day.day, 23, 59, 59);
+    final currentNW = finance.totalBalance.value;
+    final futureTxs = finance.transactions.value
+        .where((t) => t.transactionDate.isAfter(endOfDay))
+        .fold(0.0, (sum, t) {
+          if (t.type == 'income' || t.type == 'savings') return sum + t.amount;
+          if (t.type == 'expense' || t.type == 'investment') {
+            return sum - t.amount;
+          }
+          return sum;
+        });
+    return currentNW - futureTxs;
+  }
+
+  double _financeDeltaOnDay(FinanceBlock finance, DateTime day) {
+    final dayStart = DateTime(day.year, day.month, day.day);
+    final dayEnd = dayStart.add(const Duration(days: 1));
+    return finance.transactions.value
+        .where(
+          (t) =>
+              !t.transactionDate.isBefore(dayStart) &&
+              t.transactionDate.isBefore(dayEnd),
+        )
+        .fold(0.0, (sum, t) {
+          if (t.type == 'income') return sum + t.amount;
+          if (t.type == 'expense') return sum - t.amount;
+          return sum;
+        });
+  }
+
+  double _financeSpendingOnDay(FinanceBlock finance, DateTime day) {
+    final dayStart = DateTime(day.year, day.month, day.day);
+    final dayEnd = dayStart.add(const Duration(days: 1));
+    return finance.transactions.value
+        .where(
+          (t) =>
+              t.type == 'expense' &&
+              !t.transactionDate.isBefore(dayStart) &&
+              t.transactionDate.isBefore(dayEnd),
+        )
+        .fold(0.0, (sum, t) => sum + t.amount);
   }
 
   Widget _buildGuestBanner(ColorScheme colorScheme, BuildContext context) {
@@ -310,8 +511,13 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       final health = watchContext.watch<HealthBlock>();
       final finance = watchContext.watch<FinanceBlock>();
       final projectCount = watchContext.watch<ProjectBlock>().projects.value.length;
-      final socialMinutes = _usageMinutesToday(scoreBlock, 'social');
-      final careerMinutes = _usageMinutesToday(scoreBlock, 'projects');
+      final selectedDay = _dateOnly(_usageSelectedDay);
+      final healthStats = _healthStatsForDay(health, selectedDay);
+      final socialMinutes = _usageMinutesOnDay(scoreBlock, 'social', selectedDay);
+      final careerMinutes = _usageMinutesOnDay(scoreBlock, 'projects', selectedDay);
+      final netWorth = _financeNetWorthOnDay(finance, selectedDay);
+      final dailyDelta = _financeDeltaOnDay(finance, selectedDay);
+      final dailySpending = _financeSpendingOnDay(finance, selectedDay);
 
       return GridView.count(
         crossAxisCount: 2,
@@ -328,12 +534,12 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
             icon: Icons.favorite_rounded,
             color: Colors.green,
             stats: [
-              (l10n.breakdown_steps, '${health.todaySteps.value}'),
+              (l10n.breakdown_steps, '${healthStats.steps}'),
               (
                 l10n.breakdown_sleep,
-                '${health.todaySleep.value.toStringAsFixed(1)}h',
+                '${healthStats.sleepHours.toStringAsFixed(1)}h',
               ),
-              (l10n.breakdown_water, '${health.todayWater.value} ml'),
+              (l10n.breakdown_water, '${healthStats.waterMl} ml'),
             ],
             onTap: () => watchContext.push('/health/dashboard'),
           ),
@@ -346,18 +552,15 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
             stats: [
               (
                 l10n.finance_total_net_worth,
-                finance.formatCurrency(finance.totalBalance.value, compact: true),
+                finance.formatCurrency(netWorth, compact: true),
               ),
               (
                 l10n.finance_daily_report_net,
-                finance.formatCurrency(finance.dailyDelta.value, compact: true),
+                finance.formatCurrency(dailyDelta, compact: true),
               ),
               (
                 l10n.finance_daily_report_expense,
-                finance.formatCurrency(
-                  finance.monthlySpending.value,
-                  compact: true,
-                ),
+                finance.formatCurrency(dailySpending, compact: true),
               ),
             ],
             onTap: () => watchContext.push('/finance/dashboard'),
@@ -372,7 +575,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
               (l10n.breakdown_screentime, _formatScreenTime(socialMinutes)),
               (
                 l10n.breakdown_focus,
-                '${health.todayFocusMinutes.value} ${l10n.unit_min}',
+                '${healthStats.focusMinutes} ${l10n.unit_min}',
               ),
             ],
             onTap: () => watchContext.push('/social/dashboard'),
@@ -394,13 +597,17 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
     });
   }
 
-  double _usageMinutesToday(ScoreBlock scoreBlock, String sector) {
-    final today = _dateOnly(DateTime.now());
+  double _usageMinutesOnDay(
+    ScoreBlock scoreBlock,
+    String sector,
+    DateTime day,
+  ) {
+    final targetDay = _dateOnly(day);
     final key = sector.toLowerCase();
     return scoreBlock.usageHistory.value
         .where((item) {
-          final day = _dateOnly(item.date);
-          return day == today && item.sector.toLowerCase() == key;
+          final itemDay = _dateOnly(item.date);
+          return itemDay == targetDay && item.sector.toLowerCase() == key;
         })
         .fold(0.0, (sum, item) => sum + item.durationMinutes);
   }
@@ -703,12 +910,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
           onMonthChanged: (month) {
             setState(() => _usageFocusedMonth = DateTime(month.year, month.month));
           },
-          onDaySelected: (day) {
-            setState(() {
-              _usageSelectedDay = _dateOnly(day);
-              _usageFocusedMonth = DateTime(day.year, day.month);
-            });
-          },
+          onDaySelected: (day) => _selectDay(day),
         ),
         const SizedBox(height: 20),
         Row(

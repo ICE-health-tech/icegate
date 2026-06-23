@@ -7,6 +7,7 @@
   "recent_notes_label": "Recent Notes",
   "projects_tile_reminders": "Reminders",
   "projects_tile_calendar": "Calendar",
+  "projects_tile_sdlc": "SDLC",
   "projects_calendar_projects_created": "Projects created",
   "projects_calendar_day_empty": "No tasks or project starts on this day.",
   "projects_calendar_day_empty_not_connected": "No calendar connected. Use “Connect calendar” above, then sync.",
@@ -39,6 +40,12 @@
   "projects_calendar_event_start": "Start",
   "projects_calendar_event_end": "End",
   "projects_calendar_event_saved": "Event saved to calendar",
+  "projects_calendar_event_moved": "Moved to {time}",
+  "@projects_calendar_event_moved": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
   "projects_calendar_event_deleted": "Event removed",
   "projects_calendar_event_failed": "Could not save event",
   "projects_calendar_edit_event": "Edit event",
@@ -49,7 +56,15 @@
   "projects_calendar_tap_day_add_hint": "Tap the selected day again to add an event",
   "projects_calendar_hold_day_add_hint": "Hold a day to add an event",
   "projects_calendar_timeline_empty": "No timed events this day",
-  "projects_calendar_timeline_tap_slot": "Tap an hour row to add · tap an event to edit or delete",
+  "projects_calendar_timeline_tap_slot": "Tap hour to add · tap event to edit · drag to move (↑↓ + Enter on desktop, hold on mobile)",
+  "projects_calendar_drag_hint_desktop": "Drag to reschedule. Arrow keys adjust time, Enter confirms, Escape cancels.",
+  "projects_calendar_drag_hint_mobile": "Long press, then drag to another time slot.",
+  "projects_calendar_drag_move_to": "Move to {time}",
+  "@projects_calendar_drag_move_to": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
   "projects_calendar_timeline_remove": "Remove from timeline",
   "projects_calendar_timeline_remove_confirm": "Remove \"{title}\" from this day's timeline?",
   "@projects_calendar_timeline_remove_confirm": {
@@ -898,6 +913,24 @@
   "mind_focus_open_projects": "Projects",
   "mind_focus_no_todos": "No active project tasks. Add tasks in Projects.",
   "mind_focus_more_todos": "+{count} more in Projects",
+  "mind_dashboard_today": "Today",
+  "mind_dashboard_title": "My skills",
+  "mind_dashboard_weekly_topic": "Topic this week",
+  "mind_dashboard_edit_topic": "Edit topic this week",
+  "mind_dashboard_topic_title": "Topic title",
+  "mind_dashboard_topic_title_hint": "e.g. Presentation week",
+  "mind_dashboard_topic_quote_hint": "Your weekly focus quote or note",
+  "mind_dashboard_topic_saved": "Weekly topic saved to quotes",
+  "mind_dashboard_target_skills": "Target skills",
+  "mind_dashboard_in_progress": "In progress",
+  "mind_dashboard_focus_week": "Focus this week",
+  "mind_dashboard_add_task": "+ Add task",
+  "mind_dashboard_no_linked_projects": "Link target skills to projects to see tasks here.",
+  "mind_dashboard_status_done": "DONE",
+  "mind_dashboard_status_waiting": "WAITING",
+  "mind_dashboard_certificates": "Skill certificates",
+  "mind_dashboard_see_all": "See all",
+  "mind_dashboard_verified": "Verified",
   "@mind_focus_more_todos": {
     "placeholders": {
       "count": {
@@ -1340,6 +1373,85 @@
   },
   "reports_hub_title": "Report via mail",
   "reports_hub_subtitle": "Daily finance on device, email delivery through n8n",
+  "system_monitor_title": "System Monitor",
+  "system_monitor_subtitle": "Homelab launcher, dev accounts, DB & sync telemetry — admin only.",
+  "system_monitor_denied_title": "Admin access required",
+  "system_monitor_denied_body": "This page is restricted to accounts with the admin role.",
+  "system_monitor_denied_roles": "Local: {local} · Remote: {remote}",
+  "@system_monitor_denied_roles": {
+    "placeholders": {
+      "local": { "type": "String" },
+      "remote": { "type": "String" }
+    }
+  },
+  "system_monitor_denied_hint": "Set role to admin in Supabase → Table Editor → user_accounts (not Auth metadata). Then tap Refresh role.",
+  "system_monitor_retry": "Refresh role",
+  "system_monitor_overview_section": "Overview",
+  "system_monitor_db_section": "Local database",
+  "system_monitor_sync_section": "Sync engine",
+  "system_monitor_app_version": "App version",
+  "system_monitor_platform": "Platform",
+  "system_monitor_role": "Role",
+  "system_monitor_auth_status": "Auth status",
+  "system_monitor_supabase_user": "Supabase user",
+  "system_monitor_running_checks": "Running diagnostics…",
+  "system_monitor_healthy": "Database healthy",
+  "system_monitor_issues": "Issues detected",
+  "system_monitor_smoke_test": "Smoke test",
+  "system_monitor_sync_active": "Sync active",
+  "system_monitor_sync_status": "Last status",
+  "system_monitor_uptime": "Session uptime",
+  "system_monitor_open_sync_engine": "Open Sync Engine",
+  "dev_launcher_web_title": "Web apps (homelab)",
+  "dev_launcher_accounts_title": "Dev & cloud accounts",
+  "dev_launcher_accounts_empty": "Save OPNsense, Supabase, Northflank, n8n logins here. Secrets stay on device.",
+  "dev_launcher_add_web": "Add web app",
+  "dev_launcher_add_account": "Add dev account",
+  "dev_launcher_name": "Name",
+  "dev_launcher_url": "URL",
+  "dev_launcher_service": "Service",
+  "dev_launcher_username": "Username",
+  "dev_launcher_password": "Password / API key",
+  "dev_launcher_copied": "Copied to clipboard",
+  "dev_launcher_pin_canvas": "Pin to Canvas",
+  "dev_launcher_pinned": "Added to Canvas widgets",
+  "dev_launcher_add_from_catalog": "From plugin catalog",
+  "dev_launcher_pick_plugin": "Homelab web plugins",
+  "infra_api_section_title": "Infra API",
+  "infra_api_section_subtitle": "Connect Cloudflare, Tailscale, Northflank. API tokens stay on this device.",
+  "infra_api_configure": "Configure {provider}",
+  "@infra_api_configure": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "infra_api_token_label": "API token / key",
+  "infra_api_tailnet_label": "Tailnet name",
+  "infra_api_tailnet_hint": "Use - for default tailnet",
+  "infra_api_clear": "Remove",
+  "infra_api_test": "Test connection",
+  "infra_api_not_configured": "Not configured",
+  "infra_api_connected": "Connected",
+  "infra_api_token_saved": "Token saved — tap Test",
+  "infra_api_test_ok": "OK · {summary}",
+  "@infra_api_test_ok": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "infra_api_test_fail": "Failed · {message}",
+  "@infra_api_test_fail": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "island_system_monitor": "SYSTEM MONITOR",
   "reports_mail_section_title": "Email via n8n",
   "reports_mail_section_subtitle": "Finance and health snapshot delivered by email",
   "reports_finance_section": "On-device finance report",
@@ -1563,6 +1675,42 @@
   "project_add_task_title": "New Task",
   "project_task_assign_to": "Assign to project",
   "project_task_title_hint": "Task title",
+  "project_sdlc_board_title": "SDLC board",
+  "project_sdlc_open": "Open SDLC board",
+  "project_sdlc_add_task_title": "Add SDLC task",
+  "project_sdlc_move_phase": "SDLC phase",
+  "project_sdlc_default_purpose": "Define what this project must deliver and why.",
+  "project_sdlc_empty": "No active tasks. Tap + to add one to a phase.",
+  "project_sdlc_column_empty": "No tasks",
+  "project_sdlc_add_to_phase": "Add task to this phase",
+  "project_sdlc_drop_here": "Drop to move here",
+  "project_sdlc_task_moved": "Moved to {phase}",
+  "@project_sdlc_task_moved": {
+    "placeholders": {
+      "phase": { "type": "String" }
+    }
+  },
+  "project_sdlc_phase_stat": "P{phase}: {count}",
+  "@project_sdlc_phase_stat": {
+    "placeholders": {
+      "phase": { "type": "int" },
+      "count": { "type": "int" }
+    }
+  },
+  "project_sdlc_phase_planning_title": "Planning & requirements",
+  "project_sdlc_phase_planning_hint": "SRS, feasibility",
+  "project_sdlc_phase_design_title": "Architecture & design",
+  "project_sdlc_phase_design_hint": "Tech stack, UI",
+  "project_sdlc_phase_implementation_title": "Implementation",
+  "project_sdlc_phase_implementation_hint": "Code, Git, reviews",
+  "project_sdlc_phase_testing_title": "Testing & QA",
+  "project_sdlc_phase_testing_hint": "Unit, integration, UAT",
+  "project_sdlc_phase_deployment_title": "Deployment",
+  "project_sdlc_phase_deployment_hint": "CI/CD, release",
+  "project_sdlc_phase_maintenance_title": "Operations & maintenance",
+  "project_sdlc_phase_maintenance_hint": "Monitor, patches, scale",
+  "project_sdlc_no_project": "Create a project first to open the SDLC board.",
+  "project_sdlc_pick_project": "Choose project for SDLC board",
   "task_delete_tooltip": "Delete task",
   "task_delete_confirm_title": "Delete task",
   "task_delete_confirm_msg": "Are you sure you want to delete \"{name}\"? This cannot be undone.",

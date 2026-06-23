@@ -33,6 +33,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get projects_tile_calendar => 'Lịch';
 
   @override
+  String get projects_tile_sdlc => 'SDLC';
+
+  @override
   String get projects_calendar_projects_created => 'Dự án được tạo';
 
   @override
@@ -109,6 +112,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get projects_calendar_event_saved => 'Đã lưu sự kiện vào lịch';
 
   @override
+  String projects_calendar_event_moved(String time) {
+    return 'Đã chuyển sang $time';
+  }
+
+  @override
   String get projects_calendar_event_deleted => 'Đã xóa sự kiện';
 
   @override
@@ -142,7 +150,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get projects_calendar_timeline_tap_slot =>
-      'Chạm khung giờ để thêm · chạm sự kiện để sửa hoặc xóa';
+      'Chạm khung giờ để thêm · chạm sự kiện để sửa · kéo đổi giờ (↑↓ + Enter trên desktop, giữ trên mobile)';
+
+  @override
+  String get projects_calendar_drag_hint_desktop =>
+      'Kéo để đổi giờ. Phím mũi tên chỉnh giờ, Enter xác nhận, Escape hủy.';
+
+  @override
+  String get projects_calendar_drag_hint_mobile =>
+      'Giữ rồi kéo sang khung giờ khác.';
+
+  @override
+  String projects_calendar_drag_move_to(String time) {
+    return 'Chuyển sang $time';
+  }
 
   @override
   String get projects_calendar_timeline_remove => 'Ẩn khỏi timeline';
@@ -2041,6 +2062,62 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get mind_dashboard_today => 'Hôm nay';
+
+  @override
+  String get mind_dashboard_title => 'Kỹ năng của tôi';
+
+  @override
+  String get mind_dashboard_weekly_topic => 'Chủ đề tuần này';
+
+  @override
+  String get mind_dashboard_edit_topic => 'Sửa chủ đề tuần này';
+
+  @override
+  String get mind_dashboard_topic_title => 'Tiêu đề chủ đề';
+
+  @override
+  String get mind_dashboard_topic_title_hint => 'vd. Tuần thuyết trình';
+
+  @override
+  String get mind_dashboard_topic_quote_hint =>
+      'Câu quote hoặc ghi chú tập trung tuần này';
+
+  @override
+  String get mind_dashboard_topic_saved => 'Đã lưu chủ đề tuần vào quotes';
+
+  @override
+  String get mind_dashboard_target_skills => 'Kỹ năng mục tiêu';
+
+  @override
+  String get mind_dashboard_in_progress => 'Đang thực hiện';
+
+  @override
+  String get mind_dashboard_focus_week => 'Tập trung tuần này';
+
+  @override
+  String get mind_dashboard_add_task => '+ Thêm nhiệm vụ';
+
+  @override
+  String get mind_dashboard_no_linked_projects =>
+      'Gắn kỹ năng mục tiêu với dự án để xem việc cần làm ở đây.';
+
+  @override
+  String get mind_dashboard_status_done => 'XONG';
+
+  @override
+  String get mind_dashboard_status_waiting => 'CHỜ';
+
+  @override
+  String get mind_dashboard_certificates => 'Chứng chỉ kỹ năng';
+
+  @override
+  String get mind_dashboard_see_all => 'Xem tất cả';
+
+  @override
+  String get mind_dashboard_verified => 'Verified';
+
+  @override
   String mind_focus_avg_mood(String score) {
     return 'Tâm trạng TB tuần này: $score';
   }
@@ -2826,6 +2903,175 @@ class AppLocalizationsVi extends AppLocalizations {
       'Báo cáo tài chính trên máy, gửi email qua n8n';
 
   @override
+  String get system_monitor_title => 'Giám sát hệ thống';
+
+  @override
+  String get system_monitor_subtitle =>
+      'Homelab, tài khoản dev, DB & đồng bộ — chỉ quản trị viên.';
+
+  @override
+  String get system_monitor_denied_title => 'Cần quyền quản trị';
+
+  @override
+  String get system_monitor_denied_body =>
+      'Trang này chỉ dành cho tài khoản có vai trò admin.';
+
+  @override
+  String system_monitor_denied_roles(String local, String remote) {
+    return 'Cục bộ: $local · Máy chủ: $remote';
+  }
+
+  @override
+  String get system_monitor_denied_hint =>
+      'Đặt role = admin trong Supabase → Table Editor → user_accounts (không phải Auth metadata). Sau đó bấm Làm mới vai trò.';
+
+  @override
+  String get system_monitor_retry => 'Làm mới vai trò';
+
+  @override
+  String get system_monitor_overview_section => 'Tổng quan';
+
+  @override
+  String get system_monitor_db_section => 'Cơ sở dữ liệu cục bộ';
+
+  @override
+  String get system_monitor_sync_section => 'Động cơ đồng bộ';
+
+  @override
+  String get system_monitor_app_version => 'Phiên bản app';
+
+  @override
+  String get system_monitor_platform => 'Nền tảng';
+
+  @override
+  String get system_monitor_role => 'Vai trò';
+
+  @override
+  String get system_monitor_auth_status => 'Trạng thái đăng nhập';
+
+  @override
+  String get system_monitor_supabase_user => 'Người dùng Supabase';
+
+  @override
+  String get system_monitor_running_checks => 'Đang chạy kiểm tra…';
+
+  @override
+  String get system_monitor_healthy => 'Cơ sở dữ liệu ổn định';
+
+  @override
+  String get system_monitor_issues => 'Phát hiện sự cố';
+
+  @override
+  String get system_monitor_smoke_test => 'Kiểm tra nhanh';
+
+  @override
+  String get system_monitor_sync_active => 'Đang đồng bộ';
+
+  @override
+  String get system_monitor_sync_status => 'Trạng thái gần nhất';
+
+  @override
+  String get system_monitor_uptime => 'Thời gian phiên';
+
+  @override
+  String get system_monitor_open_sync_engine => 'Mở Sync Engine';
+
+  @override
+  String get dev_launcher_web_title => 'Web app (homelab)';
+
+  @override
+  String get dev_launcher_accounts_title => 'Tài khoản dev & cloud';
+
+  @override
+  String get dev_launcher_accounts_empty =>
+      'Lưu OPNsense, Supabase, Northflank, n8n. Mật khẩu chỉ trên máy.';
+
+  @override
+  String get dev_launcher_add_web => 'Thêm web app';
+
+  @override
+  String get dev_launcher_add_account => 'Thêm tài khoản dev';
+
+  @override
+  String get dev_launcher_name => 'Tên';
+
+  @override
+  String get dev_launcher_url => 'URL';
+
+  @override
+  String get dev_launcher_service => 'Dịch vụ';
+
+  @override
+  String get dev_launcher_username => 'Tên đăng nhập';
+
+  @override
+  String get dev_launcher_password => 'Mật khẩu / API key';
+
+  @override
+  String get dev_launcher_copied => 'Đã sao chép';
+
+  @override
+  String get dev_launcher_pin_canvas => 'Ghim lên Canvas';
+
+  @override
+  String get dev_launcher_pinned => 'Đã thêm vào widget Canvas';
+
+  @override
+  String get dev_launcher_add_from_catalog => 'Từ danh mục plugin';
+
+  @override
+  String get dev_launcher_pick_plugin => 'Plugin web homelab';
+
+  @override
+  String get infra_api_section_title => 'API hạ tầng';
+
+  @override
+  String get infra_api_section_subtitle =>
+      'Kết nối Cloudflare, Tailscale, Northflank. Token chỉ lưu trên máy.';
+
+  @override
+  String infra_api_configure(String provider) {
+    return 'Cấu hình $provider';
+  }
+
+  @override
+  String get infra_api_token_label => 'API token / key';
+
+  @override
+  String get infra_api_tailnet_label => 'Tên tailnet';
+
+  @override
+  String get infra_api_tailnet_hint => 'Dùng - cho tailnet mặc định';
+
+  @override
+  String get infra_api_clear => 'Xóa';
+
+  @override
+  String get infra_api_test => 'Thử kết nối';
+
+  @override
+  String get infra_api_not_configured => 'Chưa cấu hình';
+
+  @override
+  String get infra_api_connected => 'Đã kết nối';
+
+  @override
+  String get infra_api_token_saved => 'Đã lưu token — bấm Thử';
+
+  @override
+  String infra_api_test_ok(String summary) {
+    return 'OK · $summary';
+  }
+
+  @override
+  String infra_api_test_fail(String message) {
+    return 'Lỗi · $message';
+  }
+
+  @override
+  String get island_system_monitor => 'GIÁM SÁT HỆ THỐNG';
+
+  @override
   String get reports_mail_section_title => 'Gửi qua n8n';
 
   @override
@@ -3302,6 +3548,87 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get project_task_title_hint => 'Tiêu đề nhiệm vụ';
+
+  @override
+  String get project_sdlc_board_title => 'Bảng SDLC';
+
+  @override
+  String get project_sdlc_open => 'Mở bảng SDLC';
+
+  @override
+  String get project_sdlc_add_task_title => 'Thêm nhiệm vụ SDLC';
+
+  @override
+  String get project_sdlc_move_phase => 'Giai đoạn SDLC';
+
+  @override
+  String get project_sdlc_default_purpose =>
+      'Xác định dự án cần giao gì và vì sao.';
+
+  @override
+  String get project_sdlc_empty =>
+      'Chưa có nhiệm vụ đang làm. Chạm + để thêm vào một giai đoạn.';
+
+  @override
+  String get project_sdlc_column_empty => 'Chưa có nhiệm vụ';
+
+  @override
+  String get project_sdlc_add_to_phase => 'Thêm nhiệm vụ vào giai đoạn này';
+
+  @override
+  String get project_sdlc_drop_here => 'Thả để chuyển sang đây';
+
+  @override
+  String project_sdlc_task_moved(String phase) {
+    return 'Đã chuyển sang $phase';
+  }
+
+  @override
+  String project_sdlc_phase_stat(int phase, int count) {
+    return 'P$phase: $count';
+  }
+
+  @override
+  String get project_sdlc_phase_planning_title => 'Lập kế hoạch & yêu cầu';
+
+  @override
+  String get project_sdlc_phase_planning_hint => 'SRS, khả thi';
+
+  @override
+  String get project_sdlc_phase_design_title => 'Kiến trúc & thiết kế';
+
+  @override
+  String get project_sdlc_phase_design_hint => 'Tech stack, UI';
+
+  @override
+  String get project_sdlc_phase_implementation_title => 'Triển khai';
+
+  @override
+  String get project_sdlc_phase_implementation_hint => 'Code, Git, review';
+
+  @override
+  String get project_sdlc_phase_testing_title => 'Kiểm thử & QA';
+
+  @override
+  String get project_sdlc_phase_testing_hint => 'Unit, tích hợp, UAT';
+
+  @override
+  String get project_sdlc_phase_deployment_title => 'Triển khai sản phẩm';
+
+  @override
+  String get project_sdlc_phase_deployment_hint => 'CI/CD, phát hành';
+
+  @override
+  String get project_sdlc_phase_maintenance_title => 'Vận hành & bảo trì';
+
+  @override
+  String get project_sdlc_phase_maintenance_hint => 'Giám sát, vá lỗi, mở rộng';
+
+  @override
+  String get project_sdlc_no_project => 'Hãy tạo dự án trước khi mở bảng SDLC.';
+
+  @override
+  String get project_sdlc_pick_project => 'Chọn dự án cho bảng SDLC';
 
   @override
   String get task_delete_tooltip => 'Xóa nhiệm vụ';

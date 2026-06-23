@@ -13,6 +13,7 @@ class GoogleCalendarEventItem {
   final bool allDay;
   final String? calendarId;
   final String? calendarName;
+  final String? description;
 
   const GoogleCalendarEventItem({
     required this.id,
@@ -22,6 +23,7 @@ class GoogleCalendarEventItem {
     this.allDay = false,
     this.calendarId,
     this.calendarName,
+    this.description,
   });
 
   DateTime get dayLocal => DateTime(start.year, start.month, start.day);
@@ -244,6 +246,7 @@ class GoogleCalendarService {
       allDay: allDay,
       calendarId: calendarId,
       calendarName: calendarName,
+      description: event.description?.trim(),
     );
   }
 }

@@ -4,11 +4,17 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/link_layer/skills/skill_practice_streak.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_skill_catalog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillCatalog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindSkillsSessionCard.dart';
 
-/// Aggregations for [SocialAnalysisPage] (mind logs only).
+/// Aggregations for Mind / Social charts (mind logs + journal notes).
 abstract final class MindLogInsights {
+  /// Shared window for [MoodTrendsChart] on Journal and Analysis tabs.
+  static const int moodChartDays = 14;
+
+  /// Summary stats on the Analysis tab.
+  static const int insightsSummaryDays = 30;
+
   static DateTime _dayKey(DateTime dt) =>
       DateTime(dt.year, dt.month, dt.day);
 
@@ -27,6 +33,26 @@ abstract final class MindLogInsights {
   static DateTime rangeStartDays(int days) {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day).subtract(Duration(days: days));
+  }
+
+  /// Skill Boost timed sessions — keep for streaks, hide from NHẬT KÝ journal UI.
+  static bool isSkillSessionLog(MindLogData log) {
+    try {
+      final raw = jsonDecode(log.activities) as List<dynamic>;
+      var hasSkill = false;
+      for (final entry in raw) {
+        if (entry is! String) continue;
+        if (entry.startsWith('skill:')) {
+          hasSkill = true;
+          continue;
+        }
+        if (MindActivityTokens.isInternalSessionToken(entry)) continue;
+        return false;
+      }
+      return hasSkill;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Synthetic mood point from a social [ProjectNoteData] (NHẬT KÝ entry).
@@ -67,7 +93,7 @@ abstract final class MindLogInsights {
 
     for (final note in journalNotes) {
       if (note.category != 'social') continue;
-      if (note.createdAt.toLocal().isBefore(start)) continue;
+      if (_dayKey(note.createdAt).isBefore(start)) continue;
       final point = moodPointFromNote(note);
       if (point != null) {
         merged[point.id] = point;
@@ -101,23 +127,29 @@ abstract final class MindLogInsights {
     );
   }
 
-  /// One synthetic log per calendar day (avg mood) for charts.
-  static List<MindLogData> dailyMoodSeries(List<MindLogData> logs) {
-    if (logs.isEmpty) return const [];
-
+  static Map<DateTime, List<MindLogData>> _logsByDay(List<MindLogData> logs) {
     final byDay = <DateTime, List<MindLogData>>{};
     for (final log in logs) {
       final day = _dayKey(log.logDate);
       byDay.putIfAbsent(day, () => []).add(log);
     }
+    return byDay;
+  }
 
+  static double _avgMoodScore(List<MindLogData> dayLogs) =>
+      dayLogs.fold<double>(0, (s, l) => s + l.moodScore) / dayLogs.length;
+
+  /// One synthetic log per calendar day (avg mood) for charts.
+  static List<MindLogData> dailyMoodSeries(List<MindLogData> logs) {
+    if (logs.isEmpty) return const [];
+
+    final byDay = _logsByDay(logs);
     final days = byDay.keys.toList()..sort();
     return [
       for (final day in days)
         () {
           final dayLogs = byDay[day]!;
-          final avg =
-              dayLogs.fold<int>(0, (s, l) => s + l.moodScore) / dayLogs.length;
+          final avg = _avgMoodScore(dayLogs);
           final template = dayLogs.first;
           return template.copyWith(
             moodScore: avg.round().clamp(1, 5),
@@ -126,6 +158,15 @@ abstract final class MindLogInsights {
           );
         }(),
     ];
+  }
+
+  /// Daily mood averages aligned with [dailyMoodSeries] (exact Y values for line chart).
+  static List<double> dailyMoodAverages(List<MindLogData> logs) {
+    if (logs.isEmpty) return const [];
+
+    final byDay = _logsByDay(logs);
+    final days = byDay.keys.toList()..sort();
+    return [for (final day in days) _avgMoodScore(byDay[day]!)];
   }
 
   /// Log count per hour for today (local time).

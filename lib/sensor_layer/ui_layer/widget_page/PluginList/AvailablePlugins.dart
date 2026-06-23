@@ -12,6 +12,7 @@ import 'WebPlugin/Spotify.dart';
 import 'WebPlugin/GitHub.dart';
 import 'WebPlugin/Weather.dart';
 import 'WebPlugin/CryptoTracker.dart';
+import 'WebPlugin/HomelabWebPlugins.dart';
 import 'TalkSSH/TalkSSH.dart';
 
 class _InternalPlugin extends BasePluginProtocol {
@@ -99,7 +100,22 @@ class AvailablePlugins {
       icon: Icons.shield_moon_rounded,
       category: PluginCategory.productivity,
     ),
+    _InternalPlugin(
+      name: 'System Monitor',
+      url: '/system/monitor',
+      icon: Icons.monitor_heart_outlined,
+      category: PluginCategory.development,
+    ),
+    _InternalPlugin(
+      name: 'SSH Manager',
+      url: '/widget/ssh_manager',
+      icon: Icons.terminal_rounded,
+      category: PluginCategory.development,
+    ),
   ];
+
+  /// Homelab / infra web consoles — also in [all] for Add Widget → Web tab.
+  static const List<BasePluginProtocol> homelab = HomelabWebPlugins.catalog;
 
   static const List<BasePluginProtocol> all = [
     // CarTrackerPlugin(),
@@ -115,7 +131,7 @@ class AvailablePlugins {
     WeatherPlugin(),
     CryptoTrackerPlugin(),
     TalkSSHPlugin(),
-    // MapPlugin(),
+    ...homelab,
   ];
 
   /// Get plugins by category

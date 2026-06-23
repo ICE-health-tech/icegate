@@ -53,6 +53,13 @@ class ProjectDetailsPage extends StatelessWidget {
                 surfaceTintColor: Colors.transparent,
                 scrolledUnderElevation: 3,
                 actions: [
+                  IconButton(
+                    padding: const EdgeInsets.only(right: 4),
+                    icon: const Icon(Icons.view_kanban_outlined),
+                    tooltip: AppLocalizations.of(context)!.project_sdlc_open,
+                    onPressed: () =>
+                        context.push('/projects/${project.id}/sdlc'),
+                  ),
                   if (project.status == 0)
                     IconButton(
                       padding: const EdgeInsets.only(right: 16),

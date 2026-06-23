@@ -35,6 +35,12 @@
   "projects_calendar_event_start": "Bắt đầu",
   "projects_calendar_event_end": "Kết thúc",
   "projects_calendar_event_saved": "Đã lưu sự kiện vào lịch",
+  "projects_calendar_event_moved": "Đã chuyển sang {time}",
+  "@projects_calendar_event_moved": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
   "projects_calendar_event_deleted": "Đã xóa sự kiện",
   "projects_calendar_event_failed": "Không thể lưu sự kiện",
   "projects_calendar_edit_event": "Sửa sự kiện",
@@ -45,7 +51,15 @@
   "projects_calendar_tap_day_add_hint": "Chạm lại ngày đã chọn để thêm sự kiện",
   "projects_calendar_hold_day_add_hint": "Giữ ngày để thêm sự kiện",
   "projects_calendar_timeline_empty": "Không có sự kiện theo giờ trong ngày",
-  "projects_calendar_timeline_tap_slot": "Chạm khung giờ để thêm · chạm sự kiện để sửa hoặc xóa",
+  "projects_calendar_timeline_tap_slot": "Chạm khung giờ để thêm · chạm sự kiện để sửa · kéo đổi giờ (↑↓ + Enter trên desktop, giữ trên mobile)",
+  "projects_calendar_drag_hint_desktop": "Kéo để đổi giờ. Phím mũi tên chỉnh giờ, Enter xác nhận, Escape hủy.",
+  "projects_calendar_drag_hint_mobile": "Giữ rồi kéo sang khung giờ khác.",
+  "projects_calendar_drag_move_to": "Chuyển sang {time}",
+  "@projects_calendar_drag_move_to": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
   "projects_calendar_timeline_remove": "Ẩn khỏi timeline",
   "projects_calendar_timeline_remove_confirm": "Ẩn \"{title}\" khỏi timeline ngày này?",
   "projects_calendar_day_timeline": "Dòng thời gian",
@@ -105,6 +119,7 @@
   },
   "projects_tile_focus": "Tập trung",
   "projects_tile_pomodoro": "Cà chua",
+  "projects_tile_sdlc": "SDLC",
   "projects_tile_social_blocker": "Chặn mạng xã hội",
   "social_shield_turn_on": "Bật Shield",
   "social_shield_subtitle_no_auth": "Chạm dòng để cấp quyền Thời gian sử dụng",
@@ -891,6 +906,24 @@
   "mind_focus_open_projects": "Dự án",
   "mind_focus_no_todos": "Chưa có việc trong dự án. Thêm ở trang Dự án.",
   "mind_focus_more_todos": "+{count} việc khác trong Dự án",
+  "mind_dashboard_today": "Hôm nay",
+  "mind_dashboard_title": "Kỹ năng của tôi",
+  "mind_dashboard_weekly_topic": "Chủ đề tuần này",
+  "mind_dashboard_edit_topic": "Sửa chủ đề tuần này",
+  "mind_dashboard_topic_title": "Tiêu đề chủ đề",
+  "mind_dashboard_topic_title_hint": "vd. Tuần thuyết trình",
+  "mind_dashboard_topic_quote_hint": "Câu quote hoặc ghi chú tập trung tuần này",
+  "mind_dashboard_topic_saved": "Đã lưu chủ đề tuần vào quotes",
+  "mind_dashboard_target_skills": "Kỹ năng mục tiêu",
+  "mind_dashboard_in_progress": "Đang thực hiện",
+  "mind_dashboard_focus_week": "Tập trung tuần này",
+  "mind_dashboard_add_task": "+ Thêm nhiệm vụ",
+  "mind_dashboard_no_linked_projects": "Gắn kỹ năng mục tiêu với dự án để xem việc cần làm ở đây.",
+  "mind_dashboard_status_done": "XONG",
+  "mind_dashboard_status_waiting": "CHỜ",
+  "mind_dashboard_certificates": "Chứng chỉ kỹ năng",
+  "mind_dashboard_see_all": "Xem tất cả",
+  "mind_dashboard_verified": "Verified",
   "@mind_focus_more_todos": {
     "placeholders": {
       "count": {
@@ -1309,6 +1342,85 @@
   },
   "reports_hub_title": "Báo cáo qua mail",
   "reports_hub_subtitle": "Báo cáo tài chính trên máy, gửi email qua n8n",
+  "system_monitor_title": "Giám sát hệ thống",
+  "system_monitor_subtitle": "Homelab, tài khoản dev, DB & đồng bộ — chỉ quản trị viên.",
+  "system_monitor_denied_title": "Cần quyền quản trị",
+  "system_monitor_denied_body": "Trang này chỉ dành cho tài khoản có vai trò admin.",
+  "system_monitor_denied_roles": "Cục bộ: {local} · Máy chủ: {remote}",
+  "@system_monitor_denied_roles": {
+    "placeholders": {
+      "local": { "type": "String" },
+      "remote": { "type": "String" }
+    }
+  },
+  "system_monitor_denied_hint": "Đặt role = admin trong Supabase → Table Editor → user_accounts (không phải Auth metadata). Sau đó bấm Làm mới vai trò.",
+  "system_monitor_retry": "Làm mới vai trò",
+  "system_monitor_overview_section": "Tổng quan",
+  "system_monitor_db_section": "Cơ sở dữ liệu cục bộ",
+  "system_monitor_sync_section": "Động cơ đồng bộ",
+  "system_monitor_app_version": "Phiên bản app",
+  "system_monitor_platform": "Nền tảng",
+  "system_monitor_role": "Vai trò",
+  "system_monitor_auth_status": "Trạng thái đăng nhập",
+  "system_monitor_supabase_user": "Người dùng Supabase",
+  "system_monitor_running_checks": "Đang chạy kiểm tra…",
+  "system_monitor_healthy": "Cơ sở dữ liệu ổn định",
+  "system_monitor_issues": "Phát hiện sự cố",
+  "system_monitor_smoke_test": "Kiểm tra nhanh",
+  "system_monitor_sync_active": "Đang đồng bộ",
+  "system_monitor_sync_status": "Trạng thái gần nhất",
+  "system_monitor_uptime": "Thời gian phiên",
+  "system_monitor_open_sync_engine": "Mở Sync Engine",
+  "dev_launcher_web_title": "Web app (homelab)",
+  "dev_launcher_accounts_title": "Tài khoản dev & cloud",
+  "dev_launcher_accounts_empty": "Lưu OPNsense, Supabase, Northflank, n8n. Mật khẩu chỉ trên máy.",
+  "dev_launcher_add_web": "Thêm web app",
+  "dev_launcher_add_account": "Thêm tài khoản dev",
+  "dev_launcher_name": "Tên",
+  "dev_launcher_url": "URL",
+  "dev_launcher_service": "Dịch vụ",
+  "dev_launcher_username": "Tên đăng nhập",
+  "dev_launcher_password": "Mật khẩu / API key",
+  "dev_launcher_copied": "Đã sao chép",
+  "dev_launcher_pin_canvas": "Ghim lên Canvas",
+  "dev_launcher_pinned": "Đã thêm vào widget Canvas",
+  "dev_launcher_add_from_catalog": "Từ danh mục plugin",
+  "dev_launcher_pick_plugin": "Plugin web homelab",
+  "infra_api_section_title": "API hạ tầng",
+  "infra_api_section_subtitle": "Kết nối Cloudflare, Tailscale, Northflank. Token chỉ lưu trên máy.",
+  "infra_api_configure": "Cấu hình {provider}",
+  "@infra_api_configure": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "infra_api_token_label": "API token / key",
+  "infra_api_tailnet_label": "Tên tailnet",
+  "infra_api_tailnet_hint": "Dùng - cho tailnet mặc định",
+  "infra_api_clear": "Xóa",
+  "infra_api_test": "Thử kết nối",
+  "infra_api_not_configured": "Chưa cấu hình",
+  "infra_api_connected": "Đã kết nối",
+  "infra_api_token_saved": "Đã lưu token — bấm Thử",
+  "infra_api_test_ok": "OK · {summary}",
+  "@infra_api_test_ok": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "infra_api_test_fail": "Lỗi · {message}",
+  "@infra_api_test_fail": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "island_system_monitor": "GIÁM SÁT HỆ THỐNG",
   "reports_mail_section_title": "Gửi qua n8n",
   "reports_mail_section_subtitle": "Tóm tắt tài chính và sức khỏe gửi bằng email",
   "reports_finance_section": "Báo cáo tài chính trên máy",
@@ -1532,6 +1644,42 @@
   "project_add_task_title": "Nhiệm vụ mới",
   "project_task_assign_to": "Gán cho dự án",
   "project_task_title_hint": "Tiêu đề nhiệm vụ",
+  "project_sdlc_board_title": "Bảng SDLC",
+  "project_sdlc_open": "Mở bảng SDLC",
+  "project_sdlc_add_task_title": "Thêm nhiệm vụ SDLC",
+  "project_sdlc_move_phase": "Giai đoạn SDLC",
+  "project_sdlc_default_purpose": "Xác định dự án cần giao gì và vì sao.",
+  "project_sdlc_empty": "Chưa có nhiệm vụ đang làm. Chạm + để thêm vào một giai đoạn.",
+  "project_sdlc_column_empty": "Chưa có nhiệm vụ",
+  "project_sdlc_add_to_phase": "Thêm nhiệm vụ vào giai đoạn này",
+  "project_sdlc_drop_here": "Thả để chuyển sang đây",
+  "project_sdlc_task_moved": "Đã chuyển sang {phase}",
+  "@project_sdlc_task_moved": {
+    "placeholders": {
+      "phase": { "type": "String" }
+    }
+  },
+  "project_sdlc_phase_stat": "P{phase}: {count}",
+  "@project_sdlc_phase_stat": {
+    "placeholders": {
+      "phase": { "type": "int" },
+      "count": { "type": "int" }
+    }
+  },
+  "project_sdlc_phase_planning_title": "Lập kế hoạch & yêu cầu",
+  "project_sdlc_phase_planning_hint": "SRS, khả thi",
+  "project_sdlc_phase_design_title": "Kiến trúc & thiết kế",
+  "project_sdlc_phase_design_hint": "Tech stack, UI",
+  "project_sdlc_phase_implementation_title": "Triển khai",
+  "project_sdlc_phase_implementation_hint": "Code, Git, review",
+  "project_sdlc_phase_testing_title": "Kiểm thử & QA",
+  "project_sdlc_phase_testing_hint": "Unit, tích hợp, UAT",
+  "project_sdlc_phase_deployment_title": "Triển khai sản phẩm",
+  "project_sdlc_phase_deployment_hint": "CI/CD, phát hành",
+  "project_sdlc_phase_maintenance_title": "Vận hành & bảo trì",
+  "project_sdlc_phase_maintenance_hint": "Giám sát, vá lỗi, mở rộng",
+  "project_sdlc_no_project": "Hãy tạo dự án trước khi mở bảng SDLC.",
+  "project_sdlc_pick_project": "Chọn dự án cho bảng SDLC",
   "task_delete_tooltip": "Xóa nhiệm vụ",
   "task_delete_confirm_title": "Xóa nhiệm vụ",
   "task_delete_confirm_msg": "Bạn có chắc chắn muốn xóa \"{name}\"? Không thể hoàn tác.",

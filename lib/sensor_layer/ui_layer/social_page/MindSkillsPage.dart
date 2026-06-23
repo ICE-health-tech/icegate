@@ -9,9 +9,10 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_skill_catalog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/SkillCertificatePage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillCatalog.dart';
 import 'package:ice_gate/link_layer/skills/skill_practice_streak.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/skill_session_celebration.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/SkillSessionCelebration.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:provider/provider.dart';
@@ -567,34 +568,7 @@ class _MindSkillsViewState extends State<MindSkillsView>
     _selectFxController.forward(from: 0);
   }
 
-  Color _skillColorFor(String skill) {
-    switch (skill.toLowerCase()) {
-      case 'focus':
-        return const Color(0xFF41E3D0);
-      case 'logic':
-        return const Color(0xFF8C7BFF);
-      case 'design':
-        return const Color(0xFFFF7FD1);
-      case 'syntax':
-        return const Color(0xFF56C0FF);
-      case 'growth':
-        return const Color(0xFF9BE15D);
-      case 'health':
-        return const Color(0xFF5AF2B0);
-      case 'presentation':
-        return const Color(0xFFFFD66B);
-      case 'adaptation':
-        return const Color(0xFF53E1FF);
-      case 'meta mental':
-        return const Color(0xFFB794F4);
-      case 'spirit':
-        return const Color(0xFFFF9A6B);
-      default:
-        // Fallback: derive from hash
-        final h = _hashSeed(skill) % 360;
-        return HSLColor.fromAHSL(1.0, h.toDouble(), 0.72, 0.55).toColor();
-    }
-  }
+  Color _skillColorFor(String skill) => SkillCertificatePage.colorForSkill(skill);
 
   // Element “type” for each skill (ice / water / thunder / fire / wind / nature).
   // This drives ring effect style so it feels consistent (not random).
@@ -952,21 +926,8 @@ class _MindSkillsViewState extends State<MindSkillsView>
     await prefs.setStringList('mind_skill_icons_$personId', raw);
   }
 
-  IconData _defaultIconForSkill(String label) {
-    return switch (label.toLowerCase()) {
-      'focus' => Icons.center_focus_strong_rounded,
-      'logic' => Icons.functions_rounded,
-      'design' => Icons.brush_rounded,
-      'syntax' => Icons.code_rounded,
-      'growth' => Icons.trending_up_rounded,
-      'health' => Icons.favorite_rounded,
-      'presentation' => Icons.record_voice_over_rounded,
-      'adaptation' => Icons.autorenew_rounded,
-      'meta mental' => Icons.psychology_alt_rounded,
-      'spirit' => Icons.auto_awesome_rounded,
-      _ => Icons.auto_awesome_mosaic_rounded,
-    };
-  }
+  IconData _defaultIconForSkill(String label) =>
+      SkillCertificatePage.iconForSkill(label);
 
   IconData _iconForSkill(String label) {
     final cp = _iconOverrideCodePoint[label.toLowerCase()];
@@ -1180,8 +1141,8 @@ class _MindSkillsViewState extends State<MindSkillsView>
                   },
                   borderRadius: BorderRadius.circular(48),
                   child: Container(
-                    width: size * 0.22,
-                    height: size * 0.22,
+                    width: size * 0.50,
+                    height: size * 0.50,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       boxShadow: [
@@ -1193,7 +1154,7 @@ class _MindSkillsViewState extends State<MindSkillsView>
                       ],
                     ),
                     child: Image.asset(
-                      'assets/images/crystal_logo.png',
+                      'assets/images/skill_compass_icon.png',
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -1245,12 +1206,14 @@ class _MindSkillsViewState extends State<MindSkillsView>
             final data = _skillDataForName(name, growth);
             final selected = _selected.contains(name);
             final streak = SkillPracticeStreak.streakFor(streakIndex, name);
-            final accent = HealthMetricColors.pillarAccentAt(index);
+            final accent = _skillColorFor(name);
+            final icon = _iconForSkill(name);
             final inSession = _sessionActive && selected;
 
             return _MindSkillStatusRow(
               name: name,
               skill: data,
+              icon: icon,
               accent: accent,
               selected: selected,
               inSession: inSession,
@@ -1436,6 +1399,7 @@ class _MindSkillStatusRow extends StatelessWidget {
   const _MindSkillStatusRow({
     required this.name,
     required this.skill,
+    required this.icon,
     required this.accent,
     required this.selected,
     required this.inSession,
@@ -1449,6 +1413,7 @@ class _MindSkillStatusRow extends StatelessWidget {
 
   final String name;
   final SkillProtocol? skill;
+  final IconData icon;
   final Color accent;
   final bool selected;
   final bool inSession;
@@ -1502,14 +1467,7 @@ class _MindSkillStatusRow extends StatelessWidget {
                       backgroundColor: cs.onSurface.withValues(alpha: 0.08),
                       color: accent,
                     ),
-                    Text(
-                      '$level',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12,
-                        color: accent,
-                      ),
-                    ),
+                    Icon(icon, size: 18, color: accent),
                   ],
                 ),
               ),
@@ -1681,20 +1639,7 @@ class _SkillTile extends StatelessWidget {
         ? accent.withValues(alpha: 0.16)
         : accent.withValues(alpha: 0.08);
 
-    final icon = iconOverride ??
-        switch (label.toLowerCase()) {
-      'focus' => Icons.center_focus_strong_rounded,
-      'logic' => Icons.functions_rounded,
-      'design' => Icons.brush_rounded,
-      'syntax' => Icons.code_rounded,
-      'growth' => Icons.trending_up_rounded,
-      'health' => Icons.favorite_rounded,
-      'presentation' => Icons.record_voice_over_rounded,
-      'adaptation' => Icons.autorenew_rounded,
-      'meta mental' => Icons.psychology_alt_rounded,
-      'spirit' => Icons.auto_awesome_rounded,
-      _ => Icons.auto_awesome_mosaic_rounded,
-    };
+    final icon = iconOverride ?? SkillCertificatePage.iconForSkill(label);
 
     return TweenAnimationBuilder<double>(
       // Using popTick as the key ensures a new pop animation per selection.

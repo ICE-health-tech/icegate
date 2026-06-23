@@ -10,6 +10,13 @@ abstract final class MindActivityTokens {
 
   static String refToken(String optionId) => '$userRefPrefix$optionId';
 
+  /// Skill Boost session tokens — not shown on NHẬT KÝ / journal cards.
+  static bool isInternalSessionToken(String token) {
+    return token.startsWith('skill:') ||
+        token.startsWith('learn:') ||
+        token.startsWith('project:');
+  }
+
   /// Returns option UUID when [token] is a synced custom ref; otherwise null.
   static String? parseOptionId(String token) {
     if (!token.startsWith(userRefPrefix)) return null;
@@ -82,6 +89,27 @@ abstract final class MindActivityTokens {
       return raw
           .map((e) => displayLabel(l10n, e.toString(), optionLabels))
           .join(', ');
+    } catch (_) {
+      return activitiesJson;
+    }
+  }
+
+  /// Journal preview: hide Skill Boost tokens; fall back to mood-only label.
+  static String formatJournalActivitiesJson(
+    AppLocalizations l10n,
+    String activitiesJson,
+    Map<String, String> optionLabels,
+  ) {
+    try {
+      final raw = jsonDecode(activitiesJson);
+      if (raw is! List) return activitiesJson;
+      final labels = raw
+          .whereType<String>()
+          .where((t) => !isInternalSessionToken(t))
+          .map((t) => displayLabel(l10n, t, optionLabels))
+          .where((label) => label.trim().isNotEmpty)
+          .join(', ');
+      return labels.isEmpty ? l10n.mind_logged_mood : labels;
     } catch (_) {
       return activitiesJson;
     }

@@ -623,8 +623,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         final Session? session = data.session;
         final ps = database.powerSync;
 
-        appLog(
-          "🔑 [DataLayer] Supabase Auth Change: Event=$event, HasSession=${session != null}",
+        authLog(
+          'Supabase auth event=$event hasSession=${session != null}'
+          '${session != null ? ' user=${session.user.email ?? session.user.id}' : ''}',
         );
 
         if (event == AuthChangeEvent.passwordRecovery && session != null) {
@@ -740,6 +741,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         } catch (_) {}
       }
       if (_isInitialized) {
+        authBlock.extendAuthInteractionTimeoutOnResume();
         authBlock.checkAuthInteractionDeadline();
       }
       if (_lastPausedTime != null) {

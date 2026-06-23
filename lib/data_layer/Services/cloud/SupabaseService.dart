@@ -187,14 +187,25 @@ class SupabaseService {
   }
 
   /// Syncs a single table from Supabase to local DB.
-  Future<void> syncTableDown(String table, String personId) async {
+  Future<void> syncTableDown(
+    String table,
+    String personId, {
+    DateTime? occurredAfter,
+    DateTime? occurredBefore,
+  }) async {
     try {
       debugPrint("📥 [SupabaseService] Syncing $table down...");
 
-      final response = await client
-          .from(table)
-          .select()
-          .eq('person_id', personId);
+      var query = client.from(table).select().eq('person_id', personId);
+      if (table == 'events' &&
+          occurredAfter != null &&
+          occurredBefore != null) {
+        query = query
+            .gte('occurred_at', occurredAfter.toUtc().toIso8601String())
+            .lte('occurred_at', occurredBefore.toUtc().toIso8601String());
+      }
+
+      final response = await query;
 
       debugPrint(
         "📦 [SupabaseSync] Received ${response.length} records for $table",

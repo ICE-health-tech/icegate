@@ -9,7 +9,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart
 import 'package:ice_gate/sensor_layer/ui_layer/UIConstants.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_log_insights.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindLogInsights.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
 import 'package:provider/provider.dart';
@@ -34,12 +34,34 @@ class SocialAnalysisPage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        return StreamBuilder<List<MindLogData>>(
-          stream: mindBlock.watchMindLogsRange(personId, 30),
-          builder: (context, logSnapshot) {
-            final logs = logSnapshot.data ?? [];
-            final summary = MindLogInsights.summarize(logs);
-            final skills = MindLogInsights.skillSummary(logs, days: 30);
+        return StreamBuilder<List<ProjectNoteData>>(
+          stream: context
+              .read<ProjectNoteDAO>()
+              .watchNotesByCategory(personId, 'social'),
+          builder: (context, notesSnap) {
+            return StreamBuilder<List<MindLogData>>(
+              stream: mindBlock.watchMindLogsRange(
+                personId,
+                MindLogInsights.insightsSummaryDays,
+              ),
+              builder: (context, logSnapshot) {
+                final mindLogs = logSnapshot.data ?? [];
+                final journalNotes = notesSnap.data ?? const [];
+                final mergedSummary = MindLogInsights.mergeNotesWithMindLogs(
+                  mindLogs: mindLogs,
+                  journalNotes: journalNotes,
+                  days: MindLogInsights.insightsSummaryDays,
+                );
+                final mergedMood = MindLogInsights.mergeNotesWithMindLogs(
+                  mindLogs: mindLogs,
+                  journalNotes: journalNotes,
+                  days: MindLogInsights.moodChartDays,
+                );
+                final summary = MindLogInsights.summarize(mergedSummary);
+                final skills = MindLogInsights.skillSummary(
+                  mindLogs,
+                  days: MindLogInsights.insightsSummaryDays,
+                );
 
             return CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -72,9 +94,9 @@ class SocialAnalysisPage extends StatelessWidget {
                         const SizedBox(height: 20),
                         _buildQuickLinks(context, l10n),
                         const SizedBox(height: 20),
-                        _buildHourlyLogsChart(context, logs, l10n),
+                        _buildHourlyLogsChart(context, mindLogs, l10n),
                         const SizedBox(height: 20),
-                        _buildMoodChart(context, mindBlock, personId, l10n),
+                        _buildMoodChart(context, mergedMood, l10n),
                         const SizedBox(height: 20),
                         _buildActivitiesSection(context, mindBlock, personId),
                         const SizedBox(height: 20),
@@ -86,6 +108,8 @@ class SocialAnalysisPage extends StatelessWidget {
                   ),
                 ),
               ],
+            );
+              },
             );
           },
         );
@@ -301,50 +325,54 @@ class SocialAnalysisPage extends StatelessWidget {
 
   Widget _buildMoodChart(
     BuildContext context,
-    MindBlock mindBlock,
-    String personId,
+    List<MindLogData> mergedMood,
     AppLocalizations l10n,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (mergedMood.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: HealthMetricColors.shellPanel(
+          colorScheme,
+          isDark: isDark,
+          radius: 22,
+          accent: HealthMetricColors.pillarViolet,
+        ),
+        child: Text(
+          l10n.track_patterns_msg,
+          style: TextStyle(
+            fontSize: 11,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
+        ),
+      );
+    }
+
     return Container(
-      height: 220,
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: HealthMetricColors.shellPanel(
+        colorScheme,
+        isDark: isDark,
+        radius: 22,
+        accent: HealthMetricColors.pillarViolet,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.weekly_mood_trend.toUpperCase(),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            l10n.mood_trends_title.toUpperCase(),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  letterSpacing: 1.4,
+                  fontWeight: FontWeight.w900,
+                  color: colorScheme.onSurface,
+                ),
           ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: StreamBuilder<List<MindLogData>>(
-              stream: mindBlock.watchMindLogsRange(personId, 7),
-              builder: (context, snapshot) {
-                final logs = snapshot.data ?? [];
-                if (logs.isEmpty) {
-                  return Center(
-                    child: Text(
-                      l10n.no_records_last_7_days,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                return MoodTrendsChart(logs: logs, groupByDay: true);
-              },
-            ),
-          ),
+          const SizedBox(height: 12),
+          MoodTrendsChart(logs: mergedMood, groupByDay: true),
         ],
       ),
     );

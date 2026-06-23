@@ -6294,6 +6294,7 @@ class QuotesTable extends Table {
   TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get content => text()();
   TextColumn get author => text().nullable()();
+  TextColumn get typeQuote => text().nullable().named('type_quote')();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant(true)).named('is_active')();
   DateTimeColumn get createdAt => dateTime()
@@ -6303,6 +6304,13 @@ class QuotesTable extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Values for [QuotesTable.typeQuote].
+abstract final class QuoteType {
+  QuoteType._();
+
+  static const focusWeek = 'focus_week';
 }
 
 @DriftAccessor(tables: [QuotesTable])
@@ -6340,6 +6348,7 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
         personID: Value(r['person_id'] as String?),
         content: (r['content'] as String?) ?? '',
         author: Value(r['author'] as String?),
+        typeQuote: Value(r['type_quote'] as String?),
         isActive: Value(isActive),
         createdAt: Value(
           r['created_at'] != null
@@ -6355,8 +6364,38 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
     await db.syncTableDown('quotes', personId);
   }
 
-  Future<bool> updateQuote(QuoteData entry) =>
-      update(quotesTable).replace(entry);
+  Future<bool> updateQuote(QuoteData entry) async {
+    final ok = await update(quotesTable).replace(entry);
+    await db.pushToSupabase(table: 'quotes', payload: _quotePayload(entry));
+    return ok;
+  }
+
+  Map<String, dynamic> _quotePayload(QuoteData entry) => {
+        'id': entry.id,
+        'tenant_id': entry.tenantID,
+        'person_id': entry.personID,
+        'content': entry.content,
+        'author': entry.author,
+        'type_quote': entry.typeQuote,
+        'is_active': entry.isActive,
+        'created_at': entry.createdAt.toUtc().toIso8601String(),
+      };
+
+  Future<QuoteData?> getFocusWeekQuote(String personId) async {
+    if (personId.isEmpty) return null;
+    final rows = await (select(quotesTable)
+          ..where((t) => t.personID.equals(personId))
+          ..where((t) => t.typeQuote.equals(QuoteType.focusWeek))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.createdAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(1))
+        .get();
+    return rows.isEmpty ? null : rows.first;
+  }
 
   Future<int> deleteQuote(String id) =>
       (delete(quotesTable)..where((t) => t.id.equals(id))).go();
@@ -6381,6 +6420,7 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
             personID: row.data['person_id'] as String? ?? '',
             content: row.data['content'] as String? ?? '',
             author: row.data['author'] as String?,
+            typeQuote: row.data['type_quote'] as String?,
             isActive:
                 (row.data['is_active'] as int?) == 1 ||
                 (row.data['is_active'] as bool?) == true,
@@ -6400,12 +6440,19 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
               mode: OrderingMode.desc,
             ),
           ]))
-        .watch();
+        .watch()
+        .map(
+          (quotes) => quotes
+              .where((q) => q.typeQuote != QuoteType.focusWeek)
+              .toList(growable: false),
+        );
   }
 
   Stream<List<QuoteData>> watchActiveQuotes() {
     return watchAllQuotes().map(
-      (quotes) => quotes.where((q) => q.isActive).toList(),
+      (quotes) => quotes
+          .where((q) => q.isActive && q.typeQuote != QuoteType.focusWeek)
+          .toList(growable: false),
     );
   }
 
@@ -6422,6 +6469,7 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
               personID: row.data['person_id'] as String? ?? '',
               content: row.data['content'] as String? ?? '',
               author: row.data['author'] as String?,
+              typeQuote: row.data['type_quote'] as String?,
               isActive:
                   (row.data['is_active'] as int?) == 1 ||
                   (row.data['is_active'] as bool?) == true,
@@ -7539,9 +7587,19 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  Future<void> syncTableDown(String table, String personId) async {
+  Future<void> syncTableDown(
+    String table,
+    String personId, {
+    DateTime? occurredAfter,
+    DateTime? occurredBefore,
+  }) async {
     if (supabaseSync != null) {
-      await supabaseSync!.syncTableDown(table, personId);
+      await supabaseSync!.syncTableDown(
+        table,
+        personId,
+        occurredAfter: occurredAfter,
+        occurredBefore: occurredBefore,
+      );
     } else {
       debugPrint(
         "⚠️ [Supabase] syncTableDown called for $table but supabaseSync is NULL",
@@ -7715,7 +7773,9 @@ class AppDatabase extends _$AppDatabase {
   // v84 → skills.point replaces years_of_experience
   // v85 → events + event_skills (person events ↔ skills junction, S3 remote_path)
   // v86 → simplify events: id, name, description, url_image, url_video, FK person_id
-  int get schemaVersion => 86;
+  // v87 → quotes.type_quote (e.g. focus_week for Mind weekly topic)
+  // v88 → query indexes: goals (person_id, project_id), events (person_id, occurred_at)
+  int get schemaVersion => 88;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -8457,6 +8517,27 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 71) {
           await m.createTable(appTimeSpendingTable);
+        }
+        if (from < 87) {
+          try {
+            await customStatement(
+              'ALTER TABLE quotes ADD COLUMN type_quote TEXT;',
+            );
+          } catch (_) {}
+        }
+        if (from < 88) {
+          try {
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_goals_person_id ON goals (person_id);',
+            );
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_goals_project_id ON goals (project_id);',
+            );
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_events_person_occurred '
+              'ON events (person_id, occurred_at);',
+            );
+          } catch (_) {}
         }
       },
       beforeOpen: (details) async {

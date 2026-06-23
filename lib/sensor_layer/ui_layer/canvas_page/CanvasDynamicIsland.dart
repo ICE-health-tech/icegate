@@ -134,6 +134,7 @@ class CanvasDynamicIsland extends StatelessWidget {
     if (path == '/change-username') return l10n.island_id_update;
     if (path == '/manual') return l10n.island_protocols;
     if (path == '/sync-engine') return l10n.island_sync_core;
+    if (path == '/system/monitor') return l10n.island_system_monitor;
     if (path.startsWith('/settings')) return l10n.island_settings;
     if (path.startsWith('/widgets/ssh')) return l10n.island_remote_ssh;
 

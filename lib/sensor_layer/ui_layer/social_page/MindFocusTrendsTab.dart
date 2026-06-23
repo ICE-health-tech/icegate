@@ -13,7 +13,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart
 import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindSkillFocusHub.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusDashboard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTrendEditor.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTodosSection.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
@@ -235,7 +235,11 @@ class _MindFocusTrendsTabState extends State<MindFocusTrendsTab> {
             ),
             slivers: [
               SliverToBoxAdapter(
-                child: MindSkillFocusHub(logs: logs),
+                child: MindFocusDashboard(
+                  logs: logs,
+                  trends: _trends,
+                  horizontalPad: hPad,
+                ),
               ),
               if (_trends.isEmpty) ...[
                 SliverToBoxAdapter(

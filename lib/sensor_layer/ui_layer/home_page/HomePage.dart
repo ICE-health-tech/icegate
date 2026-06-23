@@ -46,6 +46,7 @@ import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/EnvironmentalPluginCards.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/HomePageSettings.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:ice_gate/utils/app_log.dart';
 
 /// Avoids re-running heavy bootstrap when returning to Home (same session / same user).
@@ -1744,32 +1745,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMoodIcon(BuildContext context, int score) {
-    final Color color;
+    final color = mindMoodAccent(score);
     final IconData icon;
 
     switch (score) {
       case 1:
-        color = const Color(0xFF8000FF);
         icon = Icons.sentiment_very_dissatisfied_rounded;
         break;
       case 2:
-        color = const Color(0xFF2C3E50);
         icon = Icons.sentiment_dissatisfied_rounded;
         break;
       case 3:
-        color = const Color(0xFFE0E0E0);
         icon = Icons.sentiment_neutral_rounded;
         break;
       case 4:
-        color = const Color(0xFF00FF88);
         icon = Icons.sentiment_satisfied_alt_rounded;
         break;
       case 5:
-        color = const Color(0xFF00FFFF);
         icon = Icons.sentiment_very_satisfied_rounded;
         break;
       default:
-        color = const Color(0xFFE0E0E0);
         icon = Icons.sentiment_neutral_rounded;
     }
 

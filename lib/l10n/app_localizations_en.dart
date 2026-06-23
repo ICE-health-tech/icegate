@@ -33,6 +33,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projects_tile_calendar => 'Calendar';
 
   @override
+  String get projects_tile_sdlc => 'SDLC';
+
+  @override
   String get projects_calendar_projects_created => 'Projects created';
 
   @override
@@ -111,6 +114,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projects_calendar_event_saved => 'Event saved to calendar';
 
   @override
+  String projects_calendar_event_moved(String time) {
+    return 'Moved to $time';
+  }
+
+  @override
   String get projects_calendar_event_deleted => 'Event removed';
 
   @override
@@ -144,7 +152,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projects_calendar_timeline_tap_slot =>
-      'Tap an hour row to add · tap an event to edit or delete';
+      'Tap hour to add · tap event to edit · drag to move (↑↓ + Enter on desktop, hold on mobile)';
+
+  @override
+  String get projects_calendar_drag_hint_desktop =>
+      'Drag to reschedule. Arrow keys adjust time, Enter confirms, Escape cancels.';
+
+  @override
+  String get projects_calendar_drag_hint_mobile =>
+      'Long press, then drag to another time slot.';
+
+  @override
+  String projects_calendar_drag_move_to(String time) {
+    return 'Move to $time';
+  }
 
   @override
   String get projects_calendar_timeline_remove => 'Remove from timeline';
@@ -2044,6 +2065,62 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get mind_dashboard_today => 'Today';
+
+  @override
+  String get mind_dashboard_title => 'My skills';
+
+  @override
+  String get mind_dashboard_weekly_topic => 'Topic this week';
+
+  @override
+  String get mind_dashboard_edit_topic => 'Edit topic this week';
+
+  @override
+  String get mind_dashboard_topic_title => 'Topic title';
+
+  @override
+  String get mind_dashboard_topic_title_hint => 'e.g. Presentation week';
+
+  @override
+  String get mind_dashboard_topic_quote_hint =>
+      'Your weekly focus quote or note';
+
+  @override
+  String get mind_dashboard_topic_saved => 'Weekly topic saved to quotes';
+
+  @override
+  String get mind_dashboard_target_skills => 'Target skills';
+
+  @override
+  String get mind_dashboard_in_progress => 'In progress';
+
+  @override
+  String get mind_dashboard_focus_week => 'Focus this week';
+
+  @override
+  String get mind_dashboard_add_task => '+ Add task';
+
+  @override
+  String get mind_dashboard_no_linked_projects =>
+      'Link target skills to projects to see tasks here.';
+
+  @override
+  String get mind_dashboard_status_done => 'DONE';
+
+  @override
+  String get mind_dashboard_status_waiting => 'WAITING';
+
+  @override
+  String get mind_dashboard_certificates => 'Skill certificates';
+
+  @override
+  String get mind_dashboard_see_all => 'See all';
+
+  @override
+  String get mind_dashboard_verified => 'Verified';
+
+  @override
   String mind_focus_avg_mood(String score) {
     return 'Avg mood this week: $score';
   }
@@ -2829,6 +2906,175 @@ class AppLocalizationsEn extends AppLocalizations {
       'Daily finance on device, email delivery through n8n';
 
   @override
+  String get system_monitor_title => 'System Monitor';
+
+  @override
+  String get system_monitor_subtitle =>
+      'Homelab launcher, dev accounts, DB & sync telemetry — admin only.';
+
+  @override
+  String get system_monitor_denied_title => 'Admin access required';
+
+  @override
+  String get system_monitor_denied_body =>
+      'This page is restricted to accounts with the admin role.';
+
+  @override
+  String system_monitor_denied_roles(String local, String remote) {
+    return 'Local: $local · Remote: $remote';
+  }
+
+  @override
+  String get system_monitor_denied_hint =>
+      'Set role to admin in Supabase → Table Editor → user_accounts (not Auth metadata). Then tap Refresh role.';
+
+  @override
+  String get system_monitor_retry => 'Refresh role';
+
+  @override
+  String get system_monitor_overview_section => 'Overview';
+
+  @override
+  String get system_monitor_db_section => 'Local database';
+
+  @override
+  String get system_monitor_sync_section => 'Sync engine';
+
+  @override
+  String get system_monitor_app_version => 'App version';
+
+  @override
+  String get system_monitor_platform => 'Platform';
+
+  @override
+  String get system_monitor_role => 'Role';
+
+  @override
+  String get system_monitor_auth_status => 'Auth status';
+
+  @override
+  String get system_monitor_supabase_user => 'Supabase user';
+
+  @override
+  String get system_monitor_running_checks => 'Running diagnostics…';
+
+  @override
+  String get system_monitor_healthy => 'Database healthy';
+
+  @override
+  String get system_monitor_issues => 'Issues detected';
+
+  @override
+  String get system_monitor_smoke_test => 'Smoke test';
+
+  @override
+  String get system_monitor_sync_active => 'Sync active';
+
+  @override
+  String get system_monitor_sync_status => 'Last status';
+
+  @override
+  String get system_monitor_uptime => 'Session uptime';
+
+  @override
+  String get system_monitor_open_sync_engine => 'Open Sync Engine';
+
+  @override
+  String get dev_launcher_web_title => 'Web apps (homelab)';
+
+  @override
+  String get dev_launcher_accounts_title => 'Dev & cloud accounts';
+
+  @override
+  String get dev_launcher_accounts_empty =>
+      'Save OPNsense, Supabase, Northflank, n8n logins here. Secrets stay on device.';
+
+  @override
+  String get dev_launcher_add_web => 'Add web app';
+
+  @override
+  String get dev_launcher_add_account => 'Add dev account';
+
+  @override
+  String get dev_launcher_name => 'Name';
+
+  @override
+  String get dev_launcher_url => 'URL';
+
+  @override
+  String get dev_launcher_service => 'Service';
+
+  @override
+  String get dev_launcher_username => 'Username';
+
+  @override
+  String get dev_launcher_password => 'Password / API key';
+
+  @override
+  String get dev_launcher_copied => 'Copied to clipboard';
+
+  @override
+  String get dev_launcher_pin_canvas => 'Pin to Canvas';
+
+  @override
+  String get dev_launcher_pinned => 'Added to Canvas widgets';
+
+  @override
+  String get dev_launcher_add_from_catalog => 'From plugin catalog';
+
+  @override
+  String get dev_launcher_pick_plugin => 'Homelab web plugins';
+
+  @override
+  String get infra_api_section_title => 'Infra API';
+
+  @override
+  String get infra_api_section_subtitle =>
+      'Connect Cloudflare, Tailscale, Northflank. API tokens stay on this device.';
+
+  @override
+  String infra_api_configure(String provider) {
+    return 'Configure $provider';
+  }
+
+  @override
+  String get infra_api_token_label => 'API token / key';
+
+  @override
+  String get infra_api_tailnet_label => 'Tailnet name';
+
+  @override
+  String get infra_api_tailnet_hint => 'Use - for default tailnet';
+
+  @override
+  String get infra_api_clear => 'Remove';
+
+  @override
+  String get infra_api_test => 'Test connection';
+
+  @override
+  String get infra_api_not_configured => 'Not configured';
+
+  @override
+  String get infra_api_connected => 'Connected';
+
+  @override
+  String get infra_api_token_saved => 'Token saved — tap Test';
+
+  @override
+  String infra_api_test_ok(String summary) {
+    return 'OK · $summary';
+  }
+
+  @override
+  String infra_api_test_fail(String message) {
+    return 'Failed · $message';
+  }
+
+  @override
+  String get island_system_monitor => 'SYSTEM MONITOR';
+
+  @override
   String get reports_mail_section_title => 'Email via n8n';
 
   @override
@@ -3315,6 +3561,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get project_task_title_hint => 'Task title';
+
+  @override
+  String get project_sdlc_board_title => 'SDLC board';
+
+  @override
+  String get project_sdlc_open => 'Open SDLC board';
+
+  @override
+  String get project_sdlc_add_task_title => 'Add SDLC task';
+
+  @override
+  String get project_sdlc_move_phase => 'SDLC phase';
+
+  @override
+  String get project_sdlc_default_purpose =>
+      'Define what this project must deliver and why.';
+
+  @override
+  String get project_sdlc_empty =>
+      'No active tasks. Tap + to add one to a phase.';
+
+  @override
+  String get project_sdlc_column_empty => 'No tasks';
+
+  @override
+  String get project_sdlc_add_to_phase => 'Add task to this phase';
+
+  @override
+  String get project_sdlc_drop_here => 'Drop to move here';
+
+  @override
+  String project_sdlc_task_moved(String phase) {
+    return 'Moved to $phase';
+  }
+
+  @override
+  String project_sdlc_phase_stat(int phase, int count) {
+    return 'P$phase: $count';
+  }
+
+  @override
+  String get project_sdlc_phase_planning_title => 'Planning & requirements';
+
+  @override
+  String get project_sdlc_phase_planning_hint => 'SRS, feasibility';
+
+  @override
+  String get project_sdlc_phase_design_title => 'Architecture & design';
+
+  @override
+  String get project_sdlc_phase_design_hint => 'Tech stack, UI';
+
+  @override
+  String get project_sdlc_phase_implementation_title => 'Implementation';
+
+  @override
+  String get project_sdlc_phase_implementation_hint => 'Code, Git, reviews';
+
+  @override
+  String get project_sdlc_phase_testing_title => 'Testing & QA';
+
+  @override
+  String get project_sdlc_phase_testing_hint => 'Unit, integration, UAT';
+
+  @override
+  String get project_sdlc_phase_deployment_title => 'Deployment';
+
+  @override
+  String get project_sdlc_phase_deployment_hint => 'CI/CD, release';
+
+  @override
+  String get project_sdlc_phase_maintenance_title => 'Operations & maintenance';
+
+  @override
+  String get project_sdlc_phase_maintenance_hint => 'Monitor, patches, scale';
+
+  @override
+  String get project_sdlc_no_project =>
+      'Create a project first to open the SDLC board.';
+
+  @override
+  String get project_sdlc_pick_project => 'Choose project for SDLC board';
 
   @override
   String get task_delete_tooltip => 'Delete task';

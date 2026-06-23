@@ -82,6 +82,10 @@ class AuthBlock {
   /// backgrounded (OAuth in Safari); [checkAuthInteractionDeadline] uses this on resume.
   DateTime? _authInteractionDeadline;
 
+  /// Browser OAuth (Google/Apple) often takes >10s; short timeouts falsely show
+  /// `err_auth_timeout` before the deep-link callback arrives.
+  static const Duration _oauthBrowserTimeout = Duration(minutes: 3);
+
   /// Clears the OAuth / login spinner watchdog (call when session is ready).
   void cancelAuthInteractionTimeout() {
     _authInteractionTimer?.cancel();
@@ -106,19 +110,36 @@ class AuthBlock {
     }
     status.value = AuthStatus.unauthenticated;
     error.value = 'err_auth_timeout';
-    debugPrint('⏱️ [AuthBlock] Auth interaction timed out (watchdog)');
+    authLog('⏱️ interaction timed out (watchdog) → err_auth_timeout');
     cancelAuthInteractionTimeout();
   }
 
   /// [signInWithOAuth] returns after opening Safari / system browser; session
-  /// usually arrives later via deep link. Keep [AuthStatus.authenticating] so
-  /// the login spinner stays on until the session arrives or [armAuthInteractionTimeout]
-  /// fires (default 10s): then [error] is `err_auth_timeout` and status becomes
-  /// unauthenticated so buttons unlock.
+  /// usually arrives later via deep link. Keep [AuthStatus.authenticating] until
+  /// the session arrives or [_oauthBrowserTimeout] elapses.
   void _idleLoginUiWhileOAuthContinuesInBrowser() {
     if (Supabase.instance.client.auth.currentSession == null) {
-      armAuthInteractionTimeout(const Duration(seconds: 10));
+      armAuthInteractionTimeout(_oauthBrowserTimeout);
     }
+  }
+
+  /// Called when the app resumes from Safari during OAuth — extend the watchdog
+  /// and complete login if Supabase already has a session from the deep link.
+  void extendAuthInteractionTimeoutOnResume() {
+    if (status.value != AuthStatus.authenticating &&
+        status.value != AuthStatus.registering) {
+      return;
+    }
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      authLog('✅ resume: session ready (${session.user.email ?? session.user.id})');
+      cancelAuthInteractionTimeout();
+      error.value = null;
+      status.value = AuthStatus.authenticated;
+      return;
+    }
+    authLog('⏳ resume: still waiting for OAuth deep link; extending timeout');
+    armAuthInteractionTimeout(_oauthBrowserTimeout);
   }
 
   /// Watchdog: if still [AuthStatus.authenticating] or [AuthStatus.registering]
@@ -752,21 +773,18 @@ class AuthBlock {
   Future<void> signInWithApple() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    armAuthInteractionTimeout(const Duration(seconds: 10));
     appLog("🍎 [AuthBlock] Initiating Apple Sign-In via Supabase...");
 
     try {
       if (Platform.isIOS || Platform.isMacOS) {
-        // Apple nonce handling (required for reliable Supabase verification).
-        // Apple places the SHA256(nonce) into the id_token. Supabase expects the
-        // provided nonce to match the nonce claim inside id_token.
-        final nonce = _createAppleNonce();
+        // Apple nonce: pass SHA256(raw) to Apple, raw nonce to Supabase.
+        final nonces = _createAppleNoncePair();
         final credential = await SignInWithApple.getAppleIDCredential(
           scopes: [
             AppleIDAuthorizationScopes.email,
             AppleIDAuthorizationScopes.fullName,
           ],
-          nonce: nonce,
+          nonce: nonces.hashed,
         );
 
         final idToken = credential.identityToken;
@@ -777,11 +795,12 @@ class AuthBlock {
         await Supabase.instance.client.auth.signInWithIdToken(
           provider: OAuthProvider.apple,
           idToken: idToken,
-          nonce: nonce,
+          nonce: nonces.raw,
         );
       } else {
         // Fallback to OAuth for other platforms
         const redirectTo = 'io.supabase.icegate://login-callback';
+        authLog('🍎 opening Apple OAuth in browser → $redirectTo');
         await Supabase.instance.client.auth.signInWithOAuth(
           OAuthProvider.apple,
           redirectTo: redirectTo,
@@ -832,30 +851,27 @@ class AuthBlock {
     }
   }
 
-  /// Generate a cryptographically secure Apple nonce (SHA256 string).
-  /// Apple will embed this nonce into `id_token` (nonce claim), and Supabase
-  /// will verify it matches the nonce we pass to `signInWithIdToken`.
-  String _createAppleNonce() {
+  /// Raw nonce for Supabase + SHA256 hash for Apple's credential request.
+  ({String raw, String hashed}) _createAppleNoncePair() {
     final random = Random.secure();
     final bytes = List<int>.generate(32, (_) => random.nextInt(256));
     final raw = base64Url.encode(bytes).replaceAll('=', '');
-    final digest = sha256.convert(utf8.encode(raw)).toString();
-    return digest;
+    final hashed = sha256.convert(utf8.encode(raw)).toString();
+    return (raw: raw, hashed: hashed);
   }
 
   /// Google Sign-In with Supabase
   Future<void> signInWithGoogle() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    armAuthInteractionTimeout(const Duration(seconds: 10));
-    appLog("🌐 [AuthBlock] Initiating Google Sign-In via Supabase...");
+    authLog('🌐 Google sign-in started');
 
     try {
       // Single-path OAuth flow (external browser) on all platforms.
       await _signInWithGoogleOAuth();
       return; // Browser flow completes via deep link + onAuthStateChange.
     } catch (e) {
-      appLog("❌ [AuthBlock] Google Sign-In initiation failed: $e");
+      authLog('❌ Google sign-in failed to start: $e');
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
       cancelAuthInteractionTimeout();
@@ -870,12 +886,15 @@ class AuthBlock {
       );
     }
     const redirectTo = 'io.supabase.icegate://login-callback';
+    authLog('redirectTo="$redirectTo" (len=${redirectTo.length})');
+    authLog('supabaseUrl=$supabaseUrl');
     // User preference: go directly to external browser (Safari).
-    await Supabase.instance.client.auth.signInWithOAuth(
+    final launched = await Supabase.instance.client.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: redirectTo,
       authScreenLaunchMode: LaunchMode.externalApplication,
     );
+    authLog('browser launched=$launched — waiting for io.supabase.icegate://login-callback');
     _idleLoginUiWhileOAuthContinuesInBrowser();
   }
 
