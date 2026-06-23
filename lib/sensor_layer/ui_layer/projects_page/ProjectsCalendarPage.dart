@@ -15,8 +15,11 @@ import 'package:ice_gate/data_layer/Services/cloud/GoogleSignInHub.dart';
 import 'package:ice_gate/data_layer/Services/cloud/GoogleApiError.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/CalendarEventEnvironment.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/TaskItem.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/widgets/CalendarDayTimeline.dart';
@@ -112,7 +115,23 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
     setState(() => _sessionHiddenTimelineKeys.add(key));
   }
 
-  void _showTimelineEventSheet(_MergedCalendarEvent event) {
+  void _showTimelineEventSheet(
+    _MergedCalendarEvent event,
+    List<_MergedCalendarEvent> timedDayEvents,
+  ) {
+    final mood = context.read<MindBlock>().latestMoodLog.value?.moodScore;
+    final focusMinutesToday =
+        context.read<FocusBlock>().totalStudyTimeToday.value ~/ 60;
+    final environment = CalendarEventEnvironment.assess(
+      start: event.start,
+      end: event.end,
+      allDay: event.allDay,
+      moodScore: mood,
+      focusMinutesToday: focusMinutesToday,
+      overlappingEvents: _countOverlappingEvents(event, timedDayEvents),
+    );
+    final focusBlock = context.read<FocusBlock>();
+
     showCalendarTimelineEventDetailSheet(
       context,
       title: event.title,
@@ -130,7 +149,32 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
       canDelete: event.canDelete,
       onEdit: event.onEdit,
       onDelete: event.onDelete,
+      environment: environment,
+      onStartFocus: event.allDay
+          ? null
+          : () {
+              final mins = environment.durationMinutes.clamp(5, 120);
+              focusBlock.focusDuration.value = mins;
+              if (context.mounted) context.push('/health/focus');
+            },
     );
+  }
+
+  int _countOverlappingEvents(
+    _MergedCalendarEvent target,
+    List<_MergedCalendarEvent> events,
+  ) {
+    if (target.allDay) return 0;
+    final targetEnd = target.end ?? target.start.add(const Duration(hours: 1));
+    var count = 0;
+    for (final other in events) {
+      if (identical(other, target) || other.allDay) continue;
+      final otherEnd = other.end ?? other.start.add(const Duration(hours: 1));
+      if (target.start.isBefore(otherEnd) && targetEnd.isAfter(other.start)) {
+        count++;
+      }
+    }
+    return count;
   }
 
   String _storedLoggedDescription(CalendarEventSaveResult saved) {
@@ -1158,6 +1202,11 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                   ),
               ];
 
+              final timedDayEvents = [
+                ...mergedCalendarEvents.where((e) => !e.allDay),
+                ...reminderTimelineEvents,
+              ];
+
               final timelineEntries = <CalendarTimelineEntry>[
                 for (final e in mergedCalendarEvents)
                   CalendarTimelineEntry(
@@ -1168,7 +1217,7 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                     color: e.iconColor,
                     subtitle: e.subtitle,
                     onTap: (e.canEdit || e.canDelete)
-                        ? () => _showTimelineEventSheet(e)
+                        ? () => _showTimelineEventSheet(e, timedDayEvents)
                         : null,
                     canMove: e.onMove != null,
                     onMoved: e.onMove,
@@ -1180,7 +1229,7 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                     end: e.end,
                     color: e.iconColor,
                     subtitle: e.subtitle,
-                    onTap: () => _showTimelineEventSheet(e),
+                    onTap: () => _showTimelineEventSheet(e, timedDayEvents),
                     canMove: e.onMove != null,
                     onMoved: e.onMove,
                   ),

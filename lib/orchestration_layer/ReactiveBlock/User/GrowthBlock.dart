@@ -24,9 +24,63 @@ class GrowthBlock {
   bool _alive = false;
   int _initGeneration = 0;
 
+  Timer? _goalsFlushTimer;
+  Timer? _habitsFlushTimer;
+  Timer? _skillsFlushTimer;
+  List<GoalProtocol>? _pendingGoals;
+  List<HabitProtocol>? _pendingHabits;
+  List<SkillProtocol>? _pendingSkills;
+
   void updateGoals(List<GoalProtocol> data) => goals.value = data;
   void updateHabits(List<HabitProtocol> data) => habits.value = data;
   void updateSkills(List<SkillProtocol> data) => skills.value = data;
+
+  static const _streamFlushDelay = Duration(milliseconds: 100);
+
+  void _cancelStreamFlushTimers() {
+    _goalsFlushTimer?.cancel();
+    _habitsFlushTimer?.cancel();
+    _skillsFlushTimer?.cancel();
+    _goalsFlushTimer = null;
+    _habitsFlushTimer = null;
+    _skillsFlushTimer = null;
+  }
+
+  void _scheduleGoalsFlush(int generation) {
+    _goalsFlushTimer?.cancel();
+    _goalsFlushTimer = Timer(_streamFlushDelay, () {
+      if (!_alive || generation != _initGeneration) return;
+      final pending = _pendingGoals;
+      if (pending == null) return;
+      untracked(() {
+        batch(() => updateGoals(pending));
+      });
+    });
+  }
+
+  void _scheduleHabitsFlush(int generation) {
+    _habitsFlushTimer?.cancel();
+    _habitsFlushTimer = Timer(_streamFlushDelay, () {
+      if (!_alive || generation != _initGeneration) return;
+      final pending = _pendingHabits;
+      if (pending == null) return;
+      untracked(() {
+        batch(() => updateHabits(pending));
+      });
+    });
+  }
+
+  void _scheduleSkillsFlush(int generation) {
+    _skillsFlushTimer?.cancel();
+    _skillsFlushTimer = Timer(_streamFlushDelay, () {
+      if (!_alive || generation != _initGeneration) return;
+      final pending = _pendingSkills;
+      if (pending == null) return;
+      untracked(() {
+        batch(() => updateSkills(pending));
+      });
+    });
+  }
 
   void init(GrowthDAO dao, String personId) {
     _dao = dao;
@@ -34,6 +88,10 @@ class GrowthBlock {
     _goalsSubscription?.cancel();
     _habitsSubscription?.cancel();
     _skillsSubscription?.cancel();
+    _cancelStreamFlushTimers();
+    _pendingGoals = null;
+    _pendingHabits = null;
+    _pendingSkills = null;
 
     if (personId.isEmpty) {
       _alive = false;
@@ -49,28 +107,25 @@ class GrowthBlock {
         .debounceTime(const Duration(milliseconds: 300))
         .listen((data) {
       if (!_alive || generation != _initGeneration) return;
-      untracked(() {
-        updateGoals(
-          data
-              .map(
-                (e) => GoalProtocol(
-                  id: e.id,
-                  goalID: e.goalID ?? "",
-                  personID: e.personID ?? "",
-                  title: e.title,
-                  description: e.description,
-                  category: e.category,
-                  priority: e.priority,
-                  status: e.status,
-                  targetDate: e.targetDate,
-                  completionDate: e.completionDate,
-                  progressPercentage: e.progressPercentage,
-                  projectID: e.projectID,
-                ),
-              )
-              .toList(),
-        );
-      });
+      _pendingGoals = data
+          .map(
+            (e) => GoalProtocol(
+              id: e.id,
+              goalID: e.goalID ?? "",
+              personID: e.personID ?? "",
+              title: e.title,
+              description: e.description,
+              category: e.category,
+              priority: e.priority,
+              status: e.status,
+              targetDate: e.targetDate,
+              completionDate: e.completionDate,
+              progressPercentage: e.progressPercentage,
+              projectID: e.projectID,
+            ),
+          )
+          .toList();
+      _scheduleGoalsFlush(generation);
     });
 
     _habitsSubscription = dao
@@ -78,27 +133,24 @@ class GrowthBlock {
         .debounceTime(const Duration(milliseconds: 300))
         .listen((data) {
       if (!_alive || generation != _initGeneration) return;
-      untracked(() {
-        updateHabits(
-          data
-              .map(
-                (e) => HabitProtocol(
-                  id: e.id,
-                  habitID: e.habitID ?? "",
-                  personID: e.personID ?? "",
-                  goalID: e.goalID,
-                  habitName: e.habitName,
-                  description: e.description,
-                  frequency: e.frequency,
-                  frequencyDetails: e.frequencyDetails,
-                  targetCount: e.targetCount,
-                  isActive: e.isActive,
-                  startedDate: e.startedDate,
-                ),
-              )
-              .toList(),
-        );
-      });
+      _pendingHabits = data
+          .map(
+            (e) => HabitProtocol(
+              id: e.id,
+              habitID: e.habitID ?? "",
+              personID: e.personID ?? "",
+              goalID: e.goalID,
+              habitName: e.habitName,
+              description: e.description,
+              frequency: e.frequency,
+              frequencyDetails: e.frequencyDetails,
+              targetCount: e.targetCount,
+              isActive: e.isActive,
+              startedDate: e.startedDate,
+            ),
+          )
+          .toList();
+      _scheduleHabitsFlush(generation);
     });
 
     _skillsSubscription = dao
@@ -106,27 +158,24 @@ class GrowthBlock {
         .debounceTime(const Duration(milliseconds: 300))
         .listen((data) {
       if (!_alive || generation != _initGeneration) return;
-      untracked(() {
-        updateSkills(
-          data
-              .map(
-                (e) => SkillProtocol(
-                  id: e.id,
-                  skillID: e.skillID ?? "",
-                  personID: e.personID ?? "",
-                  skillName: e.skillName,
-                  skillCategory: e.skillCategory,
-                  proficiencyLevel: e.proficiencyLevel.name,
-                  practicePoints: e.point,
-                  description: e.description,
-                  isFeatured: e.isFeatured,
-                  createdAt: e.createdAt,
-                  updatedAt: e.updatedAt,
-                ),
-              )
-              .toList(),
-        );
-      });
+      _pendingSkills = data
+          .map(
+            (e) => SkillProtocol(
+              id: e.id,
+              skillID: e.skillID ?? "",
+              personID: e.personID ?? "",
+              skillName: e.skillName,
+              skillCategory: e.skillCategory,
+              proficiencyLevel: e.proficiencyLevel.name,
+              practicePoints: e.point,
+              description: e.description,
+              isFeatured: e.isFeatured,
+              createdAt: e.createdAt,
+              updatedAt: e.updatedAt,
+            ),
+          )
+          .toList();
+      _scheduleSkillsFlush(generation);
     });
 
     unawaited(_bootstrapPersonSkills(generation));
@@ -537,14 +586,14 @@ class GrowthBlock {
   }
 
 
-  Future<void> createNewTask(
+  Future<String?> createNewTask(
     String title,
     String description, {
     String? projectID,
     String category = 'project',
   }) async {
-    if (_personId.isEmpty) return;
-    await _dao.createGoal(
+    if (_personId.isEmpty) return null;
+    return _dao.createGoal(
       GoalsTableCompanion(
         personID: Value(_personId),
         title: Value(title),
@@ -577,6 +626,10 @@ class GrowthBlock {
     );
   }
 
+  Future<void> updateGoalProjectId(String id, String? projectId) async {
+    await _dao.updateGoalProjectIdByUuid(id, projectId);
+  }
+
   /// Push local skills to Supabase, then pull (Drift watch stream updates UI).
   Future<void> syncSkills() async {
     if (_personId.isEmpty) return;
@@ -595,6 +648,10 @@ class GrowthBlock {
   void dispose() {
     _alive = false;
     _initGeneration++;
+    _cancelStreamFlushTimers();
+    _pendingGoals = null;
+    _pendingHabits = null;
+    _pendingSkills = null;
     _goalsSubscription?.cancel();
     _goalsSubscription = null;
     _habitsSubscription?.cancel();

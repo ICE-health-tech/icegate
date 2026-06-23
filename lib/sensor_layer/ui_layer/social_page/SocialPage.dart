@@ -8,17 +8,13 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBu
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
 
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryRail.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementTimeline.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/DomainAnalysisChart.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementsTabPanel.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 
@@ -363,7 +359,6 @@ class _SocialPageState extends State<SocialPage>
   Widget _buildAchievementsDashboard(BuildContext context) {
     return Watch((context) {
       final achievementsDAO = context.read<AchievementsDAO>();
-      final mindBlock = context.read<MindBlock>();
       final personBlock = context.read<PersonBlock>();
       final currentPersonId = personBlock.currentPersonID.value ?? "";
 
@@ -375,92 +370,15 @@ class _SocialPageState extends State<SocialPage>
           }
 
           final achievements = snapshot.data!;
-          final feats = achievementLoggedFeats(achievements);
           final l10n = AppLocalizations.of(context)!;
 
-          return StreamBuilder<List<MindLogData>>(
-            stream: mindBlock.watchMindLogsRange(currentPersonId, 60),
-            builder: (context, logSnap) {
-              final mindLogs = logSnap.data ?? [];
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    flex: AchievementStoryRail.recordColumnFlex,
-                    child: CustomScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      slivers: [
-                        const SliverToBoxAdapter(child: SizedBox(height: 4)),
-                        if (feats.isEmpty && achievements.isEmpty && mindLogs.isEmpty)
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: _buildEmptyState(
-                              context,
-                              l10n.social_no_achievements_msg,
-                              Icons.emoji_events_outlined,
-                            ),
-                          )
-                        else ...[
-                          if (feats.isNotEmpty ||
-                              countSkillSessionsInRange(mindLogs) > 0) ...[
-                            SliverToBoxAdapter(
-                              child: DomainAnalysisChart(
-                                achievements: feats,
-                                mindLogs: mindLogs,
-                              ),
-                            ),
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 10, 12, 2),
-                            child: Text(
-                              l10n.achievement_feats_section.toUpperCase(),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelMedium
-                                  ?.copyWith(
-                                letterSpacing: 1.1,
-                                fontWeight: FontWeight.w800,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SliverToBoxAdapter(
-                          child: AchievementTimeline(achievements: feats),
-                        ),
-                      ] else
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 24, 12, 8),
-                            child: Text(
-                              l10n.social_no_achievements_msg,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 96)),
-                    ],
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: AchievementStoryRail.imageColumnFlex,
-                child: AchievementStoryRail(achievements: achievements),
-              ),
-            ],
-          );
-            },
+          return AchievementsTabPanel(
+            achievements: achievements,
+            emptyState: _buildEmptyState(
+              context,
+              l10n.social_no_achievements_msg,
+              Icons.emoji_events_outlined,
+            ),
           );
         },
       );

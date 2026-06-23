@@ -280,6 +280,7 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
         moodPost: Value(r['mood_post'] as String?),
         impactDescWho: (r['impact_desc_who'] as String?) ?? '',
         impactDescHow: (r['impact_desc_how'] as String?) ?? '',
+        projectID: Value(r['project_id'] as String?),
         createdAt: Value(
           r['created_at'] != null
               ? DateTime.parse(r['created_at'] as String)
@@ -322,6 +323,7 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
     payload['mood_post'] = entry.moodPost;
     payload['impact_desc_who'] = entry.impactDescWho;
     payload['impact_desc_how'] = entry.impactDescHow;
+    payload['project_id'] = entry.projectID;
     payload['created_at'] = entry.createdAt.toIso8601String();
 
     await db.pushToSupabase(table: 'achievements', payload: payload);
@@ -351,6 +353,7 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
     required String title,
     required String localImagePath,
     required DateTime createdAt,
+    String? projectId,
   }) async {
     await into(achievementsTable).insertOnConflictUpdate(
       AchievementsTableCompanion(
@@ -358,6 +361,7 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
         personID: Value(personId),
         title: Value(title),
         localImagePath: Value(localImagePath),
+        projectID: projectId != null ? Value(projectId) : const Value.absent(),
         domain: const Value('project'),
         meaningScore: const Value(6),
         impactScore: const Value(5),
@@ -645,6 +649,22 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
       GoalsTableCompanion(
         title: Value(title),
         description: Value(description),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    await _pushGoalById(id);
+  }
+
+  Future<void> updateGoalProjectIdByUuid(String id, String? projectRef) async {
+    String? normalized;
+    if (projectRef != null && projectRef.isNotEmpty) {
+      normalized = await _resolveCloudProjectId(projectRef);
+    }
+    await (update(goalsTable)..where((t) => t.id.equals(id))).write(
+      GoalsTableCompanion(
+        projectID: projectRef == null || projectRef.isEmpty
+            ? const Value(null)
+            : Value(normalized ?? projectRef),
         updatedAt: Value(DateTime.now().toUtc()),
       ),
     );

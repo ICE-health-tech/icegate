@@ -72,6 +72,10 @@ abstract final class MindActivityTokens {
         return l10n.act_cinema;
       case 'act_walking':
         return l10n.act_walking;
+      case 'focus:todos_streak':
+        return l10n.act_focus_todos_streak;
+      case 'focus:todos_complete':
+        return l10n.act_focus_todos_complete;
       default:
         return key;
     }

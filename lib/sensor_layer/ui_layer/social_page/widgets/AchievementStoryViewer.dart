@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementFeedUtils.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryImage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/DomainAnalysisChart.dart';
@@ -10,11 +14,13 @@ import 'package:intl/intl.dart';
 class AchievementStoryViewer extends StatefulWidget {
   final List<AchievementData> stories;
   final int initialIndex;
+  final List<ProjectProtocol> projects;
 
   const AchievementStoryViewer({
     super.key,
     required this.stories,
     this.initialIndex = 0,
+    this.projects = const [],
   });
 
   @override
@@ -59,6 +65,7 @@ class _AchievementStoryViewerState extends State<AchievementStoryViewer> {
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -72,6 +79,12 @@ class _AchievementStoryViewerState extends State<AchievementStoryViewer> {
             itemBuilder: (context, i) {
               final story = widget.stories[i];
               final ring = achievementDomainRingColor(story.domain);
+              final projectLabel =
+                  AchievementFeedUtils.projectLabel(story, widget.projects);
+              final routeProjectId = AchievementFeedUtils.routeProjectId(
+                story.projectID,
+                widget.projects,
+              );
               return Stack(
                 fit: StackFit.expand,
                 children: [
@@ -155,6 +168,41 @@ class _AchievementStoryViewerState extends State<AchievementStoryViewer> {
                             fontSize: 12,
                           ),
                         ),
+                        if (story.moodPost != null &&
+                            story.moodPost!.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            story.moodPost!,
+                            style: const TextStyle(fontSize: 22),
+                          ),
+                        ],
+                        if (projectLabel.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            projectLabel,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                        if (routeProjectId != null) ...[
+                          const SizedBox(height: 12),
+                          FilledButton.tonalIcon(
+                            style: FilledButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor:
+                                  Colors.white.withValues(alpha: 0.14),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              context.push('/projects/$routeProjectId');
+                            },
+                            icon: const Icon(Icons.folder_open_outlined, size: 18),
+                            label: Text(l10n.achievement_open_project),
+                          ),
+                        ],
                       ],
                     ),
                   ),

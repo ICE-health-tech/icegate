@@ -1768,6 +1768,7 @@ class AchievementsTable extends Table {
   TextColumn get moodPost => text().nullable().named('mood_post')();
   TextColumn get impactDescWho => text().named('impact_desc_who')();
   TextColumn get impactDescHow => text().named('impact_desc_how')();
+  TextColumn get projectID => text().nullable().named('project_id')();
   /// Offline story image (relative path under app documents).
   TextColumn get localImagePath =>
       text().nullable().named('local_image_path')();
@@ -7775,7 +7776,8 @@ class AppDatabase extends _$AppDatabase {
   // v86 → simplify events: id, name, description, url_image, url_video, FK person_id
   // v87 → quotes.type_quote (e.g. focus_week for Mind weekly topic)
   // v88 → query indexes: goals (person_id, project_id), events (person_id, occurred_at)
-  int get schemaVersion => 88;
+  // v89 → achievements.project_id (link story/feats to projects)
+  int get schemaVersion => 89;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -8536,6 +8538,13 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               'CREATE INDEX IF NOT EXISTS idx_events_person_occurred '
               'ON events (person_id, occurred_at);',
+            );
+          } catch (_) {}
+        }
+        if (from < 89) {
+          try {
+            await customStatement(
+              'ALTER TABLE achievements ADD COLUMN project_id TEXT;',
             );
           } catch (_) {}
         }

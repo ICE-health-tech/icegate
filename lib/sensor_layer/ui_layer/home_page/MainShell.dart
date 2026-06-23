@@ -23,6 +23,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/user_page/AnalysisDashboardPage.d
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightInputPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/HubLoader.dart';
 import 'package:provider/provider.dart';
 
 class MainShell extends StatefulWidget {
@@ -180,7 +181,7 @@ class _MainShellState extends State<MainShell> {
       ),
       body: Stack(
         children: [
-          widget.child,
+          HubRouteGate(child: widget.child),
           if (!shouldHideAppBar)
             Positioned(
               top: 0,

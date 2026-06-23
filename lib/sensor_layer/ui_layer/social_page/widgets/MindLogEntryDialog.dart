@@ -6,6 +6,7 @@ import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/ProjectJournalArchive.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodSelector.dart';
@@ -19,15 +20,43 @@ import 'package:ice_gate/utils/journal_media.dart';
 import 'package:ice_gate/utils/sync_device.dart';
 
 class MindLogEntryDialog extends StatefulWidget {
-  const MindLogEntryDialog({super.key});
+  const MindLogEntryDialog({
+    super.key,
+    this.initialMood,
+    this.initialActivities,
+    this.focusAreaName,
+    this.projectId,
+    this.projectName,
+  });
 
-  static Future<void> show(BuildContext context) {
+  final int? initialMood;
+  final List<String>? initialActivities;
+  final String? focusAreaName;
+  final String? projectId;
+  final String? projectName;
+
+  static Future<void> show(
+    BuildContext context, {
+    int? initialMood,
+    List<String>? initialActivities,
+    String? focusAreaName,
+    String? projectId,
+    String? projectName,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const MindLogEntryDialog(),
+      builder: (context) => MindLogEntryDialog(
+        initialMood: initialMood,
+        initialActivities: initialActivities == null
+            ? null
+            : List<String>.from(initialActivities),
+        focusAreaName: focusAreaName,
+        projectId: projectId,
+        projectName: projectName,
+      ),
     );
   }
 
@@ -36,11 +65,28 @@ class MindLogEntryDialog extends StatefulWidget {
 }
 
 class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
-  int _selectedMood = 3; // Meh
-  final List<String> _selectedActivities = [];
+  late int _selectedMood;
+  late final List<String> _selectedActivities;
   final _noteController = TextEditingController();
   String? _attachedImagePath;
   bool _isPickingImage = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMood = widget.initialMood ?? 3;
+    _selectedActivities = List<String>.from(widget.initialActivities ?? []);
+    final projectId = widget.projectId?.trim();
+    if (projectId != null && projectId.isNotEmpty) {
+      final token = 'project:$projectId';
+      if (!_selectedActivities.contains(token)) {
+        _selectedActivities.add(token);
+      }
+      if (!_selectedActivities.any((a) => a.startsWith('act_'))) {
+        _selectedActivities.add('act_deep_work');
+      }
+    }
+  }
 
   void _onActivityToggled(String name) {
     setState(() {
@@ -234,18 +280,40 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
           localPath,
           personId: personId,
         );
+        final projectId = widget.projectId?.trim();
+        final isProjectLog = projectId != null && projectId.isNotEmpty;
+        final projectName = widget.projectName?.trim();
 
         await context.read<ProjectNoteDAO>().insertNote(
-          title: "$emoji $activitiesStr",
+          title: isProjectLog
+              ? '$emoji ${projectName?.isNotEmpty == true ? projectName! : l10n.project_journal_entry}'
+              : '$emoji $activitiesStr',
           content: _journalContent(emoji),
           personID: personId,
           tenantID: tenantId,
-          category: 'social',
+          projectID: isProjectLog ? projectId : null,
+          category: isProjectLog ? 'project_log' : 'social',
           mood: emoji,
           localPath: localPath,
           remotePath: remotePath,
           device: localPath != null ? SyncDevice.current() : null,
         );
+
+        if (isProjectLog && context.mounted) {
+          await ProjectJournalArchive.syncFromProjectLog(
+            context: context,
+            personId: personId,
+            projectName: projectName?.isNotEmpty == true
+                ? projectName!
+                : l10n.project_journal_entry,
+            projectId: projectId,
+            moodScore: _selectedMood,
+            description: _noteController.text.trim().isEmpty
+                ? null
+                : _noteController.text.trim(),
+            imagePath: localPath,
+          );
+        }
       } catch (e) {
         appLog('MindLogEntryDialog: journal mirror failed: $e');
       }
@@ -330,6 +398,34 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                     color: colorScheme.onSurface,
                   ),
                 ),
+                if (widget.projectName != null &&
+                    widget.projectName!.trim().isNotEmpty &&
+                    widget.projectId != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!.project_log_context(
+                      widget.projectName!.trim(),
+                    ),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.primary.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ] else if (widget.focusAreaName != null &&
+                    widget.focusAreaName!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!.mind_focus_log_for_area(
+                      widget.focusAreaName!.trim(),
+                    ),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.primary.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 MoodSelector(
                   selectedMood: _selectedMood,

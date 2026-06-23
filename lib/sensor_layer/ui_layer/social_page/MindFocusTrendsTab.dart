@@ -14,6 +14,7 @@ import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusDashboard.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusHistorySheet.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTrendEditor.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTodosSection.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
@@ -297,6 +298,15 @@ class _MindFocusTrendsTabState extends State<MindFocusTrendsTab> {
                           style: textTheme.labelLarge?.copyWith(
                             color: accent,
                             fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.history_rounded, size: 20),
+                          tooltip: l10n.mind_focus_history,
+                          onPressed: () => MindFocusHistorySheet.show(
+                            context,
+                            trends: _trends,
+                            logs: logs,
                           ),
                         ),
                       ],
@@ -694,6 +704,15 @@ class _FocusDetailPanel extends StatelessWidget {
     required this.logMatches,
   });
 
+  void _openFocusLog(BuildContext context) {
+    MindLogEntryDialog.show(
+      context,
+      initialMood: 5,
+      initialActivities: List<String>.from(trend.activityTokens),
+      focusAreaName: trend.name,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -763,14 +782,26 @@ class _FocusDetailPanel extends StatelessWidget {
             );
           }),
         const SizedBox(height: 12),
-        MindFocusTodosSection(trend: trend),
-        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
-          child: FilledButton.tonal(
-            onPressed: () => MindLogEntryDialog.show(context),
-            child: Text(l10n.mind_focus_log_now),
+          child: FilledButton.icon(
+            onPressed: () => _openFocusLog(context),
+            icon: const Icon(Icons.edit_note_rounded, size: 20),
+            label: Text(l10n.mind_focus_log_now),
+            style: FilledButton.styleFrom(
+              backgroundColor: trend.color,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(46),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
           ),
+        ),
+        const SizedBox(height: 14),
+        MindFocusTodosSection(
+          trend: trend,
+          onLogTap: () => _openFocusLog(context),
         ),
       ],
     );

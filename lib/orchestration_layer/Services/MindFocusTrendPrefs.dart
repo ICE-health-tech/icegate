@@ -11,6 +11,7 @@ class MindFocusTrend {
   final List<String> activityTokens;
   final int weeklyGoal;
   final int colorArgb;
+  final String? linkedProjectId;
 
   const MindFocusTrend({
     required this.id,
@@ -19,6 +20,7 @@ class MindFocusTrend {
     required this.activityTokens,
     this.weeklyGoal = 3,
     this.colorArgb = 0xFF42A5F5,
+    this.linkedProjectId,
   });
 
   /// Icons users can pick in [MindFocusTrendEditor] — must stay const for release builds.
@@ -50,6 +52,8 @@ class MindFocusTrend {
     'activities': activityTokens,
     'weeklyGoal': weeklyGoal,
     'color': colorArgb,
+    if (linkedProjectId != null && linkedProjectId!.isNotEmpty)
+      'linkedProjectId': linkedProjectId,
   };
 
   factory MindFocusTrend.fromJson(Map<String, dynamic> json) {
@@ -64,6 +68,7 @@ class MindFocusTrend {
       activityTokens: acts,
       weeklyGoal: json['weeklyGoal'] as int? ?? 3,
       colorArgb: json['color'] as int? ?? 0xFF42A5F5,
+      linkedProjectId: json['linkedProjectId'] as String?,
     );
   }
 
@@ -74,6 +79,7 @@ class MindFocusTrend {
     List<String>? activityTokens,
     int? weeklyGoal,
     int? colorArgb,
+    String? linkedProjectId,
   }) {
     return MindFocusTrend(
       id: id ?? this.id,
@@ -82,6 +88,7 @@ class MindFocusTrend {
       activityTokens: activityTokens ?? this.activityTokens,
       weeklyGoal: weeklyGoal ?? this.weeklyGoal,
       colorArgb: colorArgb ?? this.colorArgb,
+      linkedProjectId: linkedProjectId ?? this.linkedProjectId,
     );
   }
 }
@@ -130,4 +137,105 @@ abstract final class MindFocusTrendPrefs {
       await prefs.setString(key, trendId);
     }
   }
+}
+
+/// Per-day focus to-do caps and completion tracking (local prefs).
+abstract final class MindFocusDailyTodosPrefs {
+  MindFocusDailyTodosPrefs._();
+
+  static const minAddsPerDay = 2;
+  static const maxAddsPerDay = 5;
+  static const moodRewardMinCompletions = 3;
+
+  static String _dateSuffix(DateTime day) {
+    final y = day.year.toString().padLeft(4, '0');
+    final m = day.month.toString().padLeft(2, '0');
+    final d = day.day.toString().padLeft(2, '0');
+    return '$y$m$d';
+  }
+
+  static String _prefix(String personId, String trendId, DateTime day) =>
+      'mind_focus_daily_${personId}_${trendId}_${_dateSuffix(day)}';
+
+  static Future<MindFocusDailyTodosSnapshot> load({
+    required String personId,
+    required String trendId,
+    DateTime? day,
+  }) async {
+    if (personId.isEmpty || trendId.isEmpty) {
+      return const MindFocusDailyTodosSnapshot();
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final localDay = day ?? DateTime.now();
+    final prefix = _prefix(personId, trendId, localDay);
+    final ids = prefs.getStringList('${prefix}_ids') ?? const [];
+    return MindFocusDailyTodosSnapshot(
+      taskIds: ids,
+      completedCount: prefs.getInt('${prefix}_done') ?? 0,
+      moodAwarded: prefs.getBool('${prefix}_mood6') ?? false,
+    );
+  }
+
+  static bool canAdd(MindFocusDailyTodosSnapshot snap) =>
+      snap.addedCount < maxAddsPerDay;
+
+  static Future<void> registerAddedTask({
+    required String personId,
+    required String trendId,
+    required String taskId,
+  }) async {
+    if (personId.isEmpty || trendId.isEmpty || taskId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final prefix = _prefix(personId, trendId, DateTime.now());
+    final key = '${prefix}_ids';
+    final ids = <String>[
+      ...?prefs.getStringList(key),
+      taskId,
+    ];
+    await prefs.setStringList(key, ids);
+  }
+
+  static Future<int> registerCompletion({
+    required String personId,
+    required String trendId,
+  }) async {
+    if (personId.isEmpty || trendId.isEmpty) return 0;
+    final prefs = await SharedPreferences.getInstance();
+    final prefix = _prefix(personId, trendId, DateTime.now());
+    final key = '${prefix}_done';
+    final next = (prefs.getInt(key) ?? 0) + 1;
+    await prefs.setInt(key, next);
+    return next;
+  }
+
+  static Future<void> markMoodAwarded({
+    required String personId,
+    required String trendId,
+  }) async {
+    if (personId.isEmpty || trendId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final prefix = _prefix(personId, trendId, DateTime.now());
+    await prefs.setBool('${prefix}_mood6', true);
+  }
+}
+
+class MindFocusDailyTodosSnapshot {
+  const MindFocusDailyTodosSnapshot({
+    this.taskIds = const [],
+    this.completedCount = 0,
+    this.moodAwarded = false,
+  });
+
+  final List<String> taskIds;
+  final int completedCount;
+  final bool moodAwarded;
+
+  int get addedCount => taskIds.length;
+
+  bool get canEarnMood =>
+      addedCount >= MindFocusDailyTodosPrefs.minAddsPerDay && !moodAwarded;
+
+  bool get shouldAwardMoodNow =>
+      canEarnMood &&
+      completedCount > MindFocusDailyTodosPrefs.moodRewardMinCompletions;
 }

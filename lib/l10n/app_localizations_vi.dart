@@ -129,6 +129,66 @@ class AppLocalizationsVi extends AppLocalizations {
   String get projects_calendar_delete_event => 'Xóa sự kiện';
 
   @override
+  String get projects_calendar_env_title => 'Kiểm tra bối cảnh';
+
+  @override
+  String get projects_calendar_env_ready =>
+      'Phù hợp — bạn có thể hoàn thành ngay.';
+
+  @override
+  String get projects_calendar_env_caution =>
+      'Có thể làm, nhưng vài yếu tố cần lưu ý.';
+
+  @override
+  String get projects_calendar_env_not_ready =>
+      'Khó hoàn thành lúc này — cân nhắc đổi giờ.';
+
+  @override
+  String projects_calendar_env_score(int score) {
+    return 'Sẵn sàng $score%';
+  }
+
+  @override
+  String get projects_calendar_env_start_focus => 'Bắt đầu phiên tập trung';
+
+  @override
+  String get projects_calendar_env_past => 'Khung giờ này đã qua';
+
+  @override
+  String get projects_calendar_env_too_early => 'Còn hơn 2 giờ nữa mới tới';
+
+  @override
+  String get projects_calendar_env_starting_soon => 'Sắp bắt đầu trong 15 phút';
+
+  @override
+  String get projects_calendar_env_low_mood => 'Tâm trạng gần đây thấp';
+
+  @override
+  String get projects_calendar_env_neutral_mood => 'Tâm trạng trung tính';
+
+  @override
+  String get projects_calendar_env_good_mood => 'Tâm trạng hỗ trợ tập trung';
+
+  @override
+  String get projects_calendar_env_no_mood => 'Chưa ghi tâm trạng hôm nay';
+
+  @override
+  String get projects_calendar_env_heavy_overlap => 'Trùng lịch nhiều';
+
+  @override
+  String get projects_calendar_env_some_overlap => 'Có sự kiện trùng giờ';
+
+  @override
+  String get projects_calendar_env_focus_fatigue =>
+      'Đã tập trung 2+ giờ hôm nay';
+
+  @override
+  String get projects_calendar_env_low_sleep => 'Ngủ ít đêm qua';
+
+  @override
+  String get projects_calendar_env_good_sleep => 'Ngủ đủ';
+
+  @override
   String get projects_calendar_edit_reminder => 'Sửa nhắc nhở';
 
   @override
@@ -320,6 +380,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get projects_tile_pomodoro => 'Cà chua';
+
+  @override
+  String get projects_tile_canvas => 'Bảng ghép';
 
   @override
   String get projects_tile_social_blocker => 'Chặn mạng xã hội';
@@ -1867,6 +1930,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get achievement_story_save_failed => 'Không lưu được ảnh.';
 
   @override
+  String get achievement_filter_label => 'Lọc';
+
+  @override
+  String get achievement_filter_all_months => 'Mọi tháng';
+
+  @override
+  String get achievement_filter_all_projects => 'Mọi dự án';
+
+  @override
+  String get achievement_open_project => 'Mở dự án';
+
+  @override
   String get social_delete_feat_title => 'Xóa thành tích';
 
   @override
@@ -2004,6 +2079,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mind_focus_edit => 'Sửa khu vực';
 
   @override
+  String get mind_focus_save => 'Lưu khu vực';
+
+  @override
   String get mind_focus_weekly_goal => 'Số nhật ký / tuần (mục tiêu)';
 
   @override
@@ -2045,6 +2123,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mind_focus_log_now => 'Ghi nhật ký';
+
+  @override
+  String mind_focus_log_for_area(String name) {
+    return 'Khu vực: $name';
+  }
 
   @override
   String get mind_focus_todos => 'Việc cần làm';
@@ -2121,6 +2204,77 @@ class AppLocalizationsVi extends AppLocalizations {
   String mind_focus_avg_mood(String score) {
     return 'Tâm trạng TB tuần này: $score';
   }
+
+  @override
+  String get mind_focus_history => 'Lịch sử tuần';
+
+  @override
+  String get mind_focus_history_title => 'Lịch sử khu vực tập trung';
+
+  @override
+  String mind_focus_history_week_range(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String mind_focus_history_logs(int count, int goal) {
+    return '$count / $goal nhật ký';
+  }
+
+  @override
+  String get mind_focus_history_no_logs => 'Chưa có nhật ký';
+
+  @override
+  String get mind_focus_linked_project => 'Dự án liên kết';
+
+  @override
+  String get mind_focus_linked_project_none => 'Không (mọi dự án)';
+
+  @override
+  String mind_focus_linked_project_label(String name) {
+    return 'Dự án: $name';
+  }
+
+  @override
+  String get mind_focus_add_task_title => 'Thêm việc';
+
+  @override
+  String get mind_focus_add_task_name => 'Tên việc';
+
+  @override
+  String get mind_focus_add_task_desc => 'Mô tả (tuỳ chọn)';
+
+  @override
+  String get mind_focus_add_task_confirm => 'Thêm';
+
+  @override
+  String get mind_focus_add_task_need_project =>
+      'Tạo dự án trước, rồi thêm việc ở đây.';
+
+  @override
+  String get mind_focus_assign_project => 'Dự án';
+
+  @override
+  String get mind_focus_all_tasks_mood =>
+      'Hoàn thành mọi việc — đã ghi tâm trạng +6.';
+
+  @override
+  String mind_focus_daily_cap(int max) {
+    return 'Giới hạn: $max việc mỗi ngày trong khu vực này.';
+  }
+
+  @override
+  String mind_focus_daily_progress(int added, int max, int done) {
+    return 'Hôm nay $added/$max · xong $done';
+  }
+
+  @override
+  String get mind_focus_daily_hint =>
+      'Thêm 2–5 việc mỗi ngày. Hoàn thành hơn 3 việc để nhận tâm trạng +6.';
+
+  @override
+  String get mind_focus_special_mood =>
+      'Hơn 3 việc xong — đã ghi tâm trạng +6!';
 
   @override
   String get mind_skills_session_title => 'Phiên kỹ năng';
@@ -2481,6 +2635,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get act_walking => 'Đi dạo';
+
+  @override
+  String get act_focus_todos_streak => 'Hoàn thành 4+ việc tập trung';
+
+  @override
+  String get act_focus_todos_complete => 'Hoàn thành việc tập trung';
 
   @override
   String get act_logging => 'Ghi chép';
@@ -3401,6 +3561,39 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get project_notes_label => 'Ghi chú';
+
+  @override
+  String get project_journal_label => 'Nhật ký';
+
+  @override
+  String get project_no_journal =>
+      'Chưa có nhật ký. Nhấn + để ghi mood và tiến độ.';
+
+  @override
+  String get project_journal_entry => 'Nhật ký dự án';
+
+  @override
+  String project_log_context(String name) {
+    return 'Dự án: $name';
+  }
+
+  @override
+  String get project_journal_mood_label => 'Tâm trạng';
+
+  @override
+  String get project_journal_desc_label => 'Mô tả';
+
+  @override
+  String get project_journal_save => 'Lưu nhật ký';
+
+  @override
+  String get project_journal_composer_hint =>
+      'Chạm để ghi lại cảm giác khi làm dự án.';
+
+  @override
+  String project_journal_count(int count) {
+    return '$count';
+  }
 
   @override
   String get project_no_notes => 'Chưa có ghi chú nào. Nhấn + để tạo.';

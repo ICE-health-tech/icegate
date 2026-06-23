@@ -32704,6 +32704,17 @@ class $AchievementsTableTable extends AchievementsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _projectIDMeta = const VerificationMeta(
+    'projectID',
+  );
+  @override
+  late final GeneratedColumn<String> projectID = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _localImagePathMeta = const VerificationMeta(
     'localImagePath',
   );
@@ -32749,6 +32760,7 @@ class $AchievementsTableTable extends AchievementsTable
     moodPost,
     impactDescWho,
     impactDescHow,
+    projectID,
     localImagePath,
     createdAt,
     updatedAt,
@@ -32859,6 +32871,12 @@ class $AchievementsTableTable extends AchievementsTable
     } else if (isInserting) {
       context.missing(_impactDescHowMeta);
     }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIDMeta,
+        projectID.isAcceptableOrUnknown(data['project_id']!, _projectIDMeta),
+      );
+    }
     if (data.containsKey('local_image_path')) {
       context.handle(
         _localImagePathMeta,
@@ -32925,6 +32943,10 @@ class $AchievementsTableTable extends AchievementsTable
         DriftSqlType.string,
         data['${effectivePrefix}impact_desc_how'],
       )!,
+      projectID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      ),
       localImagePath: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}local_image_path'],
@@ -32968,6 +32990,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
   final String? moodPost;
   final String impactDescWho;
   final String impactDescHow;
+  final String? projectID;
 
   /// Offline story image (relative path under app documents).
   final String? localImagePath;
@@ -32986,6 +33009,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     this.moodPost,
     required this.impactDescWho,
     required this.impactDescHow,
+    this.projectID,
     this.localImagePath,
     required this.createdAt,
     required this.updatedAt,
@@ -33015,6 +33039,9 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     }
     map['impact_desc_who'] = Variable<String>(impactDescWho);
     map['impact_desc_how'] = Variable<String>(impactDescHow);
+    if (!nullToAbsent || projectID != null) {
+      map['project_id'] = Variable<String>(projectID);
+    }
     if (!nullToAbsent || localImagePath != null) {
       map['local_image_path'] = Variable<String>(localImagePath);
     }
@@ -33055,6 +33082,9 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
           : Value(moodPost),
       impactDescWho: Value(impactDescWho),
       impactDescHow: Value(impactDescHow),
+      projectID: projectID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(projectID),
       localImagePath: localImagePath == null && nullToAbsent
           ? const Value.absent()
           : Value(localImagePath),
@@ -33081,6 +33111,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
       moodPost: serializer.fromJson<String?>(json['moodPost']),
       impactDescWho: serializer.fromJson<String>(json['impactDescWho']),
       impactDescHow: serializer.fromJson<String>(json['impactDescHow']),
+      projectID: serializer.fromJson<String?>(json['projectID']),
       localImagePath: serializer.fromJson<String?>(json['localImagePath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -33102,6 +33133,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
       'moodPost': serializer.toJson<String?>(moodPost),
       'impactDescWho': serializer.toJson<String>(impactDescWho),
       'impactDescHow': serializer.toJson<String>(impactDescHow),
+      'projectID': serializer.toJson<String?>(projectID),
       'localImagePath': serializer.toJson<String?>(localImagePath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -33121,6 +33153,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     Value<String?> moodPost = const Value.absent(),
     String? impactDescWho,
     String? impactDescHow,
+    Value<String?> projectID = const Value.absent(),
     Value<String?> localImagePath = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -33137,6 +33170,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     moodPost: moodPost.present ? moodPost.value : this.moodPost,
     impactDescWho: impactDescWho ?? this.impactDescWho,
     impactDescHow: impactDescHow ?? this.impactDescHow,
+    projectID: projectID.present ? projectID.value : this.projectID,
     localImagePath: localImagePath.present
         ? localImagePath.value
         : this.localImagePath,
@@ -33167,6 +33201,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
       impactDescHow: data.impactDescHow.present
           ? data.impactDescHow.value
           : this.impactDescHow,
+      projectID: data.projectID.present ? data.projectID.value : this.projectID,
       localImagePath: data.localImagePath.present
           ? data.localImagePath.value
           : this.localImagePath,
@@ -33190,6 +33225,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
           ..write('moodPost: $moodPost, ')
           ..write('impactDescWho: $impactDescWho, ')
           ..write('impactDescHow: $impactDescHow, ')
+          ..write('projectID: $projectID, ')
           ..write('localImagePath: $localImagePath, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -33211,6 +33247,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     moodPost,
     impactDescWho,
     impactDescHow,
+    projectID,
     localImagePath,
     createdAt,
     updatedAt,
@@ -33231,6 +33268,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
           other.moodPost == this.moodPost &&
           other.impactDescWho == this.impactDescWho &&
           other.impactDescHow == this.impactDescHow &&
+          other.projectID == this.projectID &&
           other.localImagePath == this.localImagePath &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -33249,6 +33287,7 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
   final Value<String?> moodPost;
   final Value<String> impactDescWho;
   final Value<String> impactDescHow;
+  final Value<String?> projectID;
   final Value<String?> localImagePath;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -33266,6 +33305,7 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     this.moodPost = const Value.absent(),
     this.impactDescWho = const Value.absent(),
     this.impactDescHow = const Value.absent(),
+    this.projectID = const Value.absent(),
     this.localImagePath = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -33284,6 +33324,7 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     this.moodPost = const Value.absent(),
     required String impactDescWho,
     required String impactDescHow,
+    this.projectID = const Value.absent(),
     this.localImagePath = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -33306,6 +33347,7 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     Expression<String>? moodPost,
     Expression<String>? impactDescWho,
     Expression<String>? impactDescHow,
+    Expression<String>? projectID,
     Expression<String>? localImagePath,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -33324,6 +33366,7 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
       if (moodPost != null) 'mood_post': moodPost,
       if (impactDescWho != null) 'impact_desc_who': impactDescWho,
       if (impactDescHow != null) 'impact_desc_how': impactDescHow,
+      if (projectID != null) 'project_id': projectID,
       if (localImagePath != null) 'local_image_path': localImagePath,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -33344,6 +33387,7 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     Value<String?>? moodPost,
     Value<String>? impactDescWho,
     Value<String>? impactDescHow,
+    Value<String?>? projectID,
     Value<String?>? localImagePath,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -33362,6 +33406,7 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
       moodPost: moodPost ?? this.moodPost,
       impactDescWho: impactDescWho ?? this.impactDescWho,
       impactDescHow: impactDescHow ?? this.impactDescHow,
+      projectID: projectID ?? this.projectID,
       localImagePath: localImagePath ?? this.localImagePath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -33408,6 +33453,9 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     if (impactDescHow.present) {
       map['impact_desc_how'] = Variable<String>(impactDescHow.value);
     }
+    if (projectID.present) {
+      map['project_id'] = Variable<String>(projectID.value);
+    }
     if (localImagePath.present) {
       map['local_image_path'] = Variable<String>(localImagePath.value);
     }
@@ -33442,6 +33490,7 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
           ..write('moodPost: $moodPost, ')
           ..write('impactDescWho: $impactDescWho, ')
           ..write('impactDescHow: $impactDescHow, ')
+          ..write('projectID: $projectID, ')
           ..write('localImagePath: $localImagePath, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -54174,6 +54223,7 @@ typedef $$AchievementsTableTableCreateCompanionBuilder =
       Value<String?> moodPost,
       required String impactDescWho,
       required String impactDescHow,
+      Value<String?> projectID,
       Value<String?> localImagePath,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -54193,6 +54243,7 @@ typedef $$AchievementsTableTableUpdateCompanionBuilder =
       Value<String?> moodPost,
       Value<String> impactDescWho,
       Value<String> impactDescHow,
+      Value<String?> projectID,
       Value<String?> localImagePath,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -54265,6 +54316,11 @@ class $$AchievementsTableTableFilterComposer
 
   ColumnFilters<String> get impactDescHow => $composableBuilder(
     column: $table.impactDescHow,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectID => $composableBuilder(
+    column: $table.projectID,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -54355,6 +54411,11 @@ class $$AchievementsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get projectID => $composableBuilder(
+    column: $table.projectID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get localImagePath => $composableBuilder(
     column: $table.localImagePath,
     builder: (column) => ColumnOrderings(column),
@@ -54426,6 +54487,9 @@ class $$AchievementsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get projectID =>
+      $composableBuilder(column: $table.projectID, builder: (column) => column);
+
   GeneratedColumn<String> get localImagePath => $composableBuilder(
     column: $table.localImagePath,
     builder: (column) => column,
@@ -54490,6 +54554,7 @@ class $$AchievementsTableTableTableManager
                 Value<String?> moodPost = const Value.absent(),
                 Value<String> impactDescWho = const Value.absent(),
                 Value<String> impactDescHow = const Value.absent(),
+                Value<String?> projectID = const Value.absent(),
                 Value<String?> localImagePath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -54507,6 +54572,7 @@ class $$AchievementsTableTableTableManager
                 moodPost: moodPost,
                 impactDescWho: impactDescWho,
                 impactDescHow: impactDescHow,
+                projectID: projectID,
                 localImagePath: localImagePath,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -54526,6 +54592,7 @@ class $$AchievementsTableTableTableManager
                 Value<String?> moodPost = const Value.absent(),
                 required String impactDescWho,
                 required String impactDescHow,
+                Value<String?> projectID = const Value.absent(),
                 Value<String?> localImagePath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -54543,6 +54610,7 @@ class $$AchievementsTableTableTableManager
                 moodPost: moodPost,
                 impactDescWho: impactDescWho,
                 impactDescHow: impactDescHow,
+                projectID: projectID,
                 localImagePath: localImagePath,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

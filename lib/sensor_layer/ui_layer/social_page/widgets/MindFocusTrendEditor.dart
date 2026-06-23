@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ActivitySelector.dart';
+import 'package:provider/provider.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 class MindFocusTrendEditor extends StatefulWidget {
   final MindFocusTrend? existing;
@@ -26,13 +30,21 @@ class MindFocusTrendEditor extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black54,
       builder: (ctx) => MindFocusTrendEditor(
         existing: existing,
         onSave: onSave,
         onDelete: onDelete,
       ),
     );
+  }
+
+  /// Clearance for [MainShell] Dynamic Island (SafeArea + 54px slot + gap).
+  static double _mainShellTopClearance(BuildContext context, {double gap = 8}) {
+    const islandSlotHeight = 54.0;
+    return MediaQuery.paddingOf(context).top + islandSlotHeight + gap;
   }
 
   @override
@@ -45,6 +57,9 @@ class _MindFocusTrendEditorState extends State<MindFocusTrendEditor> {
   late int _weeklyGoal;
   late int _iconCodePoint;
   late int _colorArgb;
+  String? _linkedProjectId;
+
+  static const _noProject = '__none__';
 
   static const _iconChoices = [
     Icons.fitness_center_rounded,
@@ -76,6 +91,7 @@ class _MindFocusTrendEditorState extends State<MindFocusTrendEditor> {
     _iconCodePoint =
         e?.iconCodePoint ?? Icons.track_changes_rounded.codePoint;
     _colorArgb = e?.colorArgb ?? _colorChoices[1];
+    _linkedProjectId = e?.linkedProjectId;
   }
 
   @override
@@ -117,6 +133,7 @@ class _MindFocusTrendEditorState extends State<MindFocusTrendEditor> {
         activityTokens: List<String>.from(_selectedTokens),
         weeklyGoal: _weeklyGoal.clamp(1, 14),
         colorArgb: _colorArgb,
+        linkedProjectId: _linkedProjectId,
       ),
     );
     Navigator.pop(context);
@@ -127,23 +144,22 @@ class _MindFocusTrendEditorState extends State<MindFocusTrendEditor> {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    final topClearance = MindFocusTrendEditor._mainShellTopClearance(context);
+    final screenH = MediaQuery.sizeOf(context).height;
+    final sheetHeight = (screenH - topClearance - 24).clamp(320.0, screenH * 0.88);
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
-      child: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * 0.88,
-          ),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.4)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+      child: Container(
+        margin: EdgeInsets.fromLTRB(12, topClearance, 12, 12),
+        height: sheetHeight,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.4)),
+        ),
+        child: Column(
+          children: [
               const SizedBox(height: 12),
               Container(
                 width: 40,
@@ -178,9 +194,9 @@ class _MindFocusTrendEditorState extends State<MindFocusTrendEditor> {
                   ],
                 ),
               ),
-              Flexible(
+              Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -190,6 +206,46 @@ class _MindFocusTrendEditorState extends State<MindFocusTrendEditor> {
                           labelText: l10n.mind_focus_name_hint,
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      Watch((context) {
+                        final projects = context
+                            .watch<ProjectBlock>()
+                            .projects
+                            .value
+                            .where((p) => p.status == 0)
+                            .rootsOnly
+                            .toList();
+                        if (projects.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return DropdownButtonFormField<String>(
+                          value: projects.any(
+                            (p) =>
+                                ProjectBlock.linkId(p) == _linkedProjectId ||
+                                p.id == _linkedProjectId,
+                          )
+                              ? _linkedProjectId
+                              : _noProject,
+                          decoration: InputDecoration(
+                            labelText: l10n.mind_focus_linked_project,
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: _noProject,
+                              child: Text(l10n.mind_focus_linked_project_none),
+                            ),
+                            for (final p in projects)
+                              DropdownMenuItem(
+                                value: ProjectBlock.linkId(p),
+                                child: Text(p.name),
+                              ),
+                          ],
+                          onChanged: (v) => setState(
+                            () => _linkedProjectId =
+                                v == null || v == _noProject ? null : v,
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 16),
                       Text(
                         l10n.mind_focus_icon_label,
@@ -307,14 +363,13 @@ class _MindFocusTrendEditorState extends State<MindFocusTrendEditor> {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: _submit,
-                    child: Text(l10n.mind_save_btn),
+                    child: Text(l10n.mind_focus_save),
                   ),
                 ),
               ),
             ],
           ),
         ),
-      ),
     );
   }
 }

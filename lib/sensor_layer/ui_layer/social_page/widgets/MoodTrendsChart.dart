@@ -72,7 +72,7 @@ class MoodTrendsChart extends StatelessWidget {
     return DateFormat('MM/dd').format(local);
   }
 
-  static int _moodScoreFromY(double y) => y.round().clamp(1, 5);
+  static int _moodScoreFromY(double y) => y.round().clamp(1, 6);
 
   /// fl_chart tints the whole stroke from one [gradient]; per-segment bars + dot layer
   /// keeps each day’s mood color visible.
@@ -288,7 +288,7 @@ class MoodTrendsChart extends StatelessWidget {
                   ),
                   borderData: FlBorderData(show: false),
                   minY: 0.5,
-                  maxY: 5.5,
+                  maxY: 6.5,
                   lineTouchData: const LineTouchData(enabled: false),
                   lineBarsData: _buildMoodColoredBars(
                     spots: spots,

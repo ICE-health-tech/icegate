@@ -374,7 +374,6 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
             itemBuilder: (context, index) {
               final log = sortedLogs[index];
 
-              final mood = mindMoodAccent(log.moodScore);
               return Container(
                 width: 168,
                 margin: EdgeInsets.only(right: index == sortedLogs.length - 1 ? 0 : 12),
@@ -409,11 +408,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      MindActivityTokens.formatJournalActivitiesJson(
-                        l10n,
-                        log.activities,
-                        optMap,
-                      ),
+                      _journalCardSubtitle(l10n, log, optMap),
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.82),
                         fontSize: 11,
@@ -433,29 +428,27 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     );
   }
 
+  String _journalCardSubtitle(
+    AppLocalizations l10n,
+    MindLogData log,
+    Map<String, String> optionLabels,
+  ) {
+    final note = log.note?.trim();
+    if (isBoostMoodScore(log.moodScore) &&
+        note != null &&
+        note.isNotEmpty) {
+      return note;
+    }
+    return MindActivityTokens.formatJournalActivitiesJson(
+      l10n,
+      log.activities,
+      optionLabels,
+    );
+  }
+
   Widget _buildMoodIcon(BuildContext context, int score) {
     final Color color = mindMoodAccent(score);
-    final IconData icon;
-
-    switch (score) {
-      case 1:
-        icon = Icons.sentiment_very_dissatisfied_rounded;
-        break;
-      case 2:
-        icon = Icons.sentiment_dissatisfied_rounded;
-        break;
-      case 3:
-        icon = Icons.sentiment_neutral_rounded;
-        break;
-      case 4:
-        icon = Icons.sentiment_satisfied_alt_rounded;
-        break;
-      case 5:
-        icon = Icons.sentiment_very_satisfied_rounded;
-        break;
-      default:
-        icon = Icons.sentiment_neutral_rounded;
-    }
+    final icon = mindMoodIcon(score);
 
     return Container(
       padding: const EdgeInsets.all(4),

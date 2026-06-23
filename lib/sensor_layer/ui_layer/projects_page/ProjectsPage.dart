@@ -36,6 +36,7 @@ const _builtInQuickActionPaths = {
   '/projects/sdlc',
   '/health/focus',
   '/focus-history',
+  '/canvas',
 };
 
 /// Responsive layout breakpoints for Projects page.
@@ -194,151 +195,6 @@ class ProjectsPage extends StatelessWidget {
                     : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 8),
-                    Watch((context) {
-                      final projectBlock = context.read<ProjectBlock>();
-                      final growthBlock = context.read<GrowthBlock>();
-                      final pluginsCount = internalWidgetBlock
-                          .listInternalWidgetProjectsPage
-                          .value
-                          .length;
-                      final notePersonId =
-                          context
-                              .read<PersonBlock>()
-                              .information
-                              .value
-                              .profiles
-                              .id ??
-                          '';
-
-                      final allProjects = projectBlock.projects.value;
-                      final projectsDone = allProjects
-                          .where((p) => p.status == 1)
-                          .length;
-                      final projectsActive = allProjects
-                          .where((p) => p.status == 0)
-                          .length;
-                      final totalProjects = projectsActive + projectsDone;
-
-                      final projectGoals = growthBlock.goals.value
-                          .where((g) => g.category == 'project')
-                          .toList();
-                      final tasksDone = projectGoals
-                          .where((g) => g.status == 'done')
-                          .length;
-                      final tasksActive = projectGoals
-                          .where((g) => g.status != 'done')
-                          .length;
-                      final totalTasks = tasksDone + tasksActive;
-
-                      final workspaceDetail =
-                          '${context.l10n.home_projects_active} $projectsActive · ${context.l10n.home_projects_done} $projectsDone';
-                      final taskDetail =
-                          '${context.l10n.home_tasks_active} $tasksActive · ${context.l10n.home_tasks_done} $tasksDone';
-
-                      return Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: _ProjectsSurface.panel(colorScheme),
-                        child: LayoutBuilder(
-                              builder: (context, box) {
-                                final compact = _ProjectsHubGridSpec.isDesktop(
-                                  box.maxWidth,
-                                );
-                                final twoRows = !compact && box.maxWidth < 380;
-                                Widget workspaces() => _buildSummaryItem(
-                                  context,
-                                  context.l10n.projects_summary_workspaces,
-                                  totalProjects > 0
-                                      ? '$projectsDone/$totalProjects'
-                                      : '0',
-                                  Icons.folder_copy_rounded,
-                                  HealthMetricColors.pillarBlue,
-                                  detail: workspaceDetail,
-                                  compact: compact,
-                                );
-                                Widget tasks() => _buildSummaryItem(
-                                  context,
-                                  context.l10n.tasks,
-                                  totalTasks > 0
-                                      ? '$tasksDone/$totalTasks'
-                                      : '0',
-                                  Icons.task_alt_rounded,
-                                  HealthMetricColors.pillarYellow,
-                                  detail: taskDetail,
-                                  compact: compact,
-                                );
-                                Widget notes() =>
-                                    StreamBuilder<List<ProjectNoteData>>(
-                                      stream: database.projectNoteDAO
-                                          .watchAllNotes(notePersonId),
-                                      builder: (context, snapshot) {
-                                        final n = snapshot.data?.length ?? 0;
-                                        return _buildSummaryItem(
-                                          context,
-                                          context.l10n.project_notes_label,
-                                          '$n',
-                                          Icons.edit_note_rounded,
-                                          HealthMetricColors.pillarViolet,
-                                          detail:
-                                              context.l10n.recent_notes_label,
-                                          compact: compact,
-                                        );
-                                      },
-                                    );
-                                Widget plugins() => _buildSummaryItem(
-                                  context,
-                                  context.l10n.projects_summary_plugins,
-                                  '$pluginsCount',
-                                  Icons.extension_rounded,
-                                  HealthMetricColors.pillarGreen,
-                                  compact: compact,
-                                );
-
-                                if (twoRows) {
-                                  return Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(child: workspaces()),
-                                          const SizedBox(width: 8),
-                                          Expanded(child: tasks()),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(child: notes()),
-                                          const SizedBox(width: 8),
-                                          Expanded(child: plugins()),
-                                        ],
-                                      ),
-                                    ],
-                                  );
-                                }
-
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(child: workspaces()),
-                                    const SizedBox(width: 8),
-                                    Expanded(child: tasks()),
-                                    const SizedBox(width: 8),
-                                    Expanded(child: notes()),
-                                    const SizedBox(width: 8),
-                                    Expanded(child: plugins()),
-                                  ],
-                                );
-                              },
-                            ),
-                      );
-                    }),
-                    // const SizedBox(height: 18),
-                    const SizedBox(height: 4),
                     _buildQuickActionsBlock(
                       context,
                       internalWidgetBlock,
@@ -610,8 +466,6 @@ class ProjectsPage extends StatelessWidget {
             children: [
               tagline,
               const SizedBox(height: 16),
-              _buildSummaryPanel(context, colorScheme, internalWidgetBlock, database),
-              const SizedBox(height: 18),
               _buildQuickActionsBlock(context, internalWidgetBlock),
               const SizedBox(height: 6),
             ],
@@ -630,107 +484,6 @@ class ProjectsPage extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildSummaryPanel(
-    BuildContext context,
-    ColorScheme colorScheme,
-    InternalWidgetBlock internalWidgetBlock,
-    AppDatabase database,
-  ) {
-    return Watch((context) {
-      final projectBlock = context.read<ProjectBlock>();
-      final growthBlock = context.read<GrowthBlock>();
-      final pluginsCount =
-          internalWidgetBlock.listInternalWidgetProjectsPage.value.length;
-      final notePersonId =
-          context.read<PersonBlock>().information.value.profiles.id ?? '';
-
-      final allProjects = projectBlock.projects.value;
-      final projectsDone = allProjects.where((p) => p.status == 1).length;
-      final projectsActive = allProjects.where((p) => p.status == 0).length;
-      final totalProjects = projectsActive + projectsDone;
-
-      final projectGoals =
-          growthBlock.goals.value.where((g) => g.category == 'project').toList();
-      final tasksDone = projectGoals.where((g) => g.status == 'done').length;
-      final tasksActive = projectGoals.where((g) => g.status != 'done').length;
-      final totalTasks = tasksDone + tasksActive;
-
-      final workspaceDetail =
-          '${context.l10n.home_projects_active} $projectsActive · ${context.l10n.home_projects_done} $projectsDone';
-      final taskDetail =
-          '${context.l10n.home_tasks_active} $tasksActive · ${context.l10n.home_tasks_done} $tasksDone';
-
-      return Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.12),
-          ),
-        ),
-        child: LayoutBuilder(
-          builder: (context, box) {
-            const compact = true;
-            Widget workspaces() => _buildSummaryItem(
-              context,
-              context.l10n.projects_summary_workspaces,
-              totalProjects > 0 ? '$projectsDone/$totalProjects' : '0',
-              Icons.folder_copy_rounded,
-              HealthMetricColors.pillarBlue,
-              detail: workspaceDetail,
-              compact: compact,
-            );
-            Widget tasks() => _buildSummaryItem(
-              context,
-              context.l10n.tasks,
-              totalTasks > 0 ? '$tasksDone/$totalTasks' : '0',
-              Icons.task_alt_rounded,
-              HealthMetricColors.pillarYellow,
-              detail: taskDetail,
-              compact: compact,
-            );
-            Widget notes() => StreamBuilder<List<ProjectNoteData>>(
-              stream: database.projectNoteDAO.watchAllNotes(notePersonId),
-              builder: (context, snapshot) {
-                final n = snapshot.data?.length ?? 0;
-                return _buildSummaryItem(
-                  context,
-                  context.l10n.project_notes_label,
-                  '$n',
-                  Icons.edit_note_rounded,
-                  HealthMetricColors.pillarViolet,
-                  detail: context.l10n.recent_notes_label,
-                  compact: compact,
-                );
-              },
-            );
-            Widget plugins() => _buildSummaryItem(
-              context,
-              context.l10n.projects_summary_plugins,
-              '$pluginsCount',
-              Icons.extension_rounded,
-              HealthMetricColors.pillarGreen,
-              compact: compact,
-            );
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: workspaces()),
-                const SizedBox(width: 8),
-                Expanded(child: tasks()),
-                const SizedBox(width: 8),
-                Expanded(child: notes()),
-                const SizedBox(width: 8),
-                Expanded(child: plugins()),
-              ],
-            );
-          },
-        ),
-      );
-    });
   }
 
   Widget _buildQuickActionsBlock(
@@ -819,6 +572,12 @@ class ProjectsPage extends StatelessWidget {
           icon: Icons.timer_rounded,
           accent: HealthMetricColors.pillarAccentAt(2),
           onTap: () => context.push('/focus-history'),
+        ),
+        QuickActionTileSpec(
+          label: l10n.projects_tile_canvas,
+          icon: Icons.grid_view_rounded,
+          accent: HealthMetricColors.pillarAccentAt(4),
+          onTap: () => context.go('/canvas'),
         ),
         ...apps.asMap().entries.map(
           (entry) => QuickActionTileSpec(
@@ -1001,143 +760,6 @@ class ProjectsPage extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSummaryItem(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color, {
-    String? detail,
-    bool compact = false,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final iconBox = Container(
-      padding: EdgeInsets.all(compact ? 5 : 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(compact ? 8 : 10),
-      ),
-      child: Icon(icon, color: color, size: compact ? 16 : 18),
-    );
-
-    if (compact) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withValues(alpha: 0.16),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            iconBox,
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: colorScheme.onSurface,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface.withValues(alpha: 0.55),
-                    ),
-                  ),
-                  if (detail != null)
-                    Text(
-                      detail,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: colorScheme.onSurface.withValues(alpha: 0.4),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: 0.16),
-            width: 1,
-          ),
-        ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          iconBox,
-          const SizedBox(height: 8),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: colorScheme.onSurface,
-              letterSpacing: -0.4,
-              height: 1.05,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-              color: colorScheme.onSurface.withValues(alpha: 0.58),
-            ),
-          ),
-          if (detail != null) ...[
-            const SizedBox(height: 3),
-            Text(
-              detail,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10,
-                height: 1.25,
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface.withValues(alpha: 0.42),
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 

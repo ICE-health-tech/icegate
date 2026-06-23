@@ -64,10 +64,12 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SkillCertificatePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/blocker/SocialBlockerPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/HubLoader.dart';
+import 'package:ice_gate/orchestration_layer/HubRegistry.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/IntegrationHubPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/CursorHubPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsCalendarPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/NoteManagerPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/FolderDetailsPage.dart';
@@ -267,13 +269,14 @@ final GoRouter router = GoRouter(
       path: '/projects/editor',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
+        Widget page;
         if (state.extra is ProjectNoteData) {
-          return TextEditorPage(note: state.extra as ProjectNoteData);
+          page = TextEditorPage(note: state.extra as ProjectNoteData);
         } else if (state.extra is File) {
-          return TextEditorPage(initialFile: state.extra as File);
+          page = TextEditorPage(initialFile: state.extra as File);
         } else if (state.extra is Map<String, dynamic>) {
           final data = state.extra as Map<String, dynamic>;
-          return TextEditorPage(
+          page = TextEditorPage(
             note: data['note'] as ProjectNoteData?,
             initialCategory: data['category'] as String?,
             initialFile: data['file'] as File?,
@@ -281,8 +284,10 @@ final GoRouter router = GoRouter(
             initialDirectory: data['initialDirectory'] as Directory?,
             initialExtension: data['extension'] as String?,
           );
+        } else {
+          page = const TextEditorPage();
         }
-        return const TextEditorPage();
+        return HubLoader(hub: HubId.projects, child: page);
       },
     ),
 
@@ -313,7 +318,7 @@ final GoRouter router = GoRouter(
         ),
         GoRoute(
           path: '/canvas',
-          builder: (context, state) => DragCanvasGrid(),
+          builder: (context, state) => const DragCanvasGrid(),
           routes: [
             GoRoute(
               path: 'goals',

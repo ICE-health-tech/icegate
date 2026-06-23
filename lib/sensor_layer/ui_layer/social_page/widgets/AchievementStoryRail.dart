@@ -2,16 +2,24 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementFeedUtils.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryImage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryActions.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
+import 'package:intl/intl.dart';
 
 /// Right column: photo story grid (3×3 laptop, 2×2 phone).
 class AchievementStoryRail extends StatelessWidget {
   final List<AchievementData> achievements;
+  final List<ProjectProtocol> projects;
 
-  const AchievementStoryRail({super.key, required this.achievements});
+  const AchievementStoryRail({
+    super.key,
+    required this.achievements,
+    this.projects = const [],
+  });
 
   static const int imageColumnFlex = 10;
   static const int recordColumnFlex = 12;
@@ -110,7 +118,11 @@ class AchievementStoryRail extends StatelessWidget {
                     final storyIndex = index - 1;
                     final a = stories[storyIndex];
                     return _StoryGridCell(
-                      title: a.title,
+                      achievement: a,
+                      projectLabel: AchievementFeedUtils.projectLabel(
+                        a,
+                        projects,
+                      ),
                       ringColor: achievementDomainRingColor(a.domain),
                       imagePath: a.localImagePath,
                       size: cell,
@@ -119,6 +131,7 @@ class AchievementStoryRail extends StatelessWidget {
                         context,
                         stories,
                         storyIndex,
+                        projects: projects,
                       ),
                       onLongPress: () =>
                           AchievementStoryActions.showStoryActionSheet(
@@ -151,7 +164,8 @@ class AchievementStoryRail extends StatelessWidget {
 }
 
 class _StoryGridCell extends StatelessWidget {
-  final String title;
+  final AchievementData achievement;
+  final String projectLabel;
   final Color ringColor;
   final String? imagePath;
   final double size;
@@ -160,7 +174,8 @@ class _StoryGridCell extends StatelessWidget {
   final VoidCallback? onLongPress;
 
   const _StoryGridCell({
-    required this.title,
+    required this.achievement,
+    required this.projectLabel,
     required this.ringColor,
     required this.imagePath,
     required this.size,
@@ -172,7 +187,9 @@ class _StoryGridCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final showTitle = size >= 72;
+    final showMeta = size >= 72;
+    final mood = achievement.moodPost ?? '😐';
+    final dateLabel = DateFormat.MMMd().format(achievement.createdAt.toLocal());
 
     return Material(
       color: Colors.transparent,
@@ -210,7 +227,23 @@ class _StoryGridCell extends StatelessWidget {
                   ),
                 ),
               ),
-              if (showTitle)
+              if (showMeta)
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(mood, style: const TextStyle(fontSize: 14)),
+                  ),
+                ),
+              if (showMeta)
                 DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -218,31 +251,53 @@ class _StoryGridCell extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.8),
+                        Colors.black.withValues(alpha: 0.82),
                       ],
-                      stops: const [0.5, 1],
+                      stops: const [0.45, 1],
                     ),
                   ),
                 ),
-              if (showTitle)
+              if (showMeta)
                 Positioned(
-                  left: 4,
-                  right: 4,
+                  left: 5,
+                  right: 5,
                   bottom: 5,
-                  child: Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: size < 100 ? 9 : 11,
-                      fontWeight: FontWeight.w700,
-                      height: 1.1,
-                      shadows: const [
-                        Shadow(color: Colors.black54, blurRadius: 3),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        dateLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontSize: size < 100 ? 8 : 9,
+                          fontWeight: FontWeight.w700,
+                          shadows: const [
+                            Shadow(color: Colors.black54, blurRadius: 3),
+                          ],
+                        ),
+                      ),
+                      if (projectLabel.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          projectLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: size < 100 ? 9 : 10,
+                            fontWeight: FontWeight.w800,
+                            height: 1.1,
+                            shadows: const [
+                              Shadow(color: Colors.black54, blurRadius: 3),
+                            ],
+                          ),
+                        ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
             ],

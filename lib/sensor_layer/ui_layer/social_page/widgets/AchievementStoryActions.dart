@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
@@ -140,14 +141,16 @@ abstract final class AchievementStoryActions {
   static void openViewer(
     BuildContext context,
     List<AchievementData> stories,
-    int index,
-  ) {
+    int index, {
+    List<ProjectProtocol> projects = const [],
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         fullscreenDialog: true,
         builder: (_) => AchievementStoryViewer(
           stories: stories,
           initialIndex: index,
+          projects: projects,
         ),
       ),
     );

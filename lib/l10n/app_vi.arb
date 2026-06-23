@@ -45,6 +45,29 @@
   "projects_calendar_event_failed": "Không thể lưu sự kiện",
   "projects_calendar_edit_event": "Sửa sự kiện",
   "projects_calendar_delete_event": "Xóa sự kiện",
+  "projects_calendar_env_title": "Kiểm tra bối cảnh",
+  "projects_calendar_env_ready": "Phù hợp — bạn có thể hoàn thành ngay.",
+  "projects_calendar_env_caution": "Có thể làm, nhưng vài yếu tố cần lưu ý.",
+  "projects_calendar_env_not_ready": "Khó hoàn thành lúc này — cân nhắc đổi giờ.",
+  "projects_calendar_env_score": "Sẵn sàng {score}%",
+  "@projects_calendar_env_score": {
+    "placeholders": {
+      "score": { "type": "int" }
+    }
+  },
+  "projects_calendar_env_start_focus": "Bắt đầu phiên tập trung",
+  "projects_calendar_env_past": "Khung giờ này đã qua",
+  "projects_calendar_env_too_early": "Còn hơn 2 giờ nữa mới tới",
+  "projects_calendar_env_starting_soon": "Sắp bắt đầu trong 15 phút",
+  "projects_calendar_env_low_mood": "Tâm trạng gần đây thấp",
+  "projects_calendar_env_neutral_mood": "Tâm trạng trung tính",
+  "projects_calendar_env_good_mood": "Tâm trạng hỗ trợ tập trung",
+  "projects_calendar_env_no_mood": "Chưa ghi tâm trạng hôm nay",
+  "projects_calendar_env_heavy_overlap": "Trùng lịch nhiều",
+  "projects_calendar_env_some_overlap": "Có sự kiện trùng giờ",
+  "projects_calendar_env_focus_fatigue": "Đã tập trung 2+ giờ hôm nay",
+  "projects_calendar_env_low_sleep": "Ngủ ít đêm qua",
+  "projects_calendar_env_good_sleep": "Ngủ đủ",
   "projects_calendar_edit_reminder": "Sửa nhắc nhở",
   "projects_calendar_save": "Lưu",
   "projects_calendar_select_calendar": "Lịch",
@@ -119,6 +142,7 @@
   },
   "projects_tile_focus": "Tập trung",
   "projects_tile_pomodoro": "Cà chua",
+  "projects_tile_canvas": "Bảng ghép",
   "projects_tile_sdlc": "SDLC",
   "projects_tile_social_blocker": "Chặn mạng xã hội",
   "social_shield_turn_on": "Bật Shield",
@@ -827,6 +851,10 @@
   "achievement_story_title_hint": "Bạn đã làm gì?",
   "achievement_story_added": "Đã lưu story vào thành tích.",
   "achievement_story_save_failed": "Không lưu được ảnh.",
+  "achievement_filter_label": "Lọc",
+  "achievement_filter_all_months": "Mọi tháng",
+  "achievement_filter_all_projects": "Mọi dự án",
+  "achievement_open_project": "Mở dự án",
   "social_delete_feat_title": "Xóa thành tích",
   "social_delete_feat_body": "Xóa mục này? Không thể hoàn tác.",
   "social_feat": "Chiến công",
@@ -888,6 +916,7 @@
   "mind_focus_empty": "Chưa có khu vực tập trung. Chọn mẫu hoặc tạo mới.",
   "mind_focus_add": "Khu vực mới",
   "mind_focus_edit": "Sửa khu vực",
+  "mind_focus_save": "Lưu khu vực",
   "mind_focus_weekly_goal": "Số nhật ký / tuần (mục tiêu)",
   "mind_focus_this_week": "Tuần này",
   "mind_focus_select_hint": "Chạm để tập trung. Nhật ký gần đây khớp khu vực này:",
@@ -902,6 +931,12 @@
   "mind_focus_color_label": "Màu",
   "mind_focus_no_logs_yet": "Chưa có nhật ký khớp khu vực này.",
   "mind_focus_log_now": "Ghi nhật ký",
+  "mind_focus_log_for_area": "Khu vực: {name}",
+  "@mind_focus_log_for_area": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "mind_focus_todos": "Việc cần làm",
   "mind_focus_open_projects": "Dự án",
   "mind_focus_no_todos": "Chưa có việc trong dự án. Thêm ở trang Dự án.",
@@ -939,6 +974,54 @@
       }
     }
   },
+  "mind_focus_history": "Lịch sử tuần",
+  "mind_focus_history_title": "Lịch sử khu vực tập trung",
+  "mind_focus_history_week_range": "{start} – {end}",
+  "@mind_focus_history_week_range": {
+    "placeholders": {
+      "start": { "type": "String" },
+      "end": { "type": "String" }
+    }
+  },
+  "mind_focus_history_logs": "{count} / {goal} nhật ký",
+  "@mind_focus_history_logs": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "goal": { "type": "int" }
+    }
+  },
+  "mind_focus_history_no_logs": "Chưa có nhật ký",
+  "mind_focus_linked_project": "Dự án liên kết",
+  "mind_focus_linked_project_none": "Không (mọi dự án)",
+  "mind_focus_linked_project_label": "Dự án: {name}",
+  "@mind_focus_linked_project_label": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "mind_focus_add_task_title": "Thêm việc",
+  "mind_focus_add_task_name": "Tên việc",
+  "mind_focus_add_task_desc": "Mô tả (tuỳ chọn)",
+  "mind_focus_add_task_confirm": "Thêm",
+  "mind_focus_add_task_need_project": "Tạo dự án trước, rồi thêm việc ở đây.",
+  "mind_focus_assign_project": "Dự án",
+  "mind_focus_all_tasks_mood": "Hoàn thành mọi việc — đã ghi tâm trạng +6.",
+  "mind_focus_daily_cap": "Giới hạn: {max} việc mỗi ngày trong khu vực này.",
+  "@mind_focus_daily_cap": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "mind_focus_daily_progress": "Hôm nay {added}/{max} · xong {done}",
+  "@mind_focus_daily_progress": {
+    "placeholders": {
+      "added": { "type": "int" },
+      "max": { "type": "int" },
+      "done": { "type": "int" }
+    }
+  },
+  "mind_focus_daily_hint": "Thêm 2–5 việc mỗi ngày. Hoàn thành hơn 3 việc để nhận tâm trạng +6.",
+  "mind_focus_special_mood": "Hơn 3 việc xong — đã ghi tâm trạng +6!",
   "mind_skills_session_title": "Phiên kỹ năng",
   "mind_skills_session_subtitle": "Chọn kỹ năng, tập trung, ghi lại điều học được.",
   "mind_skills_session_start": "Bắt đầu phiên",
@@ -1128,6 +1211,8 @@
   "act_reading": "Đọc sách",
   "act_cinema": "Xem phim",
   "act_walking": "Đi dạo",
+  "act_focus_todos_streak": "Hoàn thành 4+ việc tập trung",
+  "act_focus_todos_complete": "Hoàn thành việc tập trung",
   "add_app_plugin": "Thêm Plugin ứng dụng",
   "plugin_desc": "Thêm tính năng mới cho giao diện của bạn",
   "plugin_ssh": "SSH",
@@ -1569,6 +1654,25 @@
   "project_complete_label": "HOÀN THÀNH",
   "project_no_tasks": "Chưa có nhiệm vụ nào. Nhấn + để thêm.",
   "project_notes_label": "Ghi chú",
+  "project_journal_label": "Nhật ký",
+  "project_no_journal": "Chưa có nhật ký. Nhấn + để ghi mood và tiến độ.",
+  "project_journal_entry": "Nhật ký dự án",
+  "project_log_context": "Dự án: {name}",
+  "@project_log_context": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "project_journal_mood_label": "Tâm trạng",
+  "project_journal_desc_label": "Mô tả",
+  "project_journal_save": "Lưu nhật ký",
+  "project_journal_composer_hint": "Chạm để ghi lại cảm giác khi làm dự án.",
+  "project_journal_count": "{count}",
+  "@project_journal_count": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "project_no_notes": "Chưa có ghi chú nào. Nhấn + để tạo.",
   "project_no_notes_list": "Không tìm thấy ghi chú nào",
   "project_choose_document_type": "Chọn loại tài liệu",

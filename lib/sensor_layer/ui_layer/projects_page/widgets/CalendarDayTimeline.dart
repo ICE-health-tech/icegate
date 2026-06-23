@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/orchestration_layer/Services/CalendarEventEnvironment.dart';
 import 'package:intl/intl.dart';
 
 /// Column placement for a timed entry when multiple events overlap.
@@ -68,6 +69,16 @@ class CalendarTimelineEntry {
   final Future<void> Function(DateTime newStart, DateTime newEnd)? onMoved;
 }
 
+/// Close [dialogContext] first, then run [action] on the next frame (avoids
+/// Navigator `!_debugLocked` when chaining pop + push).
+void calendarTimelineAfterDialogClose(
+  BuildContext dialogContext,
+  VoidCallback action,
+) {
+  Navigator.of(dialogContext).pop();
+  WidgetsBinding.instance.addPostFrameCallback((_) => action());
+}
+
 /// Detail sheet when the user taps a timeline event block.
 Future<void> showCalendarTimelineEventDetailSheet(
   BuildContext context, {
@@ -82,6 +93,8 @@ Future<void> showCalendarTimelineEventDetailSheet(
   required bool canDelete,
   VoidCallback? onEdit,
   Future<void> Function()? onDelete,
+  CalendarEnvironmentAssessment? environment,
+  VoidCallback? onStartFocus,
 }) {
   final l10n = AppLocalizations.of(context)!;
   final locale = Localizations.localeOf(context).toString();
@@ -103,6 +116,10 @@ Future<void> showCalendarTimelineEventDetailSheet(
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (ctx, animation, secondaryAnimation) {
       final cs = Theme.of(ctx).colorScheme;
+      final focusAction = onStartFocus;
+      final startFocusAction = focusAction == null
+          ? null
+          : () => calendarTimelineAfterDialogClose(ctx, focusAction);
       final size = MediaQuery.sizeOf(ctx);
       final bottomInset = MediaQuery.viewInsetsOf(ctx).bottom;
       final isWide = size.width >= 900;
@@ -206,6 +223,15 @@ Future<void> showCalendarTimelineEventDetailSheet(
                 ],
               ),
             ),
+            if (environment != null && !allDay)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
+                child: _EnvironmentReadinessCard(
+                  assessment: environment,
+                  accent: accentColor,
+                  onStartFocus: startFocusAction,
+                ),
+              ),
             if (trimmedDescription != null && trimmedDescription.isNotEmpty)
               Expanded(
                 child: Padding(
@@ -261,10 +287,8 @@ Future<void> showCalendarTimelineEventDetailSheet(
                           foregroundColor: cs.surface,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          onEdit();
-                        },
+                        onPressed: () =>
+                            calendarTimelineAfterDialogClose(ctx, onEdit!),
                         icon: const Icon(Icons.edit_rounded, size: 20),
                         label: Text(l10n.projects_calendar_edit_event),
                       ),
@@ -422,6 +446,138 @@ class _TimelineDetailChip extends StatelessWidget {
                   ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EnvironmentReadinessCard extends StatelessWidget {
+  const _EnvironmentReadinessCard({
+    required this.assessment,
+    required this.accent,
+    this.onStartFocus,
+  });
+
+  final CalendarEnvironmentAssessment assessment;
+  final Color accent;
+  final VoidCallback? onStartFocus;
+
+  String _summary(AppLocalizations l10n) {
+    return switch (assessment.level) {
+      CalendarEnvironmentLevel.ready => l10n.projects_calendar_env_ready,
+      CalendarEnvironmentLevel.caution => l10n.projects_calendar_env_caution,
+      CalendarEnvironmentLevel.notReady => l10n.projects_calendar_env_not_ready,
+    };
+  }
+
+  Color _levelColor(ColorScheme cs) {
+    return switch (assessment.level) {
+      CalendarEnvironmentLevel.ready => cs.primary,
+      CalendarEnvironmentLevel.caution => cs.tertiary,
+      CalendarEnvironmentLevel.notReady => cs.error,
+    };
+  }
+
+  String _factorLabel(AppLocalizations l10n, String id) {
+    return switch (id) {
+      'past' => l10n.projects_calendar_env_past,
+      'too_early' => l10n.projects_calendar_env_too_early,
+      'starting_soon' => l10n.projects_calendar_env_starting_soon,
+      'low_mood' => l10n.projects_calendar_env_low_mood,
+      'neutral_mood' => l10n.projects_calendar_env_neutral_mood,
+      'good_mood' => l10n.projects_calendar_env_good_mood,
+      'no_mood' => l10n.projects_calendar_env_no_mood,
+      'heavy_overlap' => l10n.projects_calendar_env_heavy_overlap,
+      'some_overlap' => l10n.projects_calendar_env_some_overlap,
+      'focus_fatigue' => l10n.projects_calendar_env_focus_fatigue,
+      'low_sleep' => l10n.projects_calendar_env_low_sleep,
+      'good_sleep' => l10n.projects_calendar_env_good_sleep,
+      _ => id,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final levelColor = _levelColor(cs);
+    final negatives = assessment.factors.where((f) => f.impact < 0).toList();
+    final positives = assessment.factors.where((f) => f.impact > 0).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: levelColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: levelColor.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.eco_outlined, size: 18, color: levelColor),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.projects_calendar_env_title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+              Text(
+                l10n.projects_calendar_env_score(assessment.score),
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                  color: levelColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _summary(l10n),
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.35,
+              color: cs.onSurface.withValues(alpha: 0.78),
+            ),
+          ),
+          if (negatives.isNotEmpty || positives.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final f in negatives)
+                  _TimelineDetailChip(
+                    icon: Icons.remove_circle_outline,
+                    label: _factorLabel(l10n, f.id),
+                    accent: cs.error,
+                  ),
+                for (final f in positives)
+                  _TimelineDetailChip(
+                    icon: Icons.add_circle_outline,
+                    label: _factorLabel(l10n, f.id),
+                    accent: cs.primary,
+                  ),
+              ],
+            ),
+          ],
+          if (onStartFocus != null &&
+              assessment.level != CalendarEnvironmentLevel.notReady) ...[
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              onPressed: onStartFocus,
+              icon: const Icon(Icons.timer_outlined, size: 18),
+              label: Text(l10n.projects_calendar_env_start_focus),
+            ),
+          ],
         ],
       ),
     );

@@ -66,8 +66,10 @@ class QuoteBlock {
     final text = await MorningLoopPrefs.loadMorningHomeQuoteIfToday();
     if (text == null || text.isEmpty) return;
     _morningMotivationActive = true;
-    currentQuote.value = text;
-    currentAuthor.value = null;
+    _deferQuoteUpdate(() {
+      currentQuote.value = text;
+      currentAuthor.value = null;
+    });
   }
 
   /// Replaces the home quote strip after the morning briefing.
@@ -78,21 +80,33 @@ class QuoteBlock {
     await MorningLoopPrefs.saveMorningHomeQuote(text);
   }
 
+  void _deferQuoteUpdate(void Function() apply) {
+    untracked(() {
+      scheduleMicrotask(() {
+        untracked(apply);
+      });
+    });
+  }
+
   void _pickQuoteByHour() {
     if (_morningMotivationActive) return;
 
-    final hourKey = DateTime.now().hour + DateTime.now().day * 24;
+    _deferQuoteUpdate(() {
+      if (_morningMotivationActive) return;
 
-    if (_cachedQuotes.isNotEmpty) {
-      _currentIndex = hourKey % _cachedQuotes.length;
-      final q = _cachedQuotes[_currentIndex];
-      currentQuote.value = q.content;
-      currentAuthor.value = q.author;
-    } else {
-      _currentIndex = hourKey % _defaultQuotes.length;
-      currentQuote.value = _defaultQuotes[_currentIndex];
-      currentAuthor.value = null;
-    }
+      final hourKey = DateTime.now().hour + DateTime.now().day * 24;
+
+      if (_cachedQuotes.isNotEmpty) {
+        _currentIndex = hourKey % _cachedQuotes.length;
+        final q = _cachedQuotes[_currentIndex];
+        currentQuote.value = q.content;
+        currentAuthor.value = q.author;
+      } else {
+        _currentIndex = hourKey % _defaultQuotes.length;
+        currentQuote.value = _defaultQuotes[_currentIndex];
+        currentAuthor.value = null;
+      }
+    });
   }
 
   /// Loads pinned Mind dashboard weekly topic from prefs + quotes table.

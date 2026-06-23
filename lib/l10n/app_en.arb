@@ -50,6 +50,29 @@
   "projects_calendar_event_failed": "Could not save event",
   "projects_calendar_edit_event": "Edit event",
   "projects_calendar_delete_event": "Delete event",
+  "projects_calendar_env_title": "Environment check",
+  "projects_calendar_env_ready": "Good fit — you can likely complete this now.",
+  "projects_calendar_env_caution": "Possible, but a few factors may get in the way.",
+  "projects_calendar_env_not_ready": "Tough right now — consider rescheduling.",
+  "projects_calendar_env_score": "{score}% ready",
+  "@projects_calendar_env_score": {
+    "placeholders": {
+      "score": { "type": "int" }
+    }
+  },
+  "projects_calendar_env_start_focus": "Start focus session",
+  "projects_calendar_env_past": "This block is already over",
+  "projects_calendar_env_too_early": "Still more than 2 hours away",
+  "projects_calendar_env_starting_soon": "Starting within 15 minutes",
+  "projects_calendar_env_low_mood": "Recent mood is low",
+  "projects_calendar_env_neutral_mood": "Mood is neutral",
+  "projects_calendar_env_good_mood": "Mood supports focus",
+  "projects_calendar_env_no_mood": "No mood logged today",
+  "projects_calendar_env_heavy_overlap": "Heavy schedule overlap",
+  "projects_calendar_env_some_overlap": "Another event overlaps",
+  "projects_calendar_env_focus_fatigue": "Already focused 2+ hours today",
+  "projects_calendar_env_low_sleep": "Low sleep last night",
+  "projects_calendar_env_good_sleep": "Well rested",
   "projects_calendar_edit_reminder": "Edit reminder",
   "projects_calendar_save": "Save",
   "projects_calendar_select_calendar": "Calendar",
@@ -123,6 +146,7 @@
   "integration_hub_open": "Open Integration Hub",
   "projects_tile_focus": "Focus",
   "projects_tile_pomodoro": "Pomodoro",
+  "projects_tile_canvas": "Canvas",
   "projects_tile_social_blocker": "Social Blocker",
   "social_shield_turn_on": "Turn on Shield",
   "social_shield_subtitle_no_auth": "Tap row to grant Screen Time (for rules)",
@@ -834,6 +858,10 @@
   "achievement_story_title_hint": "What did you achieve?",
   "achievement_story_added": "Story saved to your achievements.",
   "achievement_story_save_failed": "Could not save photo.",
+  "achievement_filter_label": "Filter",
+  "achievement_filter_all_months": "All months",
+  "achievement_filter_all_projects": "All projects",
+  "achievement_open_project": "Open project",
   "social_delete_feat_title": "Delete feat",
   "social_delete_feat_body": "Remove this achievement? This cannot be undone.",
   "social_feat": "Feat",
@@ -895,6 +923,7 @@
   "mind_focus_empty": "No focus areas yet. Start from a template or create your own.",
   "mind_focus_add": "New focus area",
   "mind_focus_edit": "Edit focus area",
+  "mind_focus_save": "Save focus area",
   "mind_focus_weekly_goal": "Logs per week (goal)",
   "mind_focus_this_week": "This week",
   "mind_focus_select_hint": "Tap to focus on this area. Recent matching journal entries:",
@@ -909,6 +938,12 @@
   "mind_focus_color_label": "Color",
   "mind_focus_no_logs_yet": "No journal entries match this area yet.",
   "mind_focus_log_now": "Log for this area",
+  "mind_focus_log_for_area": "Focus area: {name}",
+  "@mind_focus_log_for_area": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "mind_focus_todos": "To-do",
   "mind_focus_open_projects": "Projects",
   "mind_focus_no_todos": "No active project tasks. Add tasks in Projects.",
@@ -946,6 +981,54 @@
       }
     }
   },
+  "mind_focus_history": "Weekly history",
+  "mind_focus_history_title": "Focus area history",
+  "mind_focus_history_week_range": "{start} – {end}",
+  "@mind_focus_history_week_range": {
+    "placeholders": {
+      "start": { "type": "String" },
+      "end": { "type": "String" }
+    }
+  },
+  "mind_focus_history_logs": "{count} / {goal} logs",
+  "@mind_focus_history_logs": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "goal": { "type": "int" }
+    }
+  },
+  "mind_focus_history_no_logs": "No logs",
+  "mind_focus_linked_project": "Linked project",
+  "mind_focus_linked_project_none": "None (all projects)",
+  "mind_focus_linked_project_label": "Project: {name}",
+  "@mind_focus_linked_project_label": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "mind_focus_add_task_title": "Add task",
+  "mind_focus_add_task_name": "Task name",
+  "mind_focus_add_task_desc": "Description (optional)",
+  "mind_focus_add_task_confirm": "Add",
+  "mind_focus_add_task_need_project": "Create a project first, then add tasks here.",
+  "mind_focus_assign_project": "Project",
+  "mind_focus_all_tasks_mood": "All tasks done — mood +6 logged.",
+  "mind_focus_daily_cap": "Daily limit: {max} tasks per focus area.",
+  "@mind_focus_daily_cap": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "mind_focus_daily_progress": "{added}/{max} today · {done} done",
+  "@mind_focus_daily_progress": {
+    "placeholders": {
+      "added": { "type": "int" },
+      "max": { "type": "int" },
+      "done": { "type": "int" }
+    }
+  },
+  "mind_focus_daily_hint": "Add 2–5 tasks today. Finish more than 3 for mood +6.",
+  "mind_focus_special_mood": "More than 3 tasks done — mood +6 logged!",
   "mind_skills_session_title": "Skill session",
   "mind_skills_session_subtitle": "Pick skills, run a focus block, log what you learned.",
   "mind_skills_session_start": "Start session",
@@ -1135,6 +1218,8 @@
   "act_reading": "Reading",
   "act_cinema": "Cinema",
   "act_walking": "Walking",
+  "act_focus_todos_streak": "4+ focus tasks done",
+  "act_focus_todos_complete": "Focus tasks complete",
   "act_logging": "Logging",
   "act_productivity": "Productivity",
   "add_app_plugin": "Add App Plugin",
@@ -1600,6 +1685,25 @@
   "project_complete_label": "COMPLETE",
   "project_no_tasks": "No tasks yet. Tap + to add one.",
   "project_notes_label": "Notes",
+  "project_journal_label": "Journal",
+  "project_no_journal": "No journal entries yet. Tap + to log mood and progress.",
+  "project_journal_entry": "Project log",
+  "project_log_context": "Project: {name}",
+  "@project_log_context": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "project_journal_mood_label": "Mood",
+  "project_journal_desc_label": "Description",
+  "project_journal_save": "Save log",
+  "project_journal_composer_hint": "Tap to record how this project session felt.",
+  "project_journal_count": "{count}",
+  "@project_journal_count": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "project_no_notes": "No notes yet. Tap + to create one.",
   "project_no_notes_list": "No notes found",
   "project_choose_document_type": "Choose document type",

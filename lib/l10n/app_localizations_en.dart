@@ -131,6 +131,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projects_calendar_delete_event => 'Delete event';
 
   @override
+  String get projects_calendar_env_title => 'Environment check';
+
+  @override
+  String get projects_calendar_env_ready =>
+      'Good fit — you can likely complete this now.';
+
+  @override
+  String get projects_calendar_env_caution =>
+      'Possible, but a few factors may get in the way.';
+
+  @override
+  String get projects_calendar_env_not_ready =>
+      'Tough right now — consider rescheduling.';
+
+  @override
+  String projects_calendar_env_score(int score) {
+    return '$score% ready';
+  }
+
+  @override
+  String get projects_calendar_env_start_focus => 'Start focus session';
+
+  @override
+  String get projects_calendar_env_past => 'This block is already over';
+
+  @override
+  String get projects_calendar_env_too_early => 'Still more than 2 hours away';
+
+  @override
+  String get projects_calendar_env_starting_soon =>
+      'Starting within 15 minutes';
+
+  @override
+  String get projects_calendar_env_low_mood => 'Recent mood is low';
+
+  @override
+  String get projects_calendar_env_neutral_mood => 'Mood is neutral';
+
+  @override
+  String get projects_calendar_env_good_mood => 'Mood supports focus';
+
+  @override
+  String get projects_calendar_env_no_mood => 'No mood logged today';
+
+  @override
+  String get projects_calendar_env_heavy_overlap => 'Heavy schedule overlap';
+
+  @override
+  String get projects_calendar_env_some_overlap => 'Another event overlaps';
+
+  @override
+  String get projects_calendar_env_focus_fatigue =>
+      'Already focused 2+ hours today';
+
+  @override
+  String get projects_calendar_env_low_sleep => 'Low sleep last night';
+
+  @override
+  String get projects_calendar_env_good_sleep => 'Well rested';
+
+  @override
   String get projects_calendar_edit_reminder => 'Edit reminder';
 
   @override
@@ -323,6 +384,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projects_tile_pomodoro => 'Pomodoro';
+
+  @override
+  String get projects_tile_canvas => 'Canvas';
 
   @override
   String get projects_tile_social_blocker => 'Social Blocker';
@@ -1868,6 +1932,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievement_story_save_failed => 'Could not save photo.';
 
   @override
+  String get achievement_filter_label => 'Filter';
+
+  @override
+  String get achievement_filter_all_months => 'All months';
+
+  @override
+  String get achievement_filter_all_projects => 'All projects';
+
+  @override
+  String get achievement_open_project => 'Open project';
+
+  @override
   String get social_delete_feat_title => 'Delete feat';
 
   @override
@@ -2006,6 +2082,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mind_focus_edit => 'Edit focus area';
 
   @override
+  String get mind_focus_save => 'Save focus area';
+
+  @override
   String get mind_focus_weekly_goal => 'Logs per week (goal)';
 
   @override
@@ -2048,6 +2127,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mind_focus_log_now => 'Log for this area';
+
+  @override
+  String mind_focus_log_for_area(String name) {
+    return 'Focus area: $name';
+  }
 
   @override
   String get mind_focus_todos => 'To-do';
@@ -2124,6 +2208,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String mind_focus_avg_mood(String score) {
     return 'Avg mood this week: $score';
   }
+
+  @override
+  String get mind_focus_history => 'Weekly history';
+
+  @override
+  String get mind_focus_history_title => 'Focus area history';
+
+  @override
+  String mind_focus_history_week_range(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String mind_focus_history_logs(int count, int goal) {
+    return '$count / $goal logs';
+  }
+
+  @override
+  String get mind_focus_history_no_logs => 'No logs';
+
+  @override
+  String get mind_focus_linked_project => 'Linked project';
+
+  @override
+  String get mind_focus_linked_project_none => 'None (all projects)';
+
+  @override
+  String mind_focus_linked_project_label(String name) {
+    return 'Project: $name';
+  }
+
+  @override
+  String get mind_focus_add_task_title => 'Add task';
+
+  @override
+  String get mind_focus_add_task_name => 'Task name';
+
+  @override
+  String get mind_focus_add_task_desc => 'Description (optional)';
+
+  @override
+  String get mind_focus_add_task_confirm => 'Add';
+
+  @override
+  String get mind_focus_add_task_need_project =>
+      'Create a project first, then add tasks here.';
+
+  @override
+  String get mind_focus_assign_project => 'Project';
+
+  @override
+  String get mind_focus_all_tasks_mood => 'All tasks done — mood +6 logged.';
+
+  @override
+  String mind_focus_daily_cap(int max) {
+    return 'Daily limit: $max tasks per focus area.';
+  }
+
+  @override
+  String mind_focus_daily_progress(int added, int max, int done) {
+    return '$added/$max today · $done done';
+  }
+
+  @override
+  String get mind_focus_daily_hint =>
+      'Add 2–5 tasks today. Finish more than 3 for mood +6.';
+
+  @override
+  String get mind_focus_special_mood =>
+      'More than 3 tasks done — mood +6 logged!';
 
   @override
   String get mind_skills_session_title => 'Skill session';
@@ -2485,6 +2639,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get act_walking => 'Walking';
+
+  @override
+  String get act_focus_todos_streak => '4+ focus tasks done';
+
+  @override
+  String get act_focus_todos_complete => 'Focus tasks complete';
 
   @override
   String get act_logging => 'Logging';
@@ -3405,6 +3565,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get project_notes_label => 'Notes';
+
+  @override
+  String get project_journal_label => 'Journal';
+
+  @override
+  String get project_no_journal =>
+      'No journal entries yet. Tap + to log mood and progress.';
+
+  @override
+  String get project_journal_entry => 'Project log';
+
+  @override
+  String project_log_context(String name) {
+    return 'Project: $name';
+  }
+
+  @override
+  String get project_journal_mood_label => 'Mood';
+
+  @override
+  String get project_journal_desc_label => 'Description';
+
+  @override
+  String get project_journal_save => 'Save log';
+
+  @override
+  String get project_journal_composer_hint =>
+      'Tap to record how this project session felt.';
+
+  @override
+  String project_journal_count(int count) {
+    return '$count';
+  }
 
   @override
   String get project_no_notes => 'No notes yet. Tap + to create one.';

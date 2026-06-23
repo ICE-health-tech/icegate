@@ -314,6 +314,114 @@ abstract class AppLocalizations {
   /// **'Delete event'**
   String get projects_calendar_delete_event;
 
+  /// No description provided for @projects_calendar_env_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment check'**
+  String get projects_calendar_env_title;
+
+  /// No description provided for @projects_calendar_env_ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Good fit — you can likely complete this now.'**
+  String get projects_calendar_env_ready;
+
+  /// No description provided for @projects_calendar_env_caution.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible, but a few factors may get in the way.'**
+  String get projects_calendar_env_caution;
+
+  /// No description provided for @projects_calendar_env_not_ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Tough right now — consider rescheduling.'**
+  String get projects_calendar_env_not_ready;
+
+  /// No description provided for @projects_calendar_env_score.
+  ///
+  /// In en, this message translates to:
+  /// **'{score}% ready'**
+  String projects_calendar_env_score(int score);
+
+  /// No description provided for @projects_calendar_env_start_focus.
+  ///
+  /// In en, this message translates to:
+  /// **'Start focus session'**
+  String get projects_calendar_env_start_focus;
+
+  /// No description provided for @projects_calendar_env_past.
+  ///
+  /// In en, this message translates to:
+  /// **'This block is already over'**
+  String get projects_calendar_env_past;
+
+  /// No description provided for @projects_calendar_env_too_early.
+  ///
+  /// In en, this message translates to:
+  /// **'Still more than 2 hours away'**
+  String get projects_calendar_env_too_early;
+
+  /// No description provided for @projects_calendar_env_starting_soon.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting within 15 minutes'**
+  String get projects_calendar_env_starting_soon;
+
+  /// No description provided for @projects_calendar_env_low_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent mood is low'**
+  String get projects_calendar_env_low_mood;
+
+  /// No description provided for @projects_calendar_env_neutral_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood is neutral'**
+  String get projects_calendar_env_neutral_mood;
+
+  /// No description provided for @projects_calendar_env_good_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood supports focus'**
+  String get projects_calendar_env_good_mood;
+
+  /// No description provided for @projects_calendar_env_no_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'No mood logged today'**
+  String get projects_calendar_env_no_mood;
+
+  /// No description provided for @projects_calendar_env_heavy_overlap.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy schedule overlap'**
+  String get projects_calendar_env_heavy_overlap;
+
+  /// No description provided for @projects_calendar_env_some_overlap.
+  ///
+  /// In en, this message translates to:
+  /// **'Another event overlaps'**
+  String get projects_calendar_env_some_overlap;
+
+  /// No description provided for @projects_calendar_env_focus_fatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Already focused 2+ hours today'**
+  String get projects_calendar_env_focus_fatigue;
+
+  /// No description provided for @projects_calendar_env_low_sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Low sleep last night'**
+  String get projects_calendar_env_low_sleep;
+
+  /// No description provided for @projects_calendar_env_good_sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Well rested'**
+  String get projects_calendar_env_good_sleep;
+
   /// No description provided for @projects_calendar_edit_reminder.
   ///
   /// In en, this message translates to:
@@ -649,6 +757,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pomodoro'**
   String get projects_tile_pomodoro;
+
+  /// No description provided for @projects_tile_canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas'**
+  String get projects_tile_canvas;
 
   /// No description provided for @projects_tile_social_blocker.
   ///
@@ -3494,6 +3608,30 @@ abstract class AppLocalizations {
   /// **'Could not save photo.'**
   String get achievement_story_save_failed;
 
+  /// No description provided for @achievement_filter_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get achievement_filter_label;
+
+  /// No description provided for @achievement_filter_all_months.
+  ///
+  /// In en, this message translates to:
+  /// **'All months'**
+  String get achievement_filter_all_months;
+
+  /// No description provided for @achievement_filter_all_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'All projects'**
+  String get achievement_filter_all_projects;
+
+  /// No description provided for @achievement_open_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Open project'**
+  String get achievement_open_project;
+
   /// No description provided for @social_delete_feat_title.
   ///
   /// In en, this message translates to:
@@ -3746,6 +3884,12 @@ abstract class AppLocalizations {
   /// **'Edit focus area'**
   String get mind_focus_edit;
 
+  /// No description provided for @mind_focus_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save focus area'**
+  String get mind_focus_save;
+
   /// No description provided for @mind_focus_weekly_goal.
   ///
   /// In en, this message translates to:
@@ -3829,6 +3973,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log for this area'**
   String get mind_focus_log_now;
+
+  /// No description provided for @mind_focus_log_for_area.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus area: {name}'**
+  String mind_focus_log_for_area(String name);
 
   /// No description provided for @mind_focus_todos.
   ///
@@ -3967,6 +4117,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Avg mood this week: {score}'**
   String mind_focus_avg_mood(String score);
+
+  /// No description provided for @mind_focus_history.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly history'**
+  String get mind_focus_history;
+
+  /// No description provided for @mind_focus_history_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus area history'**
+  String get mind_focus_history_title;
+
+  /// No description provided for @mind_focus_history_week_range.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String mind_focus_history_week_range(String start, String end);
+
+  /// No description provided for @mind_focus_history_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {goal} logs'**
+  String mind_focus_history_logs(int count, int goal);
+
+  /// No description provided for @mind_focus_history_no_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'No logs'**
+  String get mind_focus_history_no_logs;
+
+  /// No description provided for @mind_focus_linked_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked project'**
+  String get mind_focus_linked_project;
+
+  /// No description provided for @mind_focus_linked_project_none.
+  ///
+  /// In en, this message translates to:
+  /// **'None (all projects)'**
+  String get mind_focus_linked_project_none;
+
+  /// No description provided for @mind_focus_linked_project_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Project: {name}'**
+  String mind_focus_linked_project_label(String name);
+
+  /// No description provided for @mind_focus_add_task_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task'**
+  String get mind_focus_add_task_title;
+
+  /// No description provided for @mind_focus_add_task_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Task name'**
+  String get mind_focus_add_task_name;
+
+  /// No description provided for @mind_focus_add_task_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get mind_focus_add_task_desc;
+
+  /// No description provided for @mind_focus_add_task_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get mind_focus_add_task_confirm;
+
+  /// No description provided for @mind_focus_add_task_need_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a project first, then add tasks here.'**
+  String get mind_focus_add_task_need_project;
+
+  /// No description provided for @mind_focus_assign_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Project'**
+  String get mind_focus_assign_project;
+
+  /// No description provided for @mind_focus_all_tasks_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'All tasks done — mood +6 logged.'**
+  String get mind_focus_all_tasks_mood;
+
+  /// No description provided for @mind_focus_daily_cap.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily limit: {max} tasks per focus area.'**
+  String mind_focus_daily_cap(int max);
+
+  /// No description provided for @mind_focus_daily_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{added}/{max} today · {done} done'**
+  String mind_focus_daily_progress(int added, int max, int done);
+
+  /// No description provided for @mind_focus_daily_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 2–5 tasks today. Finish more than 3 for mood +6.'**
+  String get mind_focus_daily_hint;
+
+  /// No description provided for @mind_focus_special_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'More than 3 tasks done — mood +6 logged!'**
+  String get mind_focus_special_mood;
 
   /// No description provided for @mind_skills_session_title.
   ///
@@ -4615,6 +4879,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Walking'**
   String get act_walking;
+
+  /// No description provided for @act_focus_todos_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'4+ focus tasks done'**
+  String get act_focus_todos_streak;
+
+  /// No description provided for @act_focus_todos_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus tasks complete'**
+  String get act_focus_todos_complete;
 
   /// No description provided for @act_logging.
   ///
@@ -6289,6 +6565,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notes'**
   String get project_notes_label;
+
+  /// No description provided for @project_journal_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get project_journal_label;
+
+  /// No description provided for @project_no_journal.
+  ///
+  /// In en, this message translates to:
+  /// **'No journal entries yet. Tap + to log mood and progress.'**
+  String get project_no_journal;
+
+  /// No description provided for @project_journal_entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Project log'**
+  String get project_journal_entry;
+
+  /// No description provided for @project_log_context.
+  ///
+  /// In en, this message translates to:
+  /// **'Project: {name}'**
+  String project_log_context(String name);
+
+  /// No description provided for @project_journal_mood_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get project_journal_mood_label;
+
+  /// No description provided for @project_journal_desc_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get project_journal_desc_label;
+
+  /// No description provided for @project_journal_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save log'**
+  String get project_journal_save;
+
+  /// No description provided for @project_journal_composer_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to record how this project session felt.'**
+  String get project_journal_composer_hint;
+
+  /// No description provided for @project_journal_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}'**
+  String project_journal_count(int count);
 
   /// No description provided for @project_no_notes.
   ///

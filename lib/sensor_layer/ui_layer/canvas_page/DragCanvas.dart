@@ -1,17 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:signals_flutter/signals_flutter.dart';
-import 'package:go_router/go_router.dart';
 
-import 'DotGridPainter.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/home_page/DailyLoopCard.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/HubEntryCard.dart';
+import 'FlowchartCanvas.dart';
 
 class DragCanvas extends StatelessWidget {
-  static const double _maxHubWidth = 560;
   static const double _headerClearance = 64;
 
   final Color baseColor;
@@ -44,82 +36,7 @@ class DragCanvas extends StatelessWidget {
                     filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                     child: Container(color: Colors.transparent),
                   ),
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: DotGridPainter(
-                        color: isDark ? Colors.white : Colors.black,
-                        opacity: isDark ? 0.09 : 0.06,
-                        spacing: 25,
-                      ),
-                    ),
-                  ),
-                  Watch((context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: _maxHubWidth,
-                        ),
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 108),
-                          physics: const BouncingScrollPhysics(),
-                          children: [
-                           
-                            const SizedBox(height: 16),
-                            HubEntryCard(
-                              title: l10n.canvas_notification_center,
-                              subtitle: l10n.canvas_notification_desc,
-                              icon: Icons.notifications_active_rounded,
-                              accent: HealthMetricColors.pillarBlue,
-                              onTap: () => context.push('/notifications'),
-                            ),
-                            const SizedBox(height: 14),
-                            HubEntryCard(
-                              title: l10n.canvas_goal_center,
-                              subtitle: l10n.canvas_goal_desc,
-                              icon: Icons.flag_rounded,
-                              accent: HealthMetricColors.pillarYellow,
-                              onTap: () => context.push('/canvas/goals'),
-                            ),
-                            const SizedBox(height: 14),
-                            HubEntryCard(
-                              title: l10n.integration_hub_title,
-                              subtitle: l10n.integration_hub_subtitle,
-                              icon: Icons.hub_rounded,
-                              accent: HealthMetricColors.pillarViolet,
-                              onTap: () => context.push('/integrations'),
-                            ),
-                            const SizedBox(height: 14),
-                            HubEntryCard(
-                              title: l10n.plugin_ssh,
-                              subtitle: l10n.plugin_ssh_desc,
-                              icon: Icons.terminal_rounded,
-                              accent: HealthMetricColors.pillarGreen,
-                              onTap: () => context.push('/widget/ssh_manager'),
-                            ),
-                            const SizedBox(height: 14),
-                            HubEntryCard(
-                              title: l10n.reports_hub_title,
-                              subtitle: l10n.reports_hub_subtitle,
-                              icon: Icons.mark_email_unread_rounded,
-                              accent: EntryColors.financeSilverAccent,
-                              onTap: () =>
-                                  context.push('/finance/reports/daily'),
-                            ),
-                              const SizedBox(height: 14),
-                            HubEntryCard(
-                              title: l10n.system_monitor_title,
-                              subtitle: l10n.system_monitor_subtitle,
-                              icon: Icons.monitor_heart_outlined,
-                              accent: const Color.fromARGB(255, 255, 106, 72),
-                              onTap: () =>
-                                  context.push('/system/monitor'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
+                  const FlowchartCanvas(),
                 ],
               ),
             ),
@@ -128,5 +45,4 @@ class DragCanvas extends StatelessWidget {
       ],
     );
   }
-
 }

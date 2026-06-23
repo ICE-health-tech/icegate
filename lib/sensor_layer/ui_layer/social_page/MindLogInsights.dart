@@ -152,7 +152,7 @@ abstract final class MindLogInsights {
           final avg = _avgMoodScore(dayLogs);
           final template = dayLogs.first;
           return template.copyWith(
-            moodScore: avg.round().clamp(1, 5),
+            moodScore: avg.round().clamp(1, 6),
             logDate: day,
             createdAt: day,
           );

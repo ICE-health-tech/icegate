@@ -51,6 +51,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:path/path.dart' as p;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/PlanBlock.dart';
+import 'package:ice_gate/orchestration_layer/HubRegistry.dart';
 import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 import 'package:provider/provider.dart';
@@ -93,6 +95,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late ObjectDatabaseBlock objectDatabaseBlock;
   late ScoreBlock scoreBlock;
   late WidgetManagerBlock widgetManagerBlock;
+  late PlanBlock planBlock;
+  late HubRegistry hubRegistry;
   late GrowthBlock growthBlock;
   late FocusBlock focusBlock;
   late MusicBlock musicBlock;
@@ -464,6 +468,25 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       storageBlock = StorageBlock(mediaIndexDao: database.localMediaIndexDAO);
       Future.microtask(() => storageBlock.init());
 
+      final personIdSignal = computed(
+        () => personBlock.information.value.profiles.id,
+      );
+
+      widgetManagerBlock = WidgetManagerBlock(
+        widgetDao: database.widgetDAO,
+        personIdSignal: personIdSignal,
+      );
+
+      planBlock = PlanBlock(personIdSignal: personIdSignal);
+
+      hubRegistry = HubRegistry(
+        database: database,
+        growthBlock: growthBlock,
+        projectBlock: projectBlock,
+        planBlock: planBlock,
+        widgetManagerBlock: widgetManagerBlock,
+        internalWidgetBlock: internalWidgetBlock,
+      );
 
       _effectCleanups.add(
         effect(() {
@@ -481,6 +504,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 appLog(
                   "👤 [DataLayer] PersonID resolved to $personId. Re-initializing dependent blocks...",
                 );
+                hubRegistry.bindPerson(personId);
                 storageBlock.startAutoScan(personId: personId);
                 Future.microtask(() async {
                   try {
@@ -500,8 +524,6 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 Future.microtask(() => mindBlock.init(personId));
                 _syncHealthData();
 
-                projectBlock.init(database.projectsDAO, personId);
-                growthBlock.init(database.growthDAO, personId);
                 financeBlock.init(
                   database.financeDAO,
                   database.portfolioSnapshotsDAO,
@@ -536,7 +558,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 // NEW: Trigger Cloud Sync
                 database.supabaseSync?.syncFullDown(personId).then((_) async {
                   debugPrint("📡 [CloudSync] Initial full sync completed.");
-                  await growthBlock.sync();
+                  if (hubRegistry.isReady(HubId.growth)) {
+                    await growthBlock.sync();
+                  }
                   // Reschedule notifications once cloud data is local
                   notificationService.syncAllNotifications(personId);
                 _resyncHealthNudges(force: true);
@@ -550,11 +574,6 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   database.internalWidgetsDAO,
                   personId,
                   'home',
-                );
-                internalWidgetBlock.refreshBlock(
-                  database.internalWidgetsDAO,
-                  personId,
-                  'projects',
                 );
                 externalWidgetBlock.refreshBlock(
                   database.externalWidgetsDAO,
@@ -590,13 +609,6 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         .growthBlock = growthBlock;
 
       await focusBlock.init();
-
-      widgetManagerBlock = WidgetManagerBlock(
-        widgetDao: database.widgetDAO,
-        personIdSignal: computed(
-          () => personBlock.information.value.profiles.id,
-        ),
-      );
 
       debugPrint("🚀 [Boot] Step 6: Checking Auth Session...");
       if (mounted) {
@@ -934,6 +946,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<SocialBlockerBlock>.value(value: socialBlockerBlock),
         Provider<SocialBlock>.value(value: socialBlock),
         Provider<WidgetManagerBlock>.value(value: widgetManagerBlock),
+        Provider<PlanBlock>.value(value: planBlock),
+        Provider<HubRegistry>.value(value: hubRegistry),
         Provider<MusicBlock>.value(value: musicBlock),
         Provider<FocusBlock>.value(value: focusBlock),
         Provider<HealthBlock>.value(value: healthBlock),

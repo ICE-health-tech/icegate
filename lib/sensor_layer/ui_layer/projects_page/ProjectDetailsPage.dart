@@ -21,6 +21,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
     
 import 'TaskItem.dart';
 import 'ProjectNoteItem.dart';
+import 'ProjectJournalPanel.dart';
 import 'ProjectSkillItem.dart';
 import 'ProjectSkillsPicker.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
@@ -413,11 +414,13 @@ class ProjectDetailsPage extends StatelessWidget {
                 ),
               ),
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final wide = constraints.maxWidth >= 900;
+                    final colorScheme = Theme.of(context).colorScheme;
+                    final journalPanel = ProjectJournalPanel(project: project);
+
+                    final sections = <Widget>[
                       if (!project.isRoot)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -587,7 +590,10 @@ class ProjectDetailsPage extends StatelessWidget {
                           }).toList(),
                         );
                       }),
-
+                      if (!wide) ...[
+                        const SizedBox(height: 24),
+                        journalPanel,
+                      ],
                       const SizedBox(height: 24),
                       _buildSectionHeader(
                         context,
@@ -604,7 +610,9 @@ class ProjectDetailsPage extends StatelessWidget {
                           project.projectID,
                         ),
                         builder: (context, snapshot) {
-                          final notes = snapshot.data ?? [];
+                          final notes = (snapshot.data ?? [])
+                              .where((n) => n.category != 'project_log')
+                              .toList();
                           if (notes.isEmpty) {
                             return _buildEmptyState(
                               context,
@@ -822,8 +830,45 @@ class ProjectDetailsPage extends StatelessWidget {
                         );
                       }),
                       const SizedBox(height: 100),
-                    ],
-                  ),
+                    ];
+
+                    final mainColumn = Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: sections,
+                    );
+
+                    if (!wide) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: mainColumn,
+                      );
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: mainColumn),
+                          Container(
+                            width: 360,
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.fromLTRB(20, 0, 4, 0),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                left: BorderSide(
+                                  color: colorScheme.outlineVariant.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            child: journalPanel,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
