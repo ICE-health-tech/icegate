@@ -36,7 +36,7 @@ const _builtInQuickActionPaths = {
   '/projects/sdlc',
   '/health/focus',
   '/focus-history',
-  '/canvas',
+  '/projects/plan',
 };
 
 /// Responsive layout breakpoints for Projects page.
@@ -577,7 +577,7 @@ class ProjectsPage extends StatelessWidget {
           label: l10n.projects_tile_canvas,
           icon: Icons.grid_view_rounded,
           accent: HealthMetricColors.pillarAccentAt(4),
-          onTap: () => context.go('/canvas'),
+          onTap: () => context.push('/projects/plan'),
         ),
         ...apps.asMap().entries.map(
           (entry) => QuickActionTileSpec(

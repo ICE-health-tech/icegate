@@ -69,6 +69,7 @@ import 'package:ice_gate/orchestration_layer/HubRegistry.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/IntegrationHubPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/CursorHubPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsCalendarPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPlanPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/NoteManagerPage.dart';
@@ -574,6 +575,10 @@ final GoRouter router = GoRouter(
           path: '/projects',
           builder: (context, state) => const ProjectsPage(),
           routes: [
+            GoRoute(
+              path: 'plan',
+              builder: (context, state) => const ProjectsPlanPage(),
+            ),
             GoRoute(
               path: 'dashboard',
               builder: (context, state) => const ProjectAnalysisPage(),

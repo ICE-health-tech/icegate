@@ -389,6 +389,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projects_tile_canvas => 'Canvas';
 
   @override
+  String get projects_plan_section_title => 'Schedule planner';
+
+  @override
   String get projects_tile_social_blocker => 'Social Blocker';
 
   @override

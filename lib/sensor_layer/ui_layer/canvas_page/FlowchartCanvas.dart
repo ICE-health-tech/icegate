@@ -27,17 +27,16 @@ class FlowchartCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final planBlock = context.read<PlanBlock>();
+    // Per-signal watch — avoids Watch reassemble using a defunct context on hot reload.
+    final root = planBlock.rootLabel.watch(context);
+    final cols = planBlock.columns.watch(context);
 
-    return Watch((context) {
-      final root = planBlock.rootLabel.value;
-      final cols = planBlock.columns.value;
-      return _PlanBoardView(
-        planBlock: planBlock,
-        rootLabel: root,
-        columns: cols,
-        nodeWidth: nodeWidth,
-      );
-    });
+    return _PlanBoardView(
+      planBlock: planBlock,
+      rootLabel: root,
+      columns: cols,
+      nodeWidth: nodeWidth,
+    );
   }
 }
 

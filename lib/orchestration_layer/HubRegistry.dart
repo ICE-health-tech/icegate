@@ -86,13 +86,13 @@ class HubRegistry {
       case HubId.projects:
         await ensure(HubId.growth);
         projectBlock.init(database.projectsDAO, personId);
+        await planBlock.activate();
         internalWidgetBlock.refreshBlock(
           database.internalWidgetsDAO,
           personId,
           'projects',
         );
       case HubId.canvas:
-        await planBlock.activate();
         await widgetManagerBlock.activate();
       default:
         debugPrint('HubRegistry: unknown hub $hub');

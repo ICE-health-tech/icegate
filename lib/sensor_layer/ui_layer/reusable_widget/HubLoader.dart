@@ -31,7 +31,7 @@ class _HubLoaderState extends State<HubLoader> {
   @override
   void didUpdateWidget(covariant HubLoader oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.hub != widget.hub) {
+    if (oldWidget.hub != widget.hub && mounted) {
       _ready = context.read<HubRegistry>().ensure(widget.hub);
     }
   }

@@ -385,6 +385,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get projects_tile_canvas => 'Bảng ghép';
 
   @override
+  String get projects_plan_section_title => 'Kế hoạch';
+
+  @override
   String get projects_tile_social_blocker => 'Chặn mạng xã hội';
 
   @override

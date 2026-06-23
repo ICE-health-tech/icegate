@@ -127,6 +127,9 @@ class CanvasDynamicIsland extends StatelessWidget {
     }
 
     if (path.startsWith('/projects/editor')) return l10n.island_editor;
+    if (path.startsWith('/projects/plan')) {
+      return l10n.projects_plan_section_title.toUpperCase();
+    }
     if (path.startsWith('/projects')) return l10n.projects.toUpperCase();
 
     if (path.startsWith('/personal-info')) return l10n.island_identity;

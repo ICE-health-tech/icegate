@@ -764,6 +764,12 @@ abstract class AppLocalizations {
   /// **'Canvas'**
   String get projects_tile_canvas;
 
+  /// No description provided for @projects_plan_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule planner'**
+  String get projects_plan_section_title;
+
   /// No description provided for @projects_tile_social_blocker.
   ///
   /// In en, this message translates to:

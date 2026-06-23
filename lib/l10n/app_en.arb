@@ -147,6 +147,7 @@
   "projects_tile_focus": "Focus",
   "projects_tile_pomodoro": "Pomodoro",
   "projects_tile_canvas": "Canvas",
+  "projects_plan_section_title": "Schedule planner",
   "projects_tile_social_blocker": "Social Blocker",
   "social_shield_turn_on": "Turn on Shield",
   "social_shield_subtitle_no_auth": "Tap row to grant Screen Time (for rules)",
