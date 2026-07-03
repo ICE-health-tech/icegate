@@ -219,7 +219,7 @@ class _MindFocusTrendEditorState extends State<MindFocusTrendEditor> {
                           return const SizedBox.shrink();
                         }
                         return DropdownButtonFormField<String>(
-                          value: projects.any(
+                          initialValue: projects.any(
                             (p) =>
                                 ProjectBlock.linkId(p) == _linkedProjectId ||
                                 p.id == _linkedProjectId,

@@ -143,7 +143,35 @@
   "projects_tile_focus": "Tập trung",
   "projects_tile_pomodoro": "Cà chua",
   "projects_tile_canvas": "Bảng ghép",
+  "projects_tile_whiteboard": "Bảng trắng",
+  "projects_whiteboard_clear_title": "Xóa bảng trắng?",
+  "projects_whiteboard_clear_message": "Mọi nét vẽ sẽ bị xóa. Không thể hoàn tác.",
+  "projects_whiteboard_clear_confirm": "Xóa hết",
+  "undo": "Hoàn tác",
   "projects_plan_section_title": "Kế hoạch",
+  "projects_diagrams_title": "Sơ đồ dự án",
+  "projects_diagrams_empty": "Chưa có sơ đồ. Chạm + chọn dự án để vẽ.",
+  "projects_diagrams_new": "Sơ đồ mới",
+  "projects_diagrams_pick_project": "Chọn dự án",
+  "projects_diagrams_no_projects": "Hãy tạo dự án trước.",
+  "projects_diagrams_steps": "bước",
+  "plan_workspace_breadcrumb": "KHÔNG GIAN • DỰ ÁN",
+  "plan_schedule_card_title": "Lịch trình",
+  "plan_schedule_empty": "Chưa có bước nào.",
+  "plan_focus_notes_title": "Ghi chú tập trung",
+  "plan_notes_hint": "Gõ ghi chú tại đây…",
+  "plan_add_step": "Thêm bước",
+  "plan_drop_steps": "Thả bước vào đây",
+  "plan_add_first_step": "Thêm bước đầu tiên",
+  "plan_add_block_schedule": "Khối lịch trình",
+  "plan_add_block_notes": "Khối ghi chú tập trung",
+  "plan_add_block_goals": "Khối mục tiêu",
+  "plan_add_block_flow": "Khối quy trình",
+  "plan_connect_hint": "Chạm block nguồn, rồi chạm block đích để nối.",
+  "plan_link_added": "Đã nối block",
+  "plan_goals_empty": "Chưa có mục tiêu.",
+  "plan_add_goal": "Thêm mục tiêu",
+  "plan_manage_blocks": "Quản lý khối",
   "projects_tile_sdlc": "SDLC",
   "projects_tile_social_blocker": "Chặn mạng xã hội",
   "social_shield_turn_on": "Bật Shield",
@@ -195,6 +223,16 @@
   "integrations_notion_secret_label": "Mã tích hợp nội bộ",
   "integrations_save_fetch": "Lưu & tải về",
   "integrations_marketplace_soon": "Chợ nguồn sắp ra mắt!",
+  "vault_breadcrumb_root": "Kho ghi chú",
+  "vault_section_folders": "Thư mục",
+  "vault_section_notes": "Ghi chú",
+  "vault_section_media": "Ảnh & media",
+  "vault_section_other": "Tệp khác",
+  "vault_search_files": "Tìm trong thư mục…",
+  "vault_empty_folder": "Thư mục trống",
+  "vault_stats_folders": "{count, plural, =1{1 thư mục} other{{count} thư mục}}",
+  "vault_stats_notes": "{count, plural, =1{1 ghi chú} other{{count} ghi chú}}",
+  "vault_stats_media": "{count, plural, =1{1 tệp} other{{count} tệp}}",
   "projects_workspace_empty": "Chưa có không gian làm việc nào được thiết lập.",
   "projects_workspace_start": "Bắt đầu ngay",
   "project_drive_sync": "Đồng bộ Mây",
@@ -835,11 +873,11 @@
   "social_delete_bond": "Xóa liên kết",
   "social_no_achievements": "Chưa có thành tích nào",
   "social_no_achievements_msg": "Chưa có thành tích nào được ghi nhận.",
-  "achievement_story_section": "Thành tích ảnh",
-  "achievement_story_empty_hint": "Chạm + để lưu ảnh thành tích — hiển thị dạng story ở đây.",
+  "achievement_story_section": "Khoảnh khắc",
+  "achievement_story_empty_hint": "Chạm + để giữ lại một khoảnh khắc.",
   "achievement_story_add": "Thêm",
-  "achievement_feats_section": "Thành tích đã ghi",
-  "achievement_insights_title": "Bảng phân tích",
+  "achievement_feats_section": "Dòng thời gian",
+  "achievement_insights_title": "Nhìn lại",
   "achievement_insights_summary": "Tổng kết tháng: {count} thành tích. Ý nghĩa TB: {meaning}, Tác động TB: {impact}",
   "@achievement_insights_summary": {
     "placeholders": {
@@ -855,6 +893,26 @@
   "achievement_filter_label": "Lọc",
   "achievement_filter_all_months": "Mọi tháng",
   "achievement_filter_all_projects": "Mọi dự án",
+  "achievement_on_this_day_title": "Ngày này năm ấy",
+  "achievement_on_this_day_subtitle": "Kỷ niệm ngày {date}",
+  "@achievement_on_this_day_subtitle": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "achievement_years_ago": "Cách đây {years} năm",
+  "@achievement_years_ago": {
+    "placeholders": {
+      "years": { "type": "int" }
+    }
+  },
+  "achievement_archive_empty": "Chưa có kỷ niệm. Ghi chép và ảnh journal sẽ hiện ở đây.",
+  "achievement_archive_month_summary": "{count} kỷ niệm trong khung nhìn này",
+  "@achievement_archive_month_summary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "achievement_open_project": "Mở dự án",
   "social_delete_feat_title": "Xóa thành tích",
   "social_delete_feat_body": "Xóa mục này? Không thể hoàn tác.",
@@ -1022,6 +1080,8 @@
     }
   },
   "mind_focus_daily_hint": "Thêm 2–5 việc mỗi ngày. Hoàn thành hơn 3 việc để nhận tâm trạng +6.",
+  "mind_focus_weekly_hint": "Thêm 2–5 việc mỗi tuần. Hoàn thành hơn 3 việc để nhận tâm trạng +6.",
+  "mind_focus_monthly_hint": "Thêm 2–5 việc mỗi tháng. Hoàn thành hơn 3 việc để nhận tâm trạng +6.",
   "mind_focus_special_mood": "Hơn 3 việc xong — đã ghi tâm trạng +6!",
   "mind_skills_session_title": "Phiên kỹ năng",
   "mind_skills_session_subtitle": "Chọn kỹ năng, tập trung, ghi lại điều học được.",
@@ -1375,6 +1435,32 @@
   "canvas_notification_center": "Thông báo",
   "canvas_notification_desc": "Điều khiển và kiểm soát mọi thông báo hệ thống",
   "canvas_goal_center": "Mục tiêu",
+  "dev_quick_tabs_title": "Dev Tools",
+  "dev_quick_tabs_subtitle": "Tab trình duyệt — Northflank, Supabase, n8n và hơn thế.",
+  "dev_quick_tabs_empty": "Chưa có tab. Mặc định tải lần đầu mở.",
+  "dev_quick_tabs_add": "Thêm tab",
+  "dev_quick_tabs_open": "Mở",
+  "dev_quick_tabs_edit": "Sửa tab",
+  "dev_quick_tabs_label": "Tên",
+  "dev_quick_tabs_url": "URL",
+  "dev_quick_tabs_delete_title": "Xóa tab?",
+  "dev_quick_tabs_delete_message": "Xóa \"{title}\" khỏi truy cập nhanh.",
+  "@dev_quick_tabs_delete_message": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "dev_quick_tabs_delete_confirm": "Xóa",
+  "webview_connection_error": "Lỗi kết nối",
+  "webview_retry": "Thử lại",
+  "webview_ssl_trust_title": "Tin chứng chỉ homelab?",
+  "webview_ssl_trust_message": "Chứng chỉ của {host} không được tin (thường gặp với OPNsense/LAN). Chỉ tiếp tục trên mạng bạn tin tưởng.",
+  "@webview_ssl_trust_message": {
+    "placeholders": {
+      "host": { "type": "String" }
+    }
+  },
+  "webview_ssl_trust_continue": "Tin và tiếp tục",
   "canvas_goal_desc": "Điều chỉnh mục tiêu",
   "canvas_finance_reports_title": "Báo cáo tài chính",
   "canvas_finance_reports_desc": "Tóm tắt trong ngày, nhắc nhở cục bộ và lối tắt",
@@ -1655,6 +1741,10 @@
   "project_complete_label": "HOÀN THÀNH",
   "project_no_tasks": "Chưa có nhiệm vụ nào. Nhấn + để thêm.",
   "project_notes_label": "Ghi chú",
+  "note_type_picker_title": "Chọn loại ghi chú",
+  "note_type_markdown": "Markdown (.md)",
+  "note_type_plain_text": "Văn bản thuần (.txt)",
+  "note_type_word": "Word (.docx)",
   "project_journal_label": "Nhật ký",
   "project_no_journal": "Chưa có nhật ký. Nhấn + để ghi mood và tiến độ.",
   "project_journal_entry": "Nhật ký dự án",
@@ -1753,6 +1843,9 @@
   "project_sdlc_open": "Mở bảng SDLC",
   "project_sdlc_add_task_title": "Thêm nhiệm vụ SDLC",
   "project_sdlc_move_phase": "Giai đoạn SDLC",
+  "project_sdlc_due_date": "Hạn hoàn thành",
+  "project_sdlc_due_date_none": "Chưa đặt hạn",
+  "project_sdlc_clear_due_date": "Xóa hạn",
   "project_sdlc_default_purpose": "Xác định dự án cần giao gì và vì sao.",
   "project_sdlc_empty": "Chưa có nhiệm vụ đang làm. Chạm + để thêm vào một giai đoạn.",
   "project_sdlc_column_empty": "Chưa có nhiệm vụ",
@@ -1998,7 +2091,7 @@
   "notification_pomodoro_reminder_subtitle": "Nhận thông báo khi hoàn thành một phiên Pomodoro hoặc kết thúc giờ nghỉ.",
   "notification_live_activities_title": "Hoạt động trực tiếp",
   "notification_live_activities_subtitle": "Theo dõi bộ đếm tập trung trên Màn hình khóa.",
-  "notification_morning_briefing_subtitle": "Hiện tóm tắt buổi sáng lần đầu mở Home trong ngày.",
+  "notification_morning_briefing_subtitle": "Lịch hôm nay, tóm tắt hôm qua và động lực khi mở Home lần đầu (5:00–11:59).",
   "notification_status_on": "bật",
   "notification_status_off": "tắt",
   "notification_wisdom_board": "Bảng trí tuệ",
@@ -2494,9 +2587,22 @@
   "daily_loop_finance": "Tài chính",
   "daily_loop_mind": "Tâm trạng",
   "daily_loop_projects": "Dự án",
-  "morning_loop_reminder_title": "Tóm tắt buổi sáng",
-  "morning_loop_reminder_subtitle": "Tóm tắt hôm qua & động lực hôm nay — mở Ice Gate đầu tiên mỗi sáng",
+  "morning_loop_reminder_title": "Thông báo đẩy buổi sáng",
+  "morning_loop_reminder_subtitle": "Tùy chọn trên điện thoại — tóm tắt trong app trên Home vẫn hoạt động khi tắt",
   "morning_briefing_toggle": "Tóm tắt sáng trên Home",
+  "morning_briefing_today_schedule": "Lịch hôm nay",
+  "morning_briefing_today_empty": "Không có sự kiện — một ngày trống để lên kế hoạch.",
+  "morning_briefing_today_connect_hint": "Kết nối Google hoặc lịch máy để xem sự kiện hôm nay tại đây.",
+  "morning_briefing_today_more": "+{count} sự kiện nữa trong lịch",
+  "@morning_briefing_today_more": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_all_day": "Cả ngày",
+  "morning_briefing_open_calendar": "Mở lịch",
   "morning_briefing_title": "Chào buổi sáng",
   "morning_briefing_title_name": "Chào buổi sáng, {name}",
   "@morning_briefing_title_name": {

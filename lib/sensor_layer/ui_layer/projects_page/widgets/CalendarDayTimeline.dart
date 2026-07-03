@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
@@ -77,6 +78,11 @@ void calendarTimelineAfterDialogClose(
 ) {
   Navigator.of(dialogContext).pop();
   WidgetsBinding.instance.addPostFrameCallback((_) => action());
+}
+
+double _safeClamp(double value, double min, double max) {
+  if (min > max) return min;
+  return value.clamp(min, max);
 }
 
 /// Detail sheet when the user taps a timeline event block.
@@ -288,7 +294,7 @@ Future<void> showCalendarTimelineEventDetailSheet(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         onPressed: () =>
-                            calendarTimelineAfterDialogClose(ctx, onEdit!),
+                            calendarTimelineAfterDialogClose(ctx, onEdit),
                         icon: const Icon(Icons.edit_rounded, size: 20),
                         label: Text(l10n.projects_calendar_edit_event),
                       ),
@@ -713,7 +719,8 @@ class _CalendarDayTimelineState extends State<CalendarDayTimeline> {
     final snapped = (raw / _snapMinutes).round() * _snapMinutes;
     final minStart = visibleStartHour * 60;
     final maxStart = widget.endHour * 60 + 45 - _dragDurationMinutes;
-    return snapped.clamp(minStart, maxStart.clamp(minStart, 24 * 60));
+    final upper = math.max(minStart, maxStart);
+    return snapped.clamp(minStart, upper);
   }
 
   void _beginDrag({
@@ -764,7 +771,8 @@ class _CalendarDayTimelineState extends State<CalendarDayTimeline> {
     final range = _visibleHourRange();
     final minStart = range.start * 60;
     final maxStart = widget.endHour * 60 + 45 - _dragDurationMinutes;
-    final next = (current + deltaMinutes).clamp(minStart, maxStart);
+    final upper = math.max(minStart, maxStart);
+    final next = (current + deltaMinutes).clamp(minStart, upper);
     if (next == current) return;
     HapticFeedback.selectionClick();
     setState(() => _dropSnapMinutes = next);
@@ -1063,7 +1071,7 @@ class _CalendarDayTimelineState extends State<CalendarDayTimeline> {
     final gridStartMin = visibleStartHour * 60.0;
     final blockTop =
         ((snapMinutes - gridStartMin) / 60.0) * widget.hourHeight + _laneInset / 2;
-    final badgeTop = (blockTop - 34).clamp(4.0, gridHeight - 36);
+    final badgeTop = _safeClamp(blockTop - 34, 4.0, math.max(4.0, gridHeight - 36));
 
     return AnimatedPositioned(
       duration: animDuration,
@@ -1535,11 +1543,17 @@ class _CalendarDayTimelineState extends State<CalendarDayTimeline> {
     final endLocal = _eventEnd(e);
     var endMin = endLocal.difference(dayStart).inMinutes.toDouble();
     if (endMin <= startMin) endMin = startMin + 30;
+    // Timed events past midnight still belong to this day row — cap for layout.
+    endMin = math.min(endMin, 24 * 60);
 
     final gridStartMin = visibleStartHour * 60.0;
     final gridEndMin = (visibleEndHour + 1) * 60.0;
-    final visibleStart = startMin.clamp(gridStartMin, gridEndMin);
-    final visibleEnd = endMin.clamp(visibleStart + 15, gridEndMin);
+    final visibleStart = _safeClamp(
+      startMin,
+      gridStartMin,
+      math.max(gridStartMin, gridEndMin - 15),
+    );
+    final visibleEnd = _safeClamp(endMin, visibleStart + 15, gridEndMin);
 
     if (visibleStart >= gridEndMin || visibleEnd <= gridStartMin) {
       return const SizedBox.shrink();

@@ -221,7 +221,7 @@ class MoodTrendsChart extends StatelessWidget {
               border: Border.all(color: glassBorder),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0x000F1E).withValues(
+                  color: const Color(0x00000f1e).withValues(
                     alpha: isDark ? 0.24 : 0.07,
                   ),
                   blurRadius: 20,

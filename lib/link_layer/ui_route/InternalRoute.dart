@@ -16,6 +16,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/projects_page/TextEditorPage.dart
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/entry/PrismEntryPage.dart';
 import 'package:ice_gate/orchestration_layer/Services/SessionTracker.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DragCanvasGridPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DevQuickTabsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainShell.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/HomePage.dart';
@@ -69,7 +70,9 @@ import 'package:ice_gate/orchestration_layer/HubRegistry.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/IntegrationHubPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/CursorHubPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsCalendarPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectDiagramsGalleryPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPlanPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsWhiteboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/NoteManagerPage.dart';
@@ -325,6 +328,10 @@ final GoRouter router = GoRouter(
               path: 'goals',
               builder: (context, state) => const GoalConfigurationWidget(),
             ),
+            GoRoute(
+              path: 'dev-tools',
+              builder: (context, state) => const DevQuickTabsPage(),
+            ),
           ],
         ),
         GoRoute(
@@ -577,7 +584,17 @@ final GoRouter router = GoRouter(
           routes: [
             GoRoute(
               path: 'plan',
-              builder: (context, state) => const ProjectsPlanPage(),
+              builder: (context, state) => ProjectsPlanPage(
+                projectId: state.uri.queryParameters['projectId'],
+              ),
+            ),
+            GoRoute(
+              path: 'board',
+              builder: (context, state) => const ProjectsWhiteboardPage(),
+            ),
+            GoRoute(
+              path: 'diagrams',
+              builder: (context, state) => const ProjectDiagramsGalleryPage(),
             ),
             GoRoute(
               path: 'dashboard',

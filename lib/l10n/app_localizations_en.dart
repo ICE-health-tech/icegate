@@ -389,7 +389,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projects_tile_canvas => 'Canvas';
 
   @override
+  String get projects_tile_whiteboard => 'Whiteboard';
+
+  @override
+  String get projects_whiteboard_clear_title => 'Clear whiteboard?';
+
+  @override
+  String get projects_whiteboard_clear_message =>
+      'All strokes will be removed. This cannot be undone.';
+
+  @override
+  String get projects_whiteboard_clear_confirm => 'Clear';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
   String get projects_plan_section_title => 'Schedule planner';
+
+  @override
+  String get projects_diagrams_title => 'Project diagrams';
+
+  @override
+  String get projects_diagrams_empty =>
+      'No flowcharts yet. Tap + to pick a project and start drawing.';
+
+  @override
+  String get projects_diagrams_new => 'New diagram';
+
+  @override
+  String get projects_diagrams_pick_project => 'Choose a project';
+
+  @override
+  String get projects_diagrams_no_projects => 'Create a project first.';
+
+  @override
+  String get projects_diagrams_steps => 'steps';
+
+  @override
+  String get plan_workspace_breadcrumb => 'WORKSPACE • PROJECTS';
+
+  @override
+  String get plan_schedule_card_title => 'Schedule';
+
+  @override
+  String get plan_schedule_empty => 'No steps yet.';
+
+  @override
+  String get plan_focus_notes_title => 'Focus Notes';
+
+  @override
+  String get plan_notes_hint => 'Type notes here…';
+
+  @override
+  String get plan_add_step => 'Add step';
+
+  @override
+  String get plan_drop_steps => 'Drop steps here';
+
+  @override
+  String get plan_add_first_step => 'Add first step';
+
+  @override
+  String get plan_add_block_schedule => 'Schedule block';
+
+  @override
+  String get plan_add_block_notes => 'Focus notes block';
+
+  @override
+  String get plan_add_block_goals => 'Goals block';
+
+  @override
+  String get plan_add_block_flow => 'Process block';
+
+  @override
+  String get plan_connect_hint =>
+      'Tap a source block, then tap a target block to connect.';
+
+  @override
+  String get plan_link_added => 'Blocks connected';
+
+  @override
+  String get plan_goals_empty => 'No goals yet.';
+
+  @override
+  String get plan_add_goal => 'Add goal';
+
+  @override
+  String get plan_manage_blocks => 'Manage blocks';
 
   @override
   String get projects_tile_social_blocker => 'Social Blocker';
@@ -527,6 +614,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get integrations_marketplace_soon => 'Source Marketplace coming soon!';
+
+  @override
+  String get vault_breadcrumb_root => 'Vault';
+
+  @override
+  String get vault_section_folders => 'Folders';
+
+  @override
+  String get vault_section_notes => 'Notes';
+
+  @override
+  String get vault_section_media => 'Media';
+
+  @override
+  String get vault_section_other => 'Other files';
+
+  @override
+  String get vault_search_files => 'Search in this folder…';
+
+  @override
+  String get vault_empty_folder => 'This folder is empty';
+
+  @override
+  String vault_stats_folders(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count folders',
+      one: '1 folder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String vault_stats_notes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes',
+      one: '1 note',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String vault_stats_media(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get projects_workspace_empty => 'No workspace has been set up yet.';
@@ -1898,20 +2039,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get social_no_achievements_msg => 'No achievements logged yet.';
 
   @override
-  String get achievement_story_section => 'Photo stories';
+  String get achievement_story_section => 'Snapshots';
 
   @override
   String get achievement_story_empty_hint =>
-      'Tap + to save a photo win — shown here like stories.';
+      'Tap + to freeze a moment in time.';
 
   @override
   String get achievement_story_add => 'Add';
 
   @override
-  String get achievement_feats_section => 'Logged feats';
+  String get achievement_feats_section => 'Memory lane';
 
   @override
-  String get achievement_insights_title => 'Insights Dashboard';
+  String get achievement_insights_title => 'Looking back';
 
   @override
   String achievement_insights_summary(
@@ -1942,6 +2083,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get achievement_filter_all_projects => 'All projects';
+
+  @override
+  String get achievement_on_this_day_title => 'On this day';
+
+  @override
+  String achievement_on_this_day_subtitle(String date) {
+    return 'Memories from $date';
+  }
+
+  @override
+  String achievement_years_ago(int years) {
+    String _temp0 = intl.Intl.pluralLogic(
+      years,
+      locale: localeName,
+      other: '$years years ago',
+      one: '1 year ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievement_archive_empty =>
+      'No memories yet. Journal entries and notes will appear here.';
+
+  @override
+  String achievement_archive_month_summary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count memories in this view',
+      one: '1 memory in this view',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get achievement_open_project => 'Open project';
@@ -2277,6 +2452,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get mind_focus_daily_hint =>
       'Add 2–5 tasks today. Finish more than 3 for mood +6.';
+
+  @override
+  String get mind_focus_weekly_hint =>
+      'Add 2–5 tasks this week. Finish more than 3 for mood +6.';
+
+  @override
+  String get mind_focus_monthly_hint =>
+      'Add 2–5 tasks this month. Finish more than 3 for mood +6.';
 
   @override
   String get mind_focus_special_mood =>
@@ -2950,6 +3133,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get canvas_goal_center => 'Goal Evolution';
 
   @override
+  String get dev_quick_tabs_title => 'Dev Tools';
+
+  @override
+  String get dev_quick_tabs_subtitle =>
+      'Saved browser tabs — Northflank, Supabase, n8n, and more.';
+
+  @override
+  String get dev_quick_tabs_empty =>
+      'No tabs yet. Defaults load on first open.';
+
+  @override
+  String get dev_quick_tabs_add => 'Add tab';
+
+  @override
+  String get dev_quick_tabs_open => 'Open';
+
+  @override
+  String get dev_quick_tabs_edit => 'Edit tab';
+
+  @override
+  String get dev_quick_tabs_label => 'Title';
+
+  @override
+  String get dev_quick_tabs_url => 'URL';
+
+  @override
+  String get dev_quick_tabs_delete_title => 'Delete tab?';
+
+  @override
+  String dev_quick_tabs_delete_message(String title) {
+    return 'Remove \"$title\" from quick access.';
+  }
+
+  @override
+  String get dev_quick_tabs_delete_confirm => 'Delete';
+
+  @override
+  String get webview_connection_error => 'Connection Error';
+
+  @override
+  String get webview_retry => 'Retry';
+
+  @override
+  String get webview_ssl_trust_title => 'Trust homelab certificate?';
+
+  @override
+  String webview_ssl_trust_message(String host) {
+    return 'The certificate for $host is not trusted (common for OPNsense and LAN devices). Only continue on networks you trust.';
+  }
+
+  @override
+  String get webview_ssl_trust_continue => 'Trust and continue';
+
+  @override
   String get canvas_goal_desc => 'Adjust tactical goal parameters';
 
   @override
@@ -3570,6 +3807,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get project_notes_label => 'Notes';
 
   @override
+  String get note_type_picker_title => 'Choose note type';
+
+  @override
+  String get note_type_markdown => 'Markdown (.md)';
+
+  @override
+  String get note_type_plain_text => 'Plain text (.txt)';
+
+  @override
+  String get note_type_word => 'Word (.docx)';
+
+  @override
   String get project_journal_label => 'Journal';
 
   @override
@@ -3769,6 +4018,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get project_sdlc_move_phase => 'SDLC phase';
+
+  @override
+  String get project_sdlc_due_date => 'Due date';
+
+  @override
+  String get project_sdlc_due_date_none => 'No due date';
+
+  @override
+  String get project_sdlc_clear_due_date => 'Clear due date';
 
   @override
   String get project_sdlc_default_purpose =>
@@ -4250,7 +4508,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notification_morning_briefing_subtitle =>
-      'Show the morning summary the first time you open Home each day.';
+      'Today\'s schedule, yesterday recap, and motivation when you first open Home (5:00–11:59).';
 
   @override
   String get notification_status_on => 'on';
@@ -5484,14 +5742,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get daily_loop_projects => 'Project touch';
 
   @override
-  String get morning_loop_reminder_title => 'Morning summary';
+  String get morning_loop_reminder_title => 'Morning push reminder';
 
   @override
   String get morning_loop_reminder_subtitle =>
-      'Yesterday recap & today\'s motivation — open Ice Gate first each morning';
+      'Optional phone notification — your in-app summary on Home works without this';
 
   @override
   String get morning_briefing_toggle => 'Morning summary on Home';
+
+  @override
+  String get morning_briefing_today_schedule => 'Today\'s schedule';
+
+  @override
+  String get morning_briefing_today_empty =>
+      'No events today — a clear day to plan.';
+
+  @override
+  String get morning_briefing_today_connect_hint =>
+      'Connect Google or device calendar to see today\'s events here.';
+
+  @override
+  String morning_briefing_today_more(int count) {
+    return '+$count more in calendar';
+  }
+
+  @override
+  String get morning_briefing_all_day => 'All day';
+
+  @override
+  String get morning_briefing_open_calendar => 'Open calendar';
 
   @override
   String get morning_briefing_title => 'Good morning';

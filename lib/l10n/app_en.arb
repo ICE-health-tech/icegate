@@ -147,7 +147,35 @@
   "projects_tile_focus": "Focus",
   "projects_tile_pomodoro": "Pomodoro",
   "projects_tile_canvas": "Canvas",
+  "projects_tile_whiteboard": "Whiteboard",
+  "projects_whiteboard_clear_title": "Clear whiteboard?",
+  "projects_whiteboard_clear_message": "All strokes will be removed. This cannot be undone.",
+  "projects_whiteboard_clear_confirm": "Clear",
+  "undo": "Undo",
   "projects_plan_section_title": "Schedule planner",
+  "projects_diagrams_title": "Project diagrams",
+  "projects_diagrams_empty": "No flowcharts yet. Tap + to pick a project and start drawing.",
+  "projects_diagrams_new": "New diagram",
+  "projects_diagrams_pick_project": "Choose a project",
+  "projects_diagrams_no_projects": "Create a project first.",
+  "projects_diagrams_steps": "steps",
+  "plan_workspace_breadcrumb": "WORKSPACE • PROJECTS",
+  "plan_schedule_card_title": "Schedule",
+  "plan_schedule_empty": "No steps yet.",
+  "plan_focus_notes_title": "Focus Notes",
+  "plan_notes_hint": "Type notes here…",
+  "plan_add_step": "Add step",
+  "plan_drop_steps": "Drop steps here",
+  "plan_add_first_step": "Add first step",
+  "plan_add_block_schedule": "Schedule block",
+  "plan_add_block_notes": "Focus notes block",
+  "plan_add_block_goals": "Goals block",
+  "plan_add_block_flow": "Process block",
+  "plan_connect_hint": "Tap a source block, then tap a target block to connect.",
+  "plan_link_added": "Blocks connected",
+  "plan_goals_empty": "No goals yet.",
+  "plan_add_goal": "Add goal",
+  "plan_manage_blocks": "Manage blocks",
   "projects_tile_social_blocker": "Social Blocker",
   "social_shield_turn_on": "Turn on Shield",
   "social_shield_subtitle_no_auth": "Tap row to grant Screen Time (for rules)",
@@ -198,6 +226,31 @@
   "integrations_notion_secret_label": "Internal Integration Secret",
   "integrations_save_fetch": "Save & Fetch",
   "integrations_marketplace_soon": "Source Marketplace coming soon!",
+  "vault_breadcrumb_root": "Vault",
+  "vault_section_folders": "Folders",
+  "vault_section_notes": "Notes",
+  "vault_section_media": "Media",
+  "vault_section_other": "Other files",
+  "vault_search_files": "Search in this folder…",
+  "vault_empty_folder": "This folder is empty",
+  "vault_stats_folders": "{count, plural, =1{1 folder} other{{count} folders}}",
+  "@vault_stats_folders": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "vault_stats_notes": "{count, plural, =1{1 note} other{{count} notes}}",
+  "@vault_stats_notes": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "vault_stats_media": "{count, plural, =1{1 file} other{{count} files}}",
+  "@vault_stats_media": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "projects_workspace_empty": "No workspace has been set up yet.",
   "projects_workspace_start": "Get started",
   "project_drive_sync": "Cloud Sync",
@@ -842,11 +895,11 @@
   "social_delete_bond": "Delete Bond",
   "social_no_achievements": "No achievements yet",
   "social_no_achievements_msg": "No achievements logged yet.",
-  "achievement_story_section": "Photo stories",
-  "achievement_story_empty_hint": "Tap + to save a photo win — shown here like stories.",
+  "achievement_story_section": "Snapshots",
+  "achievement_story_empty_hint": "Tap + to freeze a moment in time.",
   "achievement_story_add": "Add",
-  "achievement_feats_section": "Logged feats",
-  "achievement_insights_title": "Insights Dashboard",
+  "achievement_feats_section": "Memory lane",
+  "achievement_insights_title": "Looking back",
   "achievement_insights_summary": "Monthly Reflection: {count} feats recorded. Average Meaningfulness: {meaning}, Average Impact: {impact}",
   "@achievement_insights_summary": {
     "placeholders": {
@@ -862,6 +915,26 @@
   "achievement_filter_label": "Filter",
   "achievement_filter_all_months": "All months",
   "achievement_filter_all_projects": "All projects",
+  "achievement_on_this_day_title": "On this day",
+  "achievement_on_this_day_subtitle": "Memories from {date}",
+  "@achievement_on_this_day_subtitle": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "achievement_years_ago": "{years, plural, =1{1 year ago} other{{years} years ago}}",
+  "@achievement_years_ago": {
+    "placeholders": {
+      "years": { "type": "int" }
+    }
+  },
+  "achievement_archive_empty": "No memories yet. Journal entries and notes will appear here.",
+  "achievement_archive_month_summary": "{count, plural, =1{1 memory in this view} other{{count} memories in this view}}",
+  "@achievement_archive_month_summary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "achievement_open_project": "Open project",
   "social_delete_feat_title": "Delete feat",
   "social_delete_feat_body": "Remove this achievement? This cannot be undone.",
@@ -1029,6 +1102,8 @@
     }
   },
   "mind_focus_daily_hint": "Add 2–5 tasks today. Finish more than 3 for mood +6.",
+  "mind_focus_weekly_hint": "Add 2–5 tasks this week. Finish more than 3 for mood +6.",
+  "mind_focus_monthly_hint": "Add 2–5 tasks this month. Finish more than 3 for mood +6.",
   "mind_focus_special_mood": "More than 3 tasks done — mood +6 logged!",
   "mind_skills_session_title": "Skill session",
   "mind_skills_session_subtitle": "Pick skills, run a focus block, log what you learned.",
@@ -1406,6 +1481,32 @@
   "canvas_notification_center": "Notification Center",
   "canvas_notification_desc": "Control and oversee all system notifications",
   "canvas_goal_center": "Goal Evolution",
+  "dev_quick_tabs_title": "Dev Tools",
+  "dev_quick_tabs_subtitle": "Saved browser tabs — Northflank, Supabase, n8n, and more.",
+  "dev_quick_tabs_empty": "No tabs yet. Defaults load on first open.",
+  "dev_quick_tabs_add": "Add tab",
+  "dev_quick_tabs_open": "Open",
+  "dev_quick_tabs_edit": "Edit tab",
+  "dev_quick_tabs_label": "Title",
+  "dev_quick_tabs_url": "URL",
+  "dev_quick_tabs_delete_title": "Delete tab?",
+  "dev_quick_tabs_delete_message": "Remove \"{title}\" from quick access.",
+  "@dev_quick_tabs_delete_message": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "dev_quick_tabs_delete_confirm": "Delete",
+  "webview_connection_error": "Connection Error",
+  "webview_retry": "Retry",
+  "webview_ssl_trust_title": "Trust homelab certificate?",
+  "webview_ssl_trust_message": "The certificate for {host} is not trusted (common for OPNsense and LAN devices). Only continue on networks you trust.",
+  "@webview_ssl_trust_message": {
+    "placeholders": {
+      "host": { "type": "String" }
+    }
+  },
+  "webview_ssl_trust_continue": "Trust and continue",
   "canvas_goal_desc": "Adjust tactical goal parameters",
   "canvas_finance_reports_title": "Finance reports",
   "canvas_finance_reports_desc": "Daily summary, local reminders, and shortcuts",
@@ -1686,6 +1787,10 @@
   "project_complete_label": "COMPLETE",
   "project_no_tasks": "No tasks yet. Tap + to add one.",
   "project_notes_label": "Notes",
+  "note_type_picker_title": "Choose note type",
+  "note_type_markdown": "Markdown (.md)",
+  "note_type_plain_text": "Plain text (.txt)",
+  "note_type_word": "Word (.docx)",
   "project_journal_label": "Journal",
   "project_no_journal": "No journal entries yet. Tap + to log mood and progress.",
   "project_journal_entry": "Project log",
@@ -1784,6 +1889,9 @@
   "project_sdlc_open": "Open SDLC board",
   "project_sdlc_add_task_title": "Add SDLC task",
   "project_sdlc_move_phase": "SDLC phase",
+  "project_sdlc_due_date": "Due date",
+  "project_sdlc_due_date_none": "No due date",
+  "project_sdlc_clear_due_date": "Clear due date",
   "project_sdlc_default_purpose": "Define what this project must deliver and why.",
   "project_sdlc_empty": "No active tasks. Tap + to add one to a phase.",
   "project_sdlc_column_empty": "No tasks",
@@ -2029,7 +2137,7 @@
   "notification_pomodoro_reminder_subtitle": "Receive notification after you finish a pomodoro or end a break.",
   "notification_live_activities_title": "Live Activities",
   "notification_live_activities_subtitle": "Track focus timer and information on your Lock Screen.",
-  "notification_morning_briefing_subtitle": "Show the morning summary the first time you open Home each day.",
+  "notification_morning_briefing_subtitle": "Today's schedule, yesterday recap, and motivation when you first open Home (5:00–11:59).",
   "notification_status_on": "on",
   "notification_status_off": "off",
   "notification_wisdom_board": "Wisdom Board",
@@ -2549,9 +2657,22 @@
   "daily_loop_finance": "Money check",
   "daily_loop_mind": "Mood log",
   "daily_loop_projects": "Project touch",
-  "morning_loop_reminder_title": "Morning summary",
-  "morning_loop_reminder_subtitle": "Yesterday recap & today's motivation — open Ice Gate first each morning",
+  "morning_loop_reminder_title": "Morning push reminder",
+  "morning_loop_reminder_subtitle": "Optional phone notification — your in-app summary on Home works without this",
   "morning_briefing_toggle": "Morning summary on Home",
+  "morning_briefing_today_schedule": "Today's schedule",
+  "morning_briefing_today_empty": "No events today — a clear day to plan.",
+  "morning_briefing_today_connect_hint": "Connect Google or device calendar to see today's events here.",
+  "morning_briefing_today_more": "+{count} more in calendar",
+  "@morning_briefing_today_more": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_all_day": "All day",
+  "morning_briefing_open_calendar": "Open calendar",
   "morning_briefing_title": "Good morning",
   "morning_briefing_title_name": "Good morning, {name}",
   "@morning_briefing_title_name": {

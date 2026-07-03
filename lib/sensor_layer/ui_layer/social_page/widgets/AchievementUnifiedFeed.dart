@@ -3,25 +3,24 @@ import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementFeedUtils.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryActions.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryImage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ProjectNoteArchiveActions.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ProjectNoteArchiveImage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ProjectNoteArchiveWarm.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/project_note_archive_utils.dart';
 import 'package:intl/intl.dart';
 
-/// Chronological mix of photo stories and logged text feats (slice B).
+/// Chronological memory lane from [project_notes].
 class AchievementUnifiedFeed extends StatelessWidget {
   const AchievementUnifiedFeed({
     super.key,
     required this.items,
     required this.projects,
-    required this.photoStories,
+    required this.photoMemories,
   });
 
-  final List<AchievementData> items;
+  final List<ProjectNoteData> items;
   final List<ProjectProtocol> projects;
-  final List<AchievementData> photoStories;
+  final List<ProjectNoteData> photoMemories;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +31,7 @@ class AchievementUnifiedFeed extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.fromLTRB(20, 24, 12, 8),
         child: Text(
-          l10n.social_no_achievements_msg,
+          l10n.achievement_archive_empty,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: cs.onSurfaceVariant,
@@ -41,65 +40,137 @@ class AchievementUnifiedFeed extends StatelessWidget {
       );
     }
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 4, 12, 8),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final a = items[index];
-        if (achievementIsPhotoStory(a)) {
-          final storyIndex = photoStories.indexWhere((s) => s.id == a.id);
-          return _PhotoFeedTile(
-            achievement: a,
-            projectLabel: AchievementFeedUtils.projectLabel(a, projects),
-            onTap: () {
-              if (storyIndex >= 0) {
-                AchievementStoryActions.openViewer(
-                  context,
-                  photoStories,
-                  storyIndex,
-                  projects: projects,
+    final groups = ProjectNoteArchiveUtils.groupByMonth(items);
+    final children = <Widget>[];
+
+    for (var gi = 0; gi < groups.length; gi++) {
+      final group = groups[gi];
+      children.add(
+        _MonthHeader(label: DateFormat.yMMMM().format(group.month)),
+      );
+      for (var ii = 0; ii < group.items.length; ii++) {
+        final note = group.items[ii];
+        if (ProjectNoteArchiveUtils.hasPhoto(note)) {
+          final storyIndex = photoMemories.indexWhere((s) => s.id == note.id);
+          children.add(
+            _PhotoFeedTile(
+              note: note,
+              projectLabel: ProjectNoteArchiveUtils.projectLabel(
+                note,
+                projects,
+              ),
+              yearsAgoLabel: _yearsAgoLabel(l10n, note.createdAt),
+              onTap: () {
+                if (storyIndex >= 0) {
+                  ProjectNoteArchiveActions.openViewer(
+                    context,
+                    photoMemories,
+                    storyIndex,
+                    projects: projects,
+                  );
+                }
+              },
+            ),
+          );
+        } else {
+          children.add(
+            _TextFeedTile(
+              note: note,
+              projectLabel: ProjectNoteArchiveUtils.projectLabel(
+                note,
+                projects,
+              ),
+              yearsAgoLabel: _yearsAgoLabel(l10n, note.createdAt),
+              onTap: () => ProjectNoteArchiveActions.openNote(context, note),
+              onOpenProject: () {
+                final routeId = ProjectNoteArchiveUtils.routeProjectId(
+                  note.projectID,
+                  projects,
                 );
-              }
-            },
+                if (routeId != null) context.push('/projects/$routeId');
+              },
+            ),
           );
         }
-        return _TextFeedTile(
-          achievement: a,
-          projectLabel: AchievementFeedUtils.projectLabel(a, projects),
-          onTap: () => AchievementBuilderDialog.show(context, initialData: a),
-          onOpenProject: () {
-            final routeId =
-                AchievementFeedUtils.routeProjectId(a.projectID, projects);
-            if (routeId != null) context.push('/projects/$routeId');
-          },
-        );
-      },
+        if (ii < group.items.length - 1) {
+          children.add(const SizedBox(height: 10));
+        }
+      }
+      if (gi < groups.length - 1) {
+        children.add(const SizedBox(height: 16));
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 12, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+
+  String? _yearsAgoLabel(AppLocalizations l10n, DateTime createdAt) {
+    final years = ProjectNoteArchiveUtils.yearsAgo(createdAt);
+    if (years <= 0) return null;
+    return l10n.achievement_years_ago(years);
+  }
+}
+
+class _MonthHeader extends StatelessWidget {
+  const _MonthHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Divider(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              label.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.1,
+                color: ProjectNoteArchiveWarm.accent.withValues(alpha: 0.9),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Divider(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _PhotoFeedTile extends StatelessWidget {
   const _PhotoFeedTile({
-    required this.achievement,
+    required this.note,
     required this.projectLabel,
     required this.onTap,
+    this.yearsAgoLabel,
   });
 
-  final AchievementData achievement;
+  final ProjectNoteData note;
   final String projectLabel;
   final VoidCallback onTap;
+  final String? yearsAgoLabel;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final ring = achievementDomainRingColor(achievement.domain);
-    final when = DateFormat.MMMd().add_Hm().format(
-      achievement.createdAt.toLocal(),
-    );
-    final mood = achievement.moodPost ?? '😐';
+    final ring = ProjectNoteArchiveUtils.ringColorForCategory(note.category);
+    final when = DateFormat.MMMd().add_Hm().format(note.createdAt.toLocal());
+    final mood = ProjectNoteArchiveUtils.moodDisplay(note);
 
     return Material(
       color: cs.surface,
@@ -117,10 +188,7 @@ class _PhotoFeedTile extends StatelessWidget {
               SizedBox(
                 width: 72,
                 height: 72,
-                child: AchievementStoryImage(
-                  relativePath: achievement.localImagePath,
-                  fit: BoxFit.cover,
-                ),
+                child: ProjectNoteArchiveImage(note: note, fit: BoxFit.cover),
               ),
               Expanded(
                 child: Padding(
@@ -148,6 +216,18 @@ class _PhotoFeedTile extends StatelessWidget {
                           ),
                         ],
                       ),
+                      if (yearsAgoLabel != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          yearsAgoLabel!,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: ProjectNoteArchiveWarm.accent
+                                .withValues(alpha: 0.95),
+                          ),
+                        ),
+                      ],
                       if (projectLabel.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
@@ -163,7 +243,7 @@ class _PhotoFeedTile extends StatelessWidget {
                       ],
                       const SizedBox(height: 4),
                       Text(
-                        achievement.title,
+                        note.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -186,25 +266,26 @@ class _PhotoFeedTile extends StatelessWidget {
 
 class _TextFeedTile extends StatelessWidget {
   const _TextFeedTile({
-    required this.achievement,
+    required this.note,
     required this.projectLabel,
     required this.onTap,
     required this.onOpenProject,
+    this.yearsAgoLabel,
   });
 
-  final AchievementData achievement;
+  final ProjectNoteData note;
   final String projectLabel;
   final VoidCallback onTap;
   final VoidCallback onOpenProject;
+  final String? yearsAgoLabel;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    final when = DateFormat.MMMd().add_Hm().format(
-      achievement.createdAt.toLocal(),
-    );
-    final mood = achievement.moodPost ?? achievement.moodPre;
+    final when = DateFormat.MMMd().add_Hm().format(note.createdAt.toLocal());
+    final mood = ProjectNoteArchiveUtils.moodDisplay(note);
+    final preview = ProjectNoteArchiveUtils.plainBody(note);
 
     return Material(
       color: cs.surface,
@@ -223,11 +304,8 @@ class _TextFeedTile extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  if (mood != null && mood.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Text(mood, style: const TextStyle(fontSize: 18)),
-                    ),
+                  Text(mood, style: const TextStyle(fontSize: 18)),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       when,
@@ -237,7 +315,7 @@ class _TextFeedTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (achievement.projectID?.trim().isNotEmpty == true)
+                  if (note.projectID?.trim().isNotEmpty == true)
                     TextButton(
                       onPressed: onOpenProject,
                       style: TextButton.styleFrom(
@@ -248,6 +326,17 @@ class _TextFeedTile extends StatelessWidget {
                     ),
                 ],
               ),
+              if (yearsAgoLabel != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  yearsAgoLabel!,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: ProjectNoteArchiveWarm.accent.withValues(alpha: 0.95),
+                  ),
+                ),
+              ],
               if (projectLabel.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
@@ -261,7 +350,7 @@ class _TextFeedTile extends StatelessWidget {
               ],
               const SizedBox(height: 4),
               Text(
-                achievement.title,
+                note.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -269,6 +358,19 @@ class _TextFeedTile extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
+              if (preview.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  preview,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurfaceVariant,
+                    height: 1.25,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

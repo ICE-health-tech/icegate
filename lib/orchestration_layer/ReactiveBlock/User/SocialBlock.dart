@@ -25,7 +25,7 @@ class SocialBlock {
   Future<void> restoreActiveFocus(String personId) async {
     final id = await MindFocusTrendPrefs.loadActiveFocusId(personId);
     if (id == null || id.isEmpty) {
-      activeFocusTrend.value = null;
+      untracked(() => activeFocusTrend.value = null);
       return;
     }
     final trends = await MindFocusTrendPrefs.load(personId);
@@ -36,7 +36,7 @@ class SocialBlock {
         break;
       }
     }
-    activeFocusTrend.value = match;
+    untracked(() => activeFocusTrend.value = match);
     if (match == null) {
       await MindFocusTrendPrefs.saveActiveFocusId(personId, null);
     }

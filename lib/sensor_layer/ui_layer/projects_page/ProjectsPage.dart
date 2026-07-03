@@ -17,6 +17,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/widgets/NoteTypePicker.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/widgets/ProjectsQuickActionsHub.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'TaskItem.dart';
@@ -499,28 +500,12 @@ class ProjectsPage extends StatelessWidget {
         ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
 
       Future<void> openNewNote() async {
-        final ext = await showDialog<String>(
-          context: context,
-          builder: (context) => Center(child: SimpleDialog(
-            title: const Text('Choose Note Type'),
-            children: [
-              SimpleDialogOption(
-                onPressed: () => Navigator.pop(context, '.md'),
-                child: const Text('Markdown (.md)'),
-              ),
-              SimpleDialogOption(
-                onPressed: () => Navigator.pop(context, '.txt'),
-                child: const Text('Plain Text (.txt)'),
-              ),
-              SimpleDialogOption(
-                onPressed: () => Navigator.pop(context, '.docx'),
-                child: const Text('Word (.docx)'),
-              ),
-            ],
-          ),
-        ));
+        final ext = await showNoteTypePicker(context);
         if (ext != null && context.mounted) {
-          context.push('/projects/editor', extra: {'extension': ext});
+          context.push(
+            '/projects/editor',
+            extra: {'extension': ext, 'category': 'note'},
+          );
         }
       }
 
@@ -578,6 +563,12 @@ class ProjectsPage extends StatelessWidget {
           icon: Icons.grid_view_rounded,
           accent: HealthMetricColors.pillarAccentAt(4),
           onTap: () => context.push('/projects/plan'),
+        ),
+        QuickActionTileSpec(
+          label: l10n.projects_tile_whiteboard,
+          icon: Icons.draw_rounded,
+          accent: HealthMetricColors.pillarAccentAt(5),
+          onTap: () => context.push('/projects/board'),
         ),
         ...apps.asMap().entries.map(
           (entry) => QuickActionTileSpec(

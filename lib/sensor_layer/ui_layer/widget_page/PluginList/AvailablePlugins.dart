@@ -71,6 +71,12 @@ class AvailablePlugins {
       category: PluginCategory.other,
     ),
     _InternalPlugin(
+      name: 'Flow Diagram',
+      url: '/projects/diagrams',
+      icon: Icons.account_tree_rounded,
+      category: PluginCategory.productivity,
+    ),
+    _InternalPlugin(
       name: 'Notes',
       url: '/projects/editor',
       icon: Icons.edit_note_rounded,

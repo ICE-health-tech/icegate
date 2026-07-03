@@ -89,6 +89,14 @@ class DragCanvas extends StatelessWidget {
                             ),
                             const SizedBox(height: 14),
                             HubEntryCard(
+                              title: l10n.dev_quick_tabs_title,
+                              subtitle: l10n.dev_quick_tabs_subtitle,
+                              icon: Icons.web_rounded,
+                              accent: HealthMetricColors.pillarAccentAt(2),
+                              onTap: () => context.push('/canvas/dev-tools'),
+                            ),
+                            const SizedBox(height: 14),
+                            HubEntryCard(
                               title: l10n.plugin_ssh,
                               subtitle: l10n.plugin_ssh_desc,
                               icon: Icons.terminal_rounded,

@@ -17,8 +17,12 @@ import 'package:ice_gate/orchestration_layer/Services/Health/MotivationEngine.da
 import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryEmailFormatter.dart';
 import 'package:ice_gate/orchestration_layer/Services/MorningBriefingService.dart';
 import 'package:ice_gate/orchestration_layer/Services/MorningLoopPrefs.dart';
+import 'package:ice_gate/orchestration_layer/Services/MorningScheduleLoader.dart';
+import 'package:ice_gate/data_layer/Services/cloud/DeviceCalendarService.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleCalendarService.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -74,6 +78,8 @@ abstract final class MorningBriefingSheet {
           locale: locale,
           l10n: l10n,
           categoryLabels: categoryLabels,
+          google: context.read<GoogleCalendarService>(),
+          device: context.read<DeviceCalendarService>(),
         );
     if (!context.mounted) return;
 
@@ -178,6 +184,8 @@ class _MorningBriefingBody extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  _buildTodayScheduleCard(context, l10n, cs, snapshot.todaySchedule),
+                  const SizedBox(height: 12),
                   Flexible(
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
@@ -238,6 +246,130 @@ class _MorningBriefingBody extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static Widget _buildTodayScheduleCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme cs,
+    MorningScheduleSnapshot schedule,
+  ) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cs.primary.withValues(alpha: 0.22),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.calendar_today_rounded,
+                size: 18,
+                color: cs.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.morning_briefing_today_schedule,
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.7),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (schedule.isEmpty)
+            Text(
+              schedule.hasCalendarSource
+                  ? l10n.morning_briefing_today_empty
+                  : l10n.morning_briefing_today_connect_hint,
+              style: TextStyle(
+                color: cs.onSurface.withValues(alpha: 0.75),
+                fontSize: 12.5,
+                height: 1.45,
+                fontWeight: FontWeight.w500,
+              ),
+            )
+          else
+            for (final item in schedule.items.take(5))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 54,
+                      child: Text(
+                        _formatScheduleTime(context, item),
+                        style: TextStyle(
+                          color: cs.onSurface.withValues(alpha: 0.55),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        item.title,
+                        style: TextStyle(
+                          color: cs.onSurface.withValues(alpha: 0.9),
+                          fontSize: 12.5,
+                          height: 1.35,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          if (schedule.items.length > 5)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                l10n.morning_briefing_today_more(schedule.items.length - 5),
+                style: TextStyle(
+                  color: cs.onSurface.withValues(alpha: 0.5),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.push('/projects/calendar');
+              },
+              icon: const Icon(Icons.open_in_new_rounded, size: 16),
+              label: Text(l10n.morning_briefing_open_calendar),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatScheduleTime(
+    BuildContext context,
+    MorningScheduleItem item,
+  ) {
+    if (item.allDay) {
+      return AppLocalizations.of(context)!.morning_briefing_all_day;
+    }
+    final format = DateFormat.jm(Localizations.localeOf(context).languageCode);
+    return format.format(item.start);
   }
 
   static Widget _buildSummaryBody(

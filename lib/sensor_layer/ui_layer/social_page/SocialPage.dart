@@ -9,6 +9,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryD
 
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementsTabPanel.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/project_note_archive_utils.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
@@ -358,26 +359,30 @@ class _SocialPageState extends State<SocialPage>
 
   Widget _buildAchievementsDashboard(BuildContext context) {
     return Watch((context) {
-      final achievementsDAO = context.read<AchievementsDAO>();
+      final notesDao = context.read<ProjectNoteDAO>();
       final personBlock = context.read<PersonBlock>();
       final currentPersonId = personBlock.currentPersonID.value ?? "";
 
-      return StreamBuilder<List<AchievementData>>(
-        stream: achievementsDAO.watchAchievementsByPerson(currentPersonId),
+      return StreamBuilder<List<ProjectNoteData>>(
+        stream: notesDao.watchNotesByCategory(
+          currentPersonId,
+          ProjectNoteArchiveUtils.archiveCategory,
+        ),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final achievements = snapshot.data!;
+          final notes = List<ProjectNoteData>.from(snapshot.data!)
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
           final l10n = AppLocalizations.of(context)!;
 
           return AchievementsTabPanel(
-            achievements: achievements,
+            notes: notes,
             emptyState: _buildEmptyState(
               context,
-              l10n.social_no_achievements_msg,
-              Icons.emoji_events_outlined,
+              l10n.achievement_archive_empty,
+              Icons.auto_stories_outlined,
             ),
           );
         },

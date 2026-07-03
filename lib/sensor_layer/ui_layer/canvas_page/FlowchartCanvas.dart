@@ -17,16 +17,32 @@ class _StepDragPayload {
 
 /// Pan/zoom schedule planner — columns & steps from [PlanBlock].
 class FlowchartCanvas extends StatelessWidget {
-  const FlowchartCanvas({super.key, this.nodeWidth = 196});
+  const FlowchartCanvas({
+    super.key,
+    this.nodeWidth,
+    this.fabBottomInset = 20,
+    this.fillViewport = false,
+  });
 
-  final double nodeWidth;
+  /// Fixed column width; defaults from screen size when null.
+  final double? nodeWidth;
+  final double fabBottomInset;
+  /// When true, grid fills the parent and content pans on top (plan page).
+  final bool fillViewport;
 
   static const double _columnGap = 44;
   static const double _canvasPad = 48;
 
+  double _resolveNodeWidth(BuildContext context) {
+    if (nodeWidth != null) return nodeWidth!;
+    final w = MediaQuery.sizeOf(context).width;
+    return w < 400 ? 168.0 : (w < 720 ? 184.0 : 196.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final planBlock = context.read<PlanBlock>();
+    final resolvedWidth = _resolveNodeWidth(context);
     // Per-signal watch — avoids Watch reassemble using a defunct context on hot reload.
     final root = planBlock.rootLabel.watch(context);
     final cols = planBlock.columns.watch(context);
@@ -35,23 +51,41 @@ class FlowchartCanvas extends StatelessWidget {
       planBlock: planBlock,
       rootLabel: root,
       columns: cols,
-      nodeWidth: nodeWidth,
+      nodeWidth: resolvedWidth,
+      fabBottomInset: fabBottomInset,
+      fillViewport: fillViewport,
     );
   }
 }
 
-class _PlanBoardView extends StatelessWidget {
+class _PlanBoardView extends StatefulWidget {
   const _PlanBoardView({
     required this.planBlock,
     required this.rootLabel,
     required this.columns,
     required this.nodeWidth,
+    required this.fabBottomInset,
+    required this.fillViewport,
   });
 
   final PlanBlock planBlock;
   final String rootLabel;
   final List<PlanColumn> columns;
   final double nodeWidth;
+  final double fabBottomInset;
+  final bool fillViewport;
+
+  @override
+  State<_PlanBoardView> createState() => _PlanBoardViewState();
+}
+
+class _PlanBoardViewState extends State<_PlanBoardView> {
+  bool _canvasPanLocked = false;
+
+  void _setCanvasPanLocked(bool locked) {
+    if (_canvasPanLocked == locked) return;
+    setState(() => _canvasPanLocked = locked);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,20 +96,81 @@ class _PlanBoardView extends StatelessWidget {
         : const Color(0xFFF3F4F6);
     final gridColor = isDark ? cs.onSurface : const Color(0xFF9CA3AF);
 
-    final boardWidth =
+    final columns = widget.columns;
+    final nodeWidth = widget.nodeWidth;
+
+    final contentWidth =
         FlowchartCanvas._canvasPad * 2 +
         columns.length * nodeWidth +
-        (columns.length - 1) * FlowchartCanvas._columnGap;
-    const boardHeight = 1180.0;
+        (columns.length > 1
+            ? (columns.length - 1) * FlowchartCanvas._columnGap
+            : 0);
+    final contentHeight = 720.0 + columns.length * 40.0;
+
+    if (widget.fillViewport) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final vw = constraints.maxWidth;
+          final vh = constraints.maxHeight;
+          final boardWidth = contentWidth > vw ? contentWidth : vw;
+          final boardHeight = contentHeight > vh ? contentHeight : vh;
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: ColoredBox(
+                  color: boardColor,
+                  child: CustomPaint(
+                    painter: GridLinePainter(
+                      color: gridColor,
+                      spacing: 24,
+                      opacity: isDark ? 0.08 : 0.18,
+                    ),
+                  ),
+                ),
+              ),
+              InteractiveViewer(
+                panEnabled: !_canvasPanLocked,
+                scaleEnabled: !_canvasPanLocked,
+                minScale: 0.6,
+                maxScale: 2.5,
+                boundaryMargin: const EdgeInsets.all(480),
+                child: SizedBox(
+                  width: boardWidth,
+                  height: boardHeight,
+                  child: _buildBoardContent(context),
+                ),
+              ),
+              Positioned(
+                right: 16,
+                bottom: widget.fabBottomInset,
+                child: _PlanFab(
+                  planBlock: widget.planBlock,
+                  columns: columns,
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    final boardWidth = contentWidth;
+    final boardHeight = contentHeight;
 
     return Stack(
       children: [
         InteractiveViewer(
+          panEnabled: !_canvasPanLocked,
+          scaleEnabled: !_canvasPanLocked,
           minScale: 0.45,
           maxScale: 2.2,
           boundaryMargin: const EdgeInsets.all(280),
           child: SizedBox(
-            width: boardWidth.clamp(600, double.infinity),
+            width: boardWidth < MediaQuery.sizeOf(context).width
+                ? MediaQuery.sizeOf(context).width
+                : boardWidth,
             height: boardHeight,
             child: Stack(
               children: [
@@ -91,47 +186,61 @@ class _PlanBoardView extends StatelessWidget {
                     ),
                   ),
                 ),
-                Positioned(
-                  top: FlowchartCanvas._canvasPad,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: _RootPill(
-                      label: rootLabel,
-                      onTap: () => _editRootLabel(context, planBlock, rootLabel),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: FlowchartCanvas._canvasPad + 72,
-                  left: FlowchartCanvas._canvasPad,
-                  right: FlowchartCanvas._canvasPad,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (var i = 0; i < columns.length; i++) ...[
-                        if (i > 0)
-                          SizedBox(width: FlowchartCanvas._columnGap),
-                        Expanded(
-                          child: _PlanColumnView(
-                            planBlock: planBlock,
-                            column: columns[i],
-                            columnIndex: i,
-                            nodeWidth: nodeWidth,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+                _buildBoardContent(context),
               ],
             ),
           ),
         ),
         Positioned(
-          right: 20,
-          bottom: 20,
-          child: _PlanFab(planBlock: planBlock, columns: columns),
+          right: 16,
+          bottom: widget.fabBottomInset,
+          child: _PlanFab(planBlock: widget.planBlock, columns: columns),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBoardContent(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned(
+          top: FlowchartCanvas._canvasPad,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: _RootPill(
+              label: widget.rootLabel,
+              onTap: () => _editRootLabel(
+                context,
+                widget.planBlock,
+                widget.rootLabel,
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          top: FlowchartCanvas._canvasPad + 72,
+          left: FlowchartCanvas._canvasPad,
+          right: FlowchartCanvas._canvasPad,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < widget.columns.length; i++) ...[
+                if (i > 0) SizedBox(width: FlowchartCanvas._columnGap),
+                SizedBox(
+                  width: widget.nodeWidth,
+                  child: _PlanColumnView(
+                    planBlock: widget.planBlock,
+                    column: widget.columns[i],
+                    columnIndex: i,
+                    nodeWidth: widget.nodeWidth,
+                    onDragLockChanged: _setCanvasPanLocked,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ],
     );
@@ -263,12 +372,14 @@ class _PlanColumnView extends StatefulWidget {
     required this.column,
     required this.columnIndex,
     required this.nodeWidth,
+    required this.onDragLockChanged,
   });
 
   final PlanBlock planBlock;
   final PlanColumn column;
   final int columnIndex;
   final double nodeWidth;
+  final ValueChanged<bool> onDragLockChanged;
 
   @override
   State<_PlanColumnView> createState() => _PlanColumnViewState();
@@ -283,8 +394,58 @@ class _PlanColumnViewState extends State<_PlanColumnView> {
     final cs = Theme.of(context).colorScheme;
     final col = widget.column;
 
-    return LongPressDraggable<int>(
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (d) => d.data != widget.columnIndex,
+      onAcceptWithDetails: (d) {
+        widget.planBlock.reorderColumns(d.data, widget.columnIndex);
+        setState(() => _columnDropHover = false);
+      },
+      onMove: (_) => setState(() => _columnDropHover = true),
+      onLeave: (_) => setState(() => _columnDropHover = false),
+      builder: (context, colCandidates, _) {
+        return DragTarget<_StepDragPayload>(
+          onWillAcceptWithDetails: (d) => d.data.fromColumnId != col.id,
+          onAcceptWithDetails: (d) {
+            HapticFeedback.mediumImpact();
+            widget.planBlock.moveStepToColumn(
+              stepId: d.data.stepId,
+              fromColumnId: d.data.fromColumnId,
+              toColumnId: col.id,
+            );
+            setState(() => _stepDropHover = false);
+          },
+          onMove: (_) => setState(() => _stepDropHover = true),
+          onLeave: (_) => setState(() => _stepDropHover = false),
+          builder: (context, stepCandidates, __) {
+            final highlight = _stepDropHover || stepCandidates.isNotEmpty;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: highlight
+                      ? cs.primary.withValues(alpha: 0.55)
+                      : (_columnDropHover || colCandidates.isNotEmpty)
+                      ? cs.tertiary.withValues(alpha: 0.45)
+                      : Colors.transparent,
+                  width: 1.6,
+                ),
+              ),
+              child: _buildColumnBody(col),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildColumnHeader(PlanColumn col) {
+    return Draggable<int>(
       data: widget.columnIndex,
+      onDragStarted: () => widget.onDragLockChanged(true),
+      onDragEnd: (_) => widget.onDragLockChanged(false),
+      onDraggableCanceled: (_, __) => widget.onDragLockChanged(false),
       feedback: Material(
         elevation: 8,
         borderRadius: BorderRadius.circular(12),
@@ -296,50 +457,16 @@ class _PlanColumnViewState extends State<_PlanColumnView> {
           ),
         ),
       ),
-      childWhenDragging: Opacity(opacity: 0.35, child: _buildColumnBody(col)),
-      child: DragTarget<int>(
-        onWillAcceptWithDetails: (d) => d.data != widget.columnIndex,
-        onAcceptWithDetails: (d) {
-          widget.planBlock.reorderColumns(d.data, widget.columnIndex);
-          setState(() => _columnDropHover = false);
-        },
-        onMove: (_) => setState(() => _columnDropHover = true),
-        onLeave: (_) => setState(() => _columnDropHover = false),
-        builder: (context, colCandidates, _) {
-          return DragTarget<_StepDragPayload>(
-            onWillAcceptWithDetails: (d) =>
-                d.data.fromColumnId != col.id,
-            onAcceptWithDetails: (d) {
-              widget.planBlock.moveStepToColumn(
-                stepId: d.data.stepId,
-                fromColumnId: d.data.fromColumnId,
-                toColumnId: col.id,
-              );
-              setState(() => _stepDropHover = false);
-            },
-            onMove: (_) => setState(() => _stepDropHover = true),
-            onLeave: (_) => setState(() => _stepDropHover = false),
-            builder: (context, stepCandidates, __) {
-              final highlight = _stepDropHover || stepCandidates.isNotEmpty;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: highlight
-                        ? cs.primary.withValues(alpha: 0.55)
-                        : (_columnDropHover || colCandidates.isNotEmpty)
-                        ? cs.tertiary.withValues(alpha: 0.45)
-                        : Colors.transparent,
-                    width: 1.6,
-                  ),
-                ),
-                child: _buildColumnBody(col),
-              );
-            },
-          );
-        },
+      childWhenDragging: Opacity(
+        opacity: 0.35,
+        child: _ColumnHeader(title: col.title, dragging: true),
+      ),
+      child: _ColumnHeader(
+        title: col.title,
+        onEdit: () => _editColumnTitle(context, col),
+        onDelete: widget.planBlock.columns.value.length > 1
+            ? () => widget.planBlock.removeColumn(col.id)
+            : null,
       ),
     );
   }
@@ -348,13 +475,7 @@ class _PlanColumnViewState extends State<_PlanColumnView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _ColumnHeader(
-          title: col.title,
-          onEdit: () => _editColumnTitle(context, col),
-          onDelete: widget.planBlock.columns.value.length > 1
-              ? () => widget.planBlock.removeColumn(col.id)
-              : null,
-        ),
+        _buildColumnHeader(col),
         const SizedBox(height: 8),
         if (col.steps.isEmpty)
           _EmptyColumnHint(
@@ -383,6 +504,7 @@ class _PlanColumnViewState extends State<_PlanColumnView> {
                     onEdit: () => _editStep(context, col.id, step),
                     onDelete: () =>
                         widget.planBlock.removeStep(col.id, step.id),
+                    onDragLockChanged: widget.onDragLockChanged,
                   ),
                   if (!isLast) _FlowConnector(label: step.connectorLabel),
                 ],
@@ -534,6 +656,7 @@ class _PlanStepRow extends StatelessWidget {
     required this.nodeWidth,
     required this.onEdit,
     required this.onDelete,
+    required this.onDragLockChanged,
   });
 
   final PlanStep step;
@@ -542,45 +665,76 @@ class _PlanStepRow extends StatelessWidget {
   final double nodeWidth;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final ValueChanged<bool> onDragLockChanged;
 
   @override
   Widget build(BuildContext context) {
-    return LongPressDraggable<_StepDragPayload>(
-      data: _StepDragPayload(stepId: step.id, fromColumnId: columnId),
-      feedback: Material(
-        elevation: 6,
-        borderRadius: BorderRadius.circular(16),
-        child: Opacity(
-          opacity: 0.9,
-          child: SizedBox(
-            width: nodeWidth - 12,
-            child: _PlanNodeCard(step: step, width: nodeWidth),
+    final payload = _StepDragPayload(stepId: step.id, fromColumnId: columnId);
+    final cs = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ReorderableDragStartListener(
+          index: stepIndex,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 14, right: 2),
+            child: Icon(
+              Icons.swap_vert_rounded,
+              size: 18,
+              color: cs.onSurfaceVariant,
+            ),
           ),
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ReorderableDragStartListener(
-            index: stepIndex,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 14, right: 4),
-              child: Icon(
-                Icons.swap_vert_rounded,
-                size: 18,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+        Draggable<_StepDragPayload>(
+          data: payload,
+          onDragStarted: () => onDragLockChanged(true),
+          onDragEnd: (_) => onDragLockChanged(false),
+          onDraggableCanceled: (_, __) => onDragLockChanged(false),
+          feedback: Material(
+            elevation: 6,
+            borderRadius: BorderRadius.circular(16),
+            child: Opacity(
+              opacity: 0.92,
+              child: SizedBox(
+                width: nodeWidth - 8,
+                child: _PlanNodeCard(step: step, width: nodeWidth),
               ),
             ),
           ),
-          Expanded(
-            child: GestureDetector(
-              onTap: onEdit,
-              onLongPress: onDelete,
-              child: _PlanNodeCard(step: step, width: nodeWidth),
+          childWhenDragging: Padding(
+            padding: const EdgeInsets.only(top: 12, right: 4),
+            child: Icon(
+              Icons.drag_indicator_rounded,
+              size: 20,
+              color: cs.onSurfaceVariant.withValues(alpha: 0.35),
             ),
           ),
-        ],
-      ),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12, right: 4),
+            child: Icon(
+              Icons.drag_indicator_rounded,
+              size: 20,
+              color: cs.onSurfaceVariant.withValues(alpha: 0.75),
+            ),
+          ),
+        ),
+        Expanded(
+          child: GestureDetector(
+            onTap: onEdit,
+            child: _PlanNodeCard(step: step, width: nodeWidth),
+          ),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          iconSize: 18,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          tooltip: 'Remove step',
+          onPressed: onDelete,
+          icon: Icon(Icons.close_rounded, color: cs.error),
+        ),
+      ],
     );
   }
 }
@@ -649,7 +803,7 @@ class _PlanNodeCard extends StatelessWidget {
     }
 
     final child = Container(
-      width: width,
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
         color: bg,
@@ -802,7 +956,7 @@ class _PlanStepEditorDialogState extends State<_PlanStepEditorDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<PlanNodeVariant>(
-              value: _variant,
+              initialValue: _variant,
               decoration: const InputDecoration(labelText: 'Style'),
               items: PlanNodeVariant.values
                   .map(

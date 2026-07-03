@@ -33,7 +33,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage> {
   static const double _headerClearance = 56;
 
   bool _morningPrefsLoading = true;
-  bool _morningReminderEnabled = true;
+  bool _morningReminderEnabled = false;
   bool _morningBriefingEnabled = true;
   bool _quotesSyncStarted = false;
   TimeOfDay _morningReminderTime = const TimeOfDay(hour: 7, minute: 0);

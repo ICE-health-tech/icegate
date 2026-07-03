@@ -6,6 +6,9 @@ import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/MindSpecialMood.dart';
+import 'package:ice_gate/orchestration_layer/Services/TaskPeriodWindow.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillCatalog.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/SdlcPhase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -372,6 +375,77 @@ class GrowthBlock {
     }
   }
 
+  /// Time-scoped focus task (daily / weekly / monthly) with optional skill link.
+  Future<String?> createTimeScopedTask({
+    required TaskPeriod period,
+    required String title,
+    String description = '',
+    String? skillName,
+    String? projectID,
+  }) async {
+    if (_personId.isEmpty || title.trim().isEmpty) return null;
+    final anchor = TaskPeriodWindow.anchorFor(period, DateTime.now());
+    return _dao.createGoal(
+      GoalsTableCompanion(
+        personID: Value(_personId),
+        title: Value(title.trim()),
+        projectID: Value(projectID),
+        description: Value(
+          TaskGoalSkillCodec.encode(
+            skillName: skillName,
+            description: description,
+          ),
+        ),
+        status: const Value('active'),
+        category: Value(TaskPeriodWindow.categoryFor(period)),
+        targetDate: Value(anchor.toUtc()),
+        createdAt: Value(DateTime.now().toUtc()),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+  }
+
+  /// Complete a time-scoped task; optional per-task mood + skill XP.
+  Future<void> completeTimeScopedTask({
+    required String goalId,
+    required String? projectId,
+    String? skillName,
+    String? periodCategory,
+    MindBlock? mindBlock,
+    String? personId,
+    String? tenantId,
+    String? taskTitle,
+    bool logSpecialMood = false,
+  }) async {
+    await completeGoal(goalId, projectId: projectId);
+    if (skillName != null && skillName.isNotEmpty) {
+      await grantSessionXpToMindSkills(
+        skillNames: [skillName],
+        minutes: 15,
+      );
+    }
+    if (!logSpecialMood ||
+        mindBlock == null ||
+        personId == null ||
+        personId.isEmpty) {
+      return;
+    }
+    final activities = <String>[
+      ...MindSpecialMood.dailyTaskCompleteActivities(goalId),
+      if (periodCategory != null && periodCategory.isNotEmpty)
+        'period:$periodCategory',
+      if (skillName != null && skillName.isNotEmpty) 'skill:$skillName',
+      MindSpecialMood.focusTodosStreakTag,
+    ];
+    await mindBlock.addMindLog(
+      moodScore: MindSpecialMood.score,
+      activities: activities,
+      note: taskTitle,
+      personId: personId,
+      tenantId: tenantId,
+    );
+  }
+
   static int sessionXpForMinutes(int minutes) =>
       (minutes / 2).round().clamp(10, 60);
 
@@ -591,6 +665,7 @@ class GrowthBlock {
     String description, {
     String? projectID,
     String category = 'project',
+    DateTime? targetDate,
   }) async {
     if (_personId.isEmpty) return null;
     return _dao.createGoal(
@@ -601,6 +676,9 @@ class GrowthBlock {
         description: Value(description),
         status: const Value('active'),
         category: Value(category),
+        targetDate: targetDate != null
+            ? Value(targetDate.toUtc())
+            : const Value.absent(),
         createdAt: Value(DateTime.now().toUtc()),
         updatedAt: Value(DateTime.now().toUtc()),
       ),
@@ -628,6 +706,10 @@ class GrowthBlock {
 
   Future<void> updateGoalProjectId(String id, String? projectId) async {
     await _dao.updateGoalProjectIdByUuid(id, projectId);
+  }
+
+  Future<void> updateGoalTargetDate(String id, DateTime? targetDate) async {
+    await _dao.updateGoalTargetDateByUuid(id, targetDate);
   }
 
   /// Push local skills to Supabase, then pull (Drift watch stream updates UI).

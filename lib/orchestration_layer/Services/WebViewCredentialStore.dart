@@ -1,5 +1,23 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+/// Saved HTTP login + SSL trust flags for one WebView host.
+class WebViewHostCredentialStatus {
+  const WebViewHostCredentialStatus({
+    required this.host,
+    this.username,
+    this.hasPassword = false,
+    this.sslTrusted = false,
+  });
+
+  final String host;
+  final String? username;
+  final bool hasPassword;
+  final bool sslTrusted;
+
+  bool get hasLogin =>
+      username != null && username!.isNotEmpty && hasPassword;
+}
+
 /// Persists HTTP basic-auth credentials and per-host "remember sign-in" for WebViews.
 class WebViewCredentialStore {
   WebViewCredentialStore({FlutterSecureStorage? storage})
@@ -13,6 +31,7 @@ class WebViewCredentialStore {
   String _userKey(String host) => 'webview_http_user_${hostKey(host)}';
   String _passKey(String host) => 'webview_http_pass_${hostKey(host)}';
   String _rememberKey(String host) => 'webview_remember_${hostKey(host)}';
+  String _sslTrustKey(String host) => 'webview_ssl_trust_${hostKey(host)}';
 
   Future<bool> isRememberEnabled(String host) async {
     final v = await _storage.read(key: _rememberKey(host));
@@ -50,5 +69,33 @@ class WebViewCredentialStore {
     await _storage.delete(key: _userKey(host));
     await _storage.delete(key: _passKey(host));
     await _storage.delete(key: _rememberKey(host));
+    await _storage.delete(key: _sslTrustKey(host));
+  }
+
+  Future<bool> isHomelabSslTrusted(String host) async {
+    return await _storage.read(key: _sslTrustKey(host)) == 'true';
+  }
+
+  Future<void> setHomelabSslTrusted(String host, bool trusted) async {
+    final key = _sslTrustKey(host);
+    if (trusted) {
+      await _storage.write(key: key, value: 'true');
+    } else {
+      await _storage.delete(key: key);
+    }
+  }
+
+  Future<WebViewHostCredentialStatus> statusForHost(String host) async {
+    if (host.isEmpty) {
+      return WebViewHostCredentialStatus(host: host);
+    }
+    final user = await _storage.read(key: _userKey(host));
+    final pass = await _storage.read(key: _passKey(host));
+    return WebViewHostCredentialStatus(
+      host: host,
+      username: user,
+      hasPassword: pass != null && pass.isNotEmpty,
+      sslTrusted: await isHomelabSslTrusted(host),
+    );
   }
 }

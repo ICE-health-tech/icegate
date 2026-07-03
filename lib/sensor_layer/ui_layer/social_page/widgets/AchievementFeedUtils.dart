@@ -1,6 +1,5 @@
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
 
 /// Filters + project labels for achievements tab (stories + unified feed).
 abstract final class AchievementFeedUtils {
@@ -38,6 +37,41 @@ abstract final class AchievementFeedUtils {
   static List<AchievementData> unifiedFeed(List<AchievementData> filtered) {
     return List<AchievementData>.from(filtered)
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  /// Same calendar day in a previous year — "On this day" nostalgia.
+  static List<AchievementData> onThisDayMemories(
+    List<AchievementData> all, {
+    DateTime? reference,
+  }) {
+    final now = (reference ?? DateTime.now()).toLocal();
+    return all
+        .where((a) {
+          final d = a.createdAt.toLocal();
+          return d.month == now.month &&
+              d.day == now.day &&
+              d.year < now.year;
+        })
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  static int yearsAgo(DateTime date, {DateTime? reference}) {
+    final now = (reference ?? DateTime.now()).toLocal();
+    return now.year - date.toLocal().year;
+  }
+
+  static List<AchievementMonthGroup> groupByMonth(List<AchievementData> items) {
+    final buckets = <DateTime, List<AchievementData>>{};
+    for (final a in items) {
+      final d = a.createdAt.toLocal();
+      final key = DateTime(d.year, d.month);
+      buckets.putIfAbsent(key, () => []).add(a);
+    }
+    final months = buckets.keys.toList()..sort((a, b) => b.compareTo(a));
+    return months
+        .map((m) => AchievementMonthGroup(month: m, items: buckets[m]!))
+        .toList();
   }
 
   static String? routeProjectId(
@@ -90,4 +124,11 @@ abstract final class AchievementFeedUtils {
     }).toList()
       ..sort((a, b) => a.name.compareTo(b.name));
   }
+}
+
+class AchievementMonthGroup {
+  const AchievementMonthGroup({required this.month, required this.items});
+
+  final DateTime month;
+  final List<AchievementData> items;
 }

@@ -764,11 +764,179 @@ abstract class AppLocalizations {
   /// **'Canvas'**
   String get projects_tile_canvas;
 
+  /// No description provided for @projects_tile_whiteboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Whiteboard'**
+  String get projects_tile_whiteboard;
+
+  /// No description provided for @projects_whiteboard_clear_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear whiteboard?'**
+  String get projects_whiteboard_clear_title;
+
+  /// No description provided for @projects_whiteboard_clear_message.
+  ///
+  /// In en, this message translates to:
+  /// **'All strokes will be removed. This cannot be undone.'**
+  String get projects_whiteboard_clear_message;
+
+  /// No description provided for @projects_whiteboard_clear_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get projects_whiteboard_clear_confirm;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
   /// No description provided for @projects_plan_section_title.
   ///
   /// In en, this message translates to:
   /// **'Schedule planner'**
   String get projects_plan_section_title;
+
+  /// No description provided for @projects_diagrams_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Project diagrams'**
+  String get projects_diagrams_title;
+
+  /// No description provided for @projects_diagrams_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No flowcharts yet. Tap + to pick a project and start drawing.'**
+  String get projects_diagrams_empty;
+
+  /// No description provided for @projects_diagrams_new.
+  ///
+  /// In en, this message translates to:
+  /// **'New diagram'**
+  String get projects_diagrams_new;
+
+  /// No description provided for @projects_diagrams_pick_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a project'**
+  String get projects_diagrams_pick_project;
+
+  /// No description provided for @projects_diagrams_no_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a project first.'**
+  String get projects_diagrams_no_projects;
+
+  /// No description provided for @projects_diagrams_steps.
+  ///
+  /// In en, this message translates to:
+  /// **'steps'**
+  String get projects_diagrams_steps;
+
+  /// No description provided for @plan_workspace_breadcrumb.
+  ///
+  /// In en, this message translates to:
+  /// **'WORKSPACE • PROJECTS'**
+  String get plan_workspace_breadcrumb;
+
+  /// No description provided for @plan_schedule_card_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get plan_schedule_card_title;
+
+  /// No description provided for @plan_schedule_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No steps yet.'**
+  String get plan_schedule_empty;
+
+  /// No description provided for @plan_focus_notes_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Notes'**
+  String get plan_focus_notes_title;
+
+  /// No description provided for @plan_notes_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type notes here…'**
+  String get plan_notes_hint;
+
+  /// No description provided for @plan_add_step.
+  ///
+  /// In en, this message translates to:
+  /// **'Add step'**
+  String get plan_add_step;
+
+  /// No description provided for @plan_drop_steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop steps here'**
+  String get plan_drop_steps;
+
+  /// No description provided for @plan_add_first_step.
+  ///
+  /// In en, this message translates to:
+  /// **'Add first step'**
+  String get plan_add_first_step;
+
+  /// No description provided for @plan_add_block_schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule block'**
+  String get plan_add_block_schedule;
+
+  /// No description provided for @plan_add_block_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus notes block'**
+  String get plan_add_block_notes;
+
+  /// No description provided for @plan_add_block_goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals block'**
+  String get plan_add_block_goals;
+
+  /// No description provided for @plan_add_block_flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Process block'**
+  String get plan_add_block_flow;
+
+  /// No description provided for @plan_connect_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a source block, then tap a target block to connect.'**
+  String get plan_connect_hint;
+
+  /// No description provided for @plan_link_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks connected'**
+  String get plan_link_added;
+
+  /// No description provided for @plan_goals_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No goals yet.'**
+  String get plan_goals_empty;
+
+  /// No description provided for @plan_add_goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add goal'**
+  String get plan_add_goal;
+
+  /// No description provided for @plan_manage_blocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage blocks'**
+  String get plan_manage_blocks;
 
   /// No description provided for @projects_tile_social_blocker.
   ///
@@ -1027,6 +1195,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Source Marketplace coming soon!'**
   String get integrations_marketplace_soon;
+
+  /// No description provided for @vault_breadcrumb_root.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault'**
+  String get vault_breadcrumb_root;
+
+  /// No description provided for @vault_section_folders.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get vault_section_folders;
+
+  /// No description provided for @vault_section_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get vault_section_notes;
+
+  /// No description provided for @vault_section_media.
+  ///
+  /// In en, this message translates to:
+  /// **'Media'**
+  String get vault_section_media;
+
+  /// No description provided for @vault_section_other.
+  ///
+  /// In en, this message translates to:
+  /// **'Other files'**
+  String get vault_section_other;
+
+  /// No description provided for @vault_search_files.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in this folder…'**
+  String get vault_search_files;
+
+  /// No description provided for @vault_empty_folder.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is empty'**
+  String get vault_empty_folder;
+
+  /// No description provided for @vault_stats_folders.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 folder} other{{count} folders}}'**
+  String vault_stats_folders(int count);
+
+  /// No description provided for @vault_stats_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 note} other{{count} notes}}'**
+  String vault_stats_notes(int count);
+
+  /// No description provided for @vault_stats_media.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String vault_stats_media(int count);
 
   /// No description provided for @projects_workspace_empty.
   ///
@@ -3557,13 +3785,13 @@ abstract class AppLocalizations {
   /// No description provided for @achievement_story_section.
   ///
   /// In en, this message translates to:
-  /// **'Photo stories'**
+  /// **'Snapshots'**
   String get achievement_story_section;
 
   /// No description provided for @achievement_story_empty_hint.
   ///
   /// In en, this message translates to:
-  /// **'Tap + to save a photo win — shown here like stories.'**
+  /// **'Tap + to freeze a moment in time.'**
   String get achievement_story_empty_hint;
 
   /// No description provided for @achievement_story_add.
@@ -3575,13 +3803,13 @@ abstract class AppLocalizations {
   /// No description provided for @achievement_feats_section.
   ///
   /// In en, this message translates to:
-  /// **'Logged feats'**
+  /// **'Memory lane'**
   String get achievement_feats_section;
 
   /// No description provided for @achievement_insights_title.
   ///
   /// In en, this message translates to:
-  /// **'Insights Dashboard'**
+  /// **'Looking back'**
   String get achievement_insights_title;
 
   /// No description provided for @achievement_insights_summary.
@@ -3631,6 +3859,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All projects'**
   String get achievement_filter_all_projects;
+
+  /// No description provided for @achievement_on_this_day_title.
+  ///
+  /// In en, this message translates to:
+  /// **'On this day'**
+  String get achievement_on_this_day_title;
+
+  /// No description provided for @achievement_on_this_day_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories from {date}'**
+  String achievement_on_this_day_subtitle(String date);
+
+  /// No description provided for @achievement_years_ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{years, plural, =1{1 year ago} other{{years} years ago}}'**
+  String achievement_years_ago(int years);
+
+  /// No description provided for @achievement_archive_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No memories yet. Journal entries and notes will appear here.'**
+  String get achievement_archive_empty;
+
+  /// No description provided for @achievement_archive_month_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 memory in this view} other{{count} memories in this view}}'**
+  String achievement_archive_month_summary(int count);
 
   /// No description provided for @achievement_open_project.
   ///
@@ -4231,6 +4489,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add 2–5 tasks today. Finish more than 3 for mood +6.'**
   String get mind_focus_daily_hint;
+
+  /// No description provided for @mind_focus_weekly_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 2–5 tasks this week. Finish more than 3 for mood +6.'**
+  String get mind_focus_weekly_hint;
+
+  /// No description provided for @mind_focus_monthly_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 2–5 tasks this month. Finish more than 3 for mood +6.'**
+  String get mind_focus_monthly_hint;
 
   /// No description provided for @mind_focus_special_mood.
   ///
@@ -5432,6 +5702,102 @@ abstract class AppLocalizations {
   /// **'Goal Evolution'**
   String get canvas_goal_center;
 
+  /// No description provided for @dev_quick_tabs_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev Tools'**
+  String get dev_quick_tabs_title;
+
+  /// No description provided for @dev_quick_tabs_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved browser tabs — Northflank, Supabase, n8n, and more.'**
+  String get dev_quick_tabs_subtitle;
+
+  /// No description provided for @dev_quick_tabs_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tabs yet. Defaults load on first open.'**
+  String get dev_quick_tabs_empty;
+
+  /// No description provided for @dev_quick_tabs_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tab'**
+  String get dev_quick_tabs_add;
+
+  /// No description provided for @dev_quick_tabs_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get dev_quick_tabs_open;
+
+  /// No description provided for @dev_quick_tabs_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit tab'**
+  String get dev_quick_tabs_edit;
+
+  /// No description provided for @dev_quick_tabs_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get dev_quick_tabs_label;
+
+  /// No description provided for @dev_quick_tabs_url.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get dev_quick_tabs_url;
+
+  /// No description provided for @dev_quick_tabs_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete tab?'**
+  String get dev_quick_tabs_delete_title;
+
+  /// No description provided for @dev_quick_tabs_delete_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{title}\" from quick access.'**
+  String dev_quick_tabs_delete_message(String title);
+
+  /// No description provided for @dev_quick_tabs_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get dev_quick_tabs_delete_confirm;
+
+  /// No description provided for @webview_connection_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Error'**
+  String get webview_connection_error;
+
+  /// No description provided for @webview_retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get webview_retry;
+
+  /// No description provided for @webview_ssl_trust_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust homelab certificate?'**
+  String get webview_ssl_trust_title;
+
+  /// No description provided for @webview_ssl_trust_message.
+  ///
+  /// In en, this message translates to:
+  /// **'The certificate for {host} is not trusted (common for OPNsense and LAN devices). Only continue on networks you trust.'**
+  String webview_ssl_trust_message(String host);
+
+  /// No description provided for @webview_ssl_trust_continue.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust and continue'**
+  String get webview_ssl_trust_continue;
+
   /// No description provided for @canvas_goal_desc.
   ///
   /// In en, this message translates to:
@@ -6572,6 +6938,30 @@ abstract class AppLocalizations {
   /// **'Notes'**
   String get project_notes_label;
 
+  /// No description provided for @note_type_picker_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose note type'**
+  String get note_type_picker_title;
+
+  /// No description provided for @note_type_markdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown (.md)'**
+  String get note_type_markdown;
+
+  /// No description provided for @note_type_plain_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain text (.txt)'**
+  String get note_type_plain_text;
+
+  /// No description provided for @note_type_word.
+  ///
+  /// In en, this message translates to:
+  /// **'Word (.docx)'**
+  String get note_type_word;
+
   /// No description provided for @project_journal_label.
   ///
   /// In en, this message translates to:
@@ -6901,6 +7291,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SDLC phase'**
   String get project_sdlc_move_phase;
+
+  /// No description provided for @project_sdlc_due_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get project_sdlc_due_date;
+
+  /// No description provided for @project_sdlc_due_date_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No due date'**
+  String get project_sdlc_due_date_none;
+
+  /// No description provided for @project_sdlc_clear_due_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear due date'**
+  String get project_sdlc_clear_due_date;
 
   /// No description provided for @project_sdlc_default_purpose.
   ///
@@ -7769,7 +8177,7 @@ abstract class AppLocalizations {
   /// No description provided for @notification_morning_briefing_subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Show the morning summary the first time you open Home each day.'**
+  /// **'Today\'s schedule, yesterday recap, and motivation when you first open Home (5:00–11:59).'**
   String get notification_morning_briefing_subtitle;
 
   /// No description provided for @notification_status_on.
@@ -10061,13 +10469,13 @@ abstract class AppLocalizations {
   /// No description provided for @morning_loop_reminder_title.
   ///
   /// In en, this message translates to:
-  /// **'Morning summary'**
+  /// **'Morning push reminder'**
   String get morning_loop_reminder_title;
 
   /// No description provided for @morning_loop_reminder_subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Yesterday recap & today\'s motivation — open Ice Gate first each morning'**
+  /// **'Optional phone notification — your in-app summary on Home works without this'**
   String get morning_loop_reminder_subtitle;
 
   /// No description provided for @morning_briefing_toggle.
@@ -10075,6 +10483,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Morning summary on Home'**
   String get morning_briefing_toggle;
+
+  /// No description provided for @morning_briefing_today_schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s schedule'**
+  String get morning_briefing_today_schedule;
+
+  /// No description provided for @morning_briefing_today_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No events today — a clear day to plan.'**
+  String get morning_briefing_today_empty;
+
+  /// No description provided for @morning_briefing_today_connect_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Google or device calendar to see today\'s events here.'**
+  String get morning_briefing_today_connect_hint;
+
+  /// No description provided for @morning_briefing_today_more.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more in calendar'**
+  String morning_briefing_today_more(int count);
+
+  /// No description provided for @morning_briefing_all_day.
+  ///
+  /// In en, this message translates to:
+  /// **'All day'**
+  String get morning_briefing_all_day;
+
+  /// No description provided for @morning_briefing_open_calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Open calendar'**
+  String get morning_briefing_open_calendar;
 
   /// No description provided for @morning_briefing_title.
   ///

@@ -14,6 +14,9 @@ import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSumm
 import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryEmailFormatter.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryPayloadBuilder.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/FinanceDailySummaryBuilder.dart';
+import 'package:ice_gate/orchestration_layer/Services/MorningScheduleLoader.dart';
+import 'package:ice_gate/data_layer/Services/cloud/DeviceCalendarService.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleCalendarService.dart';
 
 /// Yesterday recap (email format) + motivation for the morning briefing sheet.
 class MorningBriefingSnapshot {
@@ -22,12 +25,14 @@ class MorningBriefingSnapshot {
     required this.motivation,
     required this.sections,
     required this.headerLine,
+    required this.todaySchedule,
   });
 
   final DateTime yesterday;
   final DailyMotivationResult motivation;
   final List<DailySummarySection> sections;
   final String headerLine;
+  final MorningScheduleSnapshot todaySchedule;
 }
 
 /// Loads yesterday's cross-domain summary using the same formatter as daily emails.
@@ -47,6 +52,8 @@ class MorningBriefingService {
     required String locale,
     required AppLocalizations l10n,
     Map<String, String>? categoryLabels,
+    GoogleCalendarService? google,
+    DeviceCalendarService? device,
   }) async {
     final yesterday = DateTime.now().subtract(const Duration(days: 1));
     final yDay = DateTime(yesterday.year, yesterday.month, yesterday.day);
@@ -200,11 +207,24 @@ class MorningBriefingService {
     final sections =
         DailySummaryEmailFormatter.buildSections(locale: localeCode, f: formatted);
 
+    final todaySchedule = google != null && device != null
+        ? await MorningScheduleLoader.loadToday(
+            db: _db,
+            personId: personId,
+            google: google,
+            device: device,
+          )
+        : const MorningScheduleSnapshot(
+            items: [],
+            hasCalendarSource: false,
+          );
+
     return MorningBriefingSnapshot(
       yesterday: yDay,
       motivation: motivation,
       sections: sections,
       headerLine: sections.first.title,
+      todaySchedule: todaySchedule,
     );
   }
 

@@ -202,7 +202,7 @@ class _ProjectJournalInlineFormState extends State<ProjectJournalInlineForm> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DropdownButtonFormField<int>(
-          value: _mood,
+          initialValue: _mood,
           decoration: _fieldDecoration(cs, l10n.project_journal_mood_label),
           items: List.generate(5, (i) {
             final score = i + 1;

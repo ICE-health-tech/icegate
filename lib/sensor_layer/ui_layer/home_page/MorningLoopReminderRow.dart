@@ -21,7 +21,7 @@ class MorningLoopReminderRow extends StatefulWidget {
 
 class _MorningLoopReminderRowState extends State<MorningLoopReminderRow> {
   bool _loading = true;
-  bool _enabled = true;
+  bool _enabled = false;
   bool _briefing = true;
   TimeOfDay _time = const TimeOfDay(hour: 7, minute: 0);
 

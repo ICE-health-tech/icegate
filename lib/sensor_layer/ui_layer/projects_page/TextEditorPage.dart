@@ -103,6 +103,19 @@ class _TextEditorPageState extends State<TextEditorPage>
     };
   }
 
+  String? _resolveTenantId(PersonBlock personBlock) {
+    final profile = personBlock.information.value.profiles;
+    final user = Supabase.instance.client.auth.currentUser;
+    final Object? raw = (profile.tenantId != null &&
+            profile.tenantId!.isNotEmpty)
+        ? profile.tenantId
+        : (user?.appMetadata['tenant_id'] ??
+            user?.userMetadata?['tenant_id']);
+    if (raw == null) return null;
+    final s = raw.toString().trim();
+    return s.isEmpty ? null : s;
+  }
+
   Widget _buildMoodIconBubble({
     required ColorScheme colorScheme,
     required String mood,
@@ -548,9 +561,12 @@ class _TextEditorPageState extends State<TextEditorPage>
     setState(() => _isSaving = true);
     try {
       final dao = context.read<ProjectNoteDAO>();
+      final personBlock = context.read<PersonBlock>();
       final personId =
-          context.read<PersonBlock>().currentPersonID.value ??
+          personBlock.currentPersonID.value ??
           Supabase.instance.client.auth.currentUser?.id;
+      final tenantId =
+          _resolveTenantId(personBlock) ?? DEFAULT_TENANT_ID;
       if (personId == null || personId.isEmpty) {
         if (!mounted) return false;
         if (showConfirmation) {
@@ -603,6 +619,7 @@ class _TextEditorPageState extends State<TextEditorPage>
           title: title,
           content: content,
           personID: personId,
+          tenantID: tenantId,
           category: category,
           mood: _selectedMood,
           extension: extension,

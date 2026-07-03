@@ -4,21 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementFeedUtils.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryImage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryActions.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ProjectNoteArchiveActions.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ProjectNoteArchiveImage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ProjectNoteArchiveWarm.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/project_note_archive_utils.dart';
 import 'package:intl/intl.dart';
 
-/// Right column: photo story grid (3×3 laptop, 2×2 phone).
+/// Right column: photo memory grid from [project_notes].
 class AchievementStoryRail extends StatelessWidget {
-  final List<AchievementData> achievements;
+  final List<ProjectNoteData> notes;
   final List<ProjectProtocol> projects;
+  final Set<String> nostalgiaIds;
 
   const AchievementStoryRail({
     super.key,
-    required this.achievements,
+    required this.notes,
     this.projects = const [],
+    this.nostalgiaIds = const {},
   });
 
   static const int imageColumnFlex = 10;
@@ -54,7 +56,7 @@ class AchievementStoryRail extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final stories = achievementPhotoStories(achievements);
+    final stories = ProjectNoteArchiveUtils.photoMemories(notes);
     final cols = gridColumns(context);
     final rows = gridRows(context);
 
@@ -112,31 +114,35 @@ class AchievementStoryRail extends StatelessWidget {
                         radius: _cardRadius,
                         compact: !isWideLayout(context),
                         onTap: () =>
-                            AchievementStoryActions.addStory(context),
+                            ProjectNoteArchiveActions.addPhotoMemory(context),
                       );
                     }
                     final storyIndex = index - 1;
-                    final a = stories[storyIndex];
+                    final note = stories[storyIndex];
+                    final ring = nostalgiaIds.contains(note.id)
+                        ? ProjectNoteArchiveWarm.accent
+                        : ProjectNoteArchiveUtils.ringColorForCategory(
+                            note.category,
+                          );
                     return _StoryGridCell(
-                      achievement: a,
-                      projectLabel: AchievementFeedUtils.projectLabel(
-                        a,
+                      note: note,
+                      projectLabel: ProjectNoteArchiveUtils.projectLabel(
+                        note,
                         projects,
                       ),
-                      ringColor: achievementDomainRingColor(a.domain),
-                      imagePath: a.localImagePath,
+                      ringColor: ring,
                       size: cell,
                       radius: _cardRadius,
-                      onTap: () => AchievementStoryActions.openViewer(
+                      onTap: () => ProjectNoteArchiveActions.openViewer(
                         context,
                         stories,
                         storyIndex,
                         projects: projects,
                       ),
                       onLongPress: () =>
-                          AchievementStoryActions.showStoryActionSheet(
+                          ProjectNoteArchiveActions.showActionSheet(
                         context,
-                        a,
+                        note,
                       ),
                     );
                   },
@@ -164,20 +170,18 @@ class AchievementStoryRail extends StatelessWidget {
 }
 
 class _StoryGridCell extends StatelessWidget {
-  final AchievementData achievement;
+  final ProjectNoteData note;
   final String projectLabel;
   final Color ringColor;
-  final String? imagePath;
   final double size;
   final double radius;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
 
   const _StoryGridCell({
-    required this.achievement,
+    required this.note,
     required this.projectLabel,
     required this.ringColor,
-    required this.imagePath,
     required this.size,
     required this.radius,
     required this.onTap,
@@ -188,8 +192,8 @@ class _StoryGridCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final showMeta = size >= 72;
-    final mood = achievement.moodPost ?? '😐';
-    final dateLabel = DateFormat.MMMd().format(achievement.createdAt.toLocal());
+    final mood = ProjectNoteArchiveUtils.moodDisplay(note);
+    final dateLabel = DateFormat.MMMd().format(note.createdAt.toLocal());
 
     return Material(
       color: Colors.transparent,
@@ -215,13 +219,13 @@ class _StoryGridCell extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              AchievementStoryImage(
-                relativePath: imagePath,
+              ProjectNoteArchiveImage(
+                note: note,
                 fit: BoxFit.cover,
                 placeholder: ColoredBox(
                   color: cs.surfaceContainerHighest,
                   child: Icon(
-                    Icons.emoji_events,
+                    Icons.photo_library_outlined,
                     color: ringColor,
                     size: size * 0.32,
                   ),

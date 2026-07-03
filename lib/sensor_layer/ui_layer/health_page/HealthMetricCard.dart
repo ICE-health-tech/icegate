@@ -191,7 +191,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                 border: Border.all(color: borderColor, width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0x000F1E).withValues(
+                    color: const Color(0x00000f1e).withValues(
                       alpha: isDark ? 0.22 : 0.07,
                     ),
                     blurRadius: 18,

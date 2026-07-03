@@ -736,7 +736,7 @@ class _HealthPageState extends State<HealthPage>
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0x000F1E).withValues(alpha: isDark ? 0.2 : 0.06),
+                color: const Color(0x00000f1e).withValues(alpha: isDark ? 0.2 : 0.06),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),

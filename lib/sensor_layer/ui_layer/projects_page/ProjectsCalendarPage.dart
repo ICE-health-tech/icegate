@@ -154,7 +154,7 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
           ? null
           : () {
               final mins = environment.durationMinutes.clamp(5, 120);
-              focusBlock.focusDuration.value = mins;
+              untracked(() => focusBlock.focusDuration.value = mins);
               if (context.mounted) context.push('/health/focus');
             },
     );
@@ -327,7 +327,32 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
 
   Future<void> _deleteLoggedEvent(EventData event) async {
     final l10n = AppLocalizations.of(context)!;
-    await context.read<AppDatabase>().eventsDAO.deleteLoggedEvent(event.id);
+    try {
+      if (_deviceConnected && DeviceCalendarService.isSupported) {
+        final service = context.read<DeviceCalendarService>();
+        for (final device in List<DeviceCalendarEventItem>.from(_deviceEvents)) {
+          if (!_deviceEventMatchesLogged(device, event)) continue;
+          await service.deleteEvent(
+            calendarId: device.calendarId,
+            eventId: device.id,
+          );
+          _hideTimelineEntry(_deviceTimelineKey(device));
+        }
+      }
+      await context.read<AppDatabase>().eventsDAO.deleteLoggedEvent(event.id);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${l10n.projects_calendar_event_failed}: $e'),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    if (_deviceConnected) {
+      await _syncDeviceEvents(showSnackBar: false);
+    }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.projects_calendar_event_deleted)),
@@ -507,14 +532,20 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
   }
 
   DateTime _loggedEventEnd(EventData event) {
+    final start = event.occurredAt.toLocal();
     final description = event.description;
     if (description != null) {
       final match = RegExp(r'\[icegate-end:([^\]]+)\]').firstMatch(description);
       if (match != null) {
-        return DateTime.parse(match.group(1)!).toLocal();
+        try {
+          final parsed = DateTime.parse(match.group(1)!).toLocal();
+          if (parsed.isAfter(start)) return parsed;
+        } catch (_) {
+          // Fall through to default duration.
+        }
       }
     }
-    return event.occurredAt.toLocal().add(const Duration(hours: 1));
+    return start.add(const Duration(hours: 1));
   }
 
   Future<void> _openAddEvent(
@@ -545,9 +576,19 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
       initialStart: initialStart,
       initialEnd: initialEnd,
     );
-    if (saved == null || !mounted) return;
+    if (saved is! CalendarEventSaveResult || !mounted) return;
 
-    await _logLocalCalendarEvent(saved, personId);
+    try {
+      await _logLocalCalendarEvent(saved, personId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${l10n.projects_calendar_event_failed}: $e'),
+        ),
+      );
+      return;
+    }
     if (!mounted) return;
 
     final eventDay = _dateOnly(saved.day);

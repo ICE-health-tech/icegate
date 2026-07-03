@@ -8,6 +8,10 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
+import 'package:ice_gate/orchestration_layer/Services/MindSpecialMood.dart';
+import 'package:ice_gate/orchestration_layer/Services/TaskPeriodWindow.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillCatalog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusMoodCelebration.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -30,54 +34,100 @@ class MindFocusTodosSection extends StatefulWidget {
 }
 
 class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
-  MindFocusDailyTodosSnapshot _daily = const MindFocusDailyTodosSnapshot();
-  String? _dailyLoadKey;
+  MindFocusDailyTodosSnapshot _periodSnap = const MindFocusDailyTodosSnapshot();
+  String? _periodLoadKey;
+  TaskPeriod _period = TaskPeriod.daily;
 
   MindFocusTrend get trend => widget.trend;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _refreshDaily();
+    _refreshPeriod();
   }
 
-  Future<void> _refreshDaily() async {
+  Future<void> _refreshPeriod() async {
     final personId =
         context.read<PersonBlock>().information.value.profiles.id ?? '';
-    final key = '${personId}_${trend.id}_${_todayKey()}';
-    if (_dailyLoadKey == key) return;
-    _dailyLoadKey = key;
+    final key =
+        '${personId}_${trend.id}_${_period.name}_${TaskPeriodWindow.windowKeySuffix(_period, DateTime.now())}';
+    if (_periodLoadKey == key) return;
+    _periodLoadKey = key;
     final snap = await MindFocusDailyTodosPrefs.load(
       personId: personId,
       trendId: trend.id,
+      period: _period,
     );
-    if (!mounted || _dailyLoadKey != key) return;
-    setState(() => _daily = snap);
+    if (!mounted || _periodLoadKey != key) return;
+    setState(() => _periodSnap = snap);
   }
 
-  String _todayKey() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month}-${now.day}';
+  void _onPeriodChanged(TaskPeriod next) {
+    if (_period == next) return;
+    setState(() {
+      _period = next;
+      _periodLoadKey = null;
+    });
+    _refreshPeriod();
   }
 
   String? _personId(BuildContext context) =>
       context.read<PersonBlock>().information.value.profiles.id;
 
-  static List<GoalProtocol> _activeProjectTasks(List<GoalProtocol> goals) {
+  List<GoalProtocol> _periodTasks(
+    List<GoalProtocol> goals,
+    MindFocusDailyTodosSnapshot snap,
+  ) {
+    if (snap.taskIds.isEmpty) return const [];
+    final ids = snap.taskIds.toSet();
+    final category = TaskPeriodWindow.categoryFor(_period);
     return goals
-        .where((g) => g.category == 'project' && g.status != 'done')
+        .where(
+          (g) =>
+              g.category == category &&
+              g.status != 'done' &&
+              ids.contains(g.id) &&
+              TaskPeriodWindow.isInCurrentWindow(
+                category: g.category,
+                targetDate: g.targetDate,
+              ),
+        )
         .toList()
       ..sort((a, b) => a.priority.compareTo(b.priority));
   }
 
-  List<GoalProtocol> _todayTasks(
-    List<GoalProtocol> goals,
-    MindFocusDailyTodosSnapshot daily,
+  static List<String> _sessionSkillOptions(
+    MindFocusTrend trend,
+    GrowthBlock growth,
   ) {
-    if (daily.taskIds.isEmpty) return const [];
-    final ids = daily.taskIds.toSet();
-    return _activeProjectTasks(goals).where((g) => ids.contains(g.id)).toList();
+    final names = <String>[];
+    for (final token in trend.activityTokens) {
+      if (!token.startsWith('skill:')) continue;
+      final name = token.substring('skill:'.length).trim();
+      if (name.isEmpty) continue;
+      if (!names.any((n) => MindSkillCatalog.namesMatch(n, name))) {
+        names.add(name);
+      }
+    }
+    for (final name in growth.personSkillNames()) {
+      if (names.any((n) => MindSkillCatalog.namesMatch(n, name))) continue;
+      names.add(name);
+      if (names.length >= 12) break;
+    }
+    return names;
   }
+
+  String _periodLabel(AppLocalizations l10n) => switch (_period) {
+    TaskPeriod.daily => l10n.mind_dashboard_today,
+    TaskPeriod.weekly => l10n.finance_interval_weekly,
+    TaskPeriod.monthly => l10n.finance_interval_monthly,
+  };
+
+  String _periodHint(AppLocalizations l10n) => switch (_period) {
+    TaskPeriod.daily => l10n.mind_focus_daily_hint,
+    TaskPeriod.weekly => l10n.mind_focus_weekly_hint,
+    TaskPeriod.monthly => l10n.mind_focus_monthly_hint,
+  };
 
   static String? _projectRouteId(
     GoalProtocol task,
@@ -153,11 +203,11 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
     final personBlock = context.read<PersonBlock>();
     final activities = <String>[
       ...trend.activityTokens,
-      'focus:todos_streak',
+      MindSpecialMood.focusTodosStreakTag,
     ];
 
     await context.read<MindBlock>().addMindLog(
-      moodScore: 6,
+      moodScore: MindSpecialMood.score,
       activities: activities,
       note: l10n.mind_focus_special_mood,
       personId: personId,
@@ -167,15 +217,13 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
     await MindFocusDailyTodosPrefs.markMoodAwarded(
       personId: personId,
       trendId: trend.id,
+      period: _period,
     );
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.mind_focus_special_mood),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
+    showMindFocusMoodCelebration(
+      context,
+      body: l10n.mind_focus_special_mood,
     );
   }
 
@@ -183,12 +231,13 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
     BuildContext context,
     GrowthBlock growthBlock,
     List<ProjectProtocol> activeRoots,
-    MindFocusDailyTodosSnapshot daily,
+    MindFocusDailyTodosSnapshot snap,
     String personId,
+    List<String> skillOptions,
   ) async {
     final l10n = AppLocalizations.of(context)!;
 
-    if (!MindFocusDailyTodosPrefs.canAdd(daily)) {
+    if (!MindFocusDailyTodosPrefs.canAdd(snap)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -202,6 +251,8 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
     final titleController = TextEditingController();
     final descController = TextEditingController();
     var selectedLinkId = _defaultProjectLinkId(trend, activeRoots);
+    String? selectedSkill =
+        skillOptions.isNotEmpty ? skillOptions.first : null;
 
     final saved = await showDialog<bool>(
       context: context,
@@ -233,10 +284,27 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
                         labelText: l10n.mind_focus_add_task_desc,
                       ),
                     ),
+                    if (skillOptions.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String?>(
+                        initialValue: selectedSkill,
+                        decoration: InputDecoration(
+                          labelText: l10n.mind_dashboard_target_skills,
+                        ),
+                        items: [
+                          for (final name in skillOptions)
+                            DropdownMenuItem(
+                              value: name,
+                              child: Text(name),
+                            ),
+                        ],
+                        onChanged: (v) => setLocal(() => selectedSkill = v),
+                      ),
+                    ],
                     if (activeRoots.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: selectedLinkId ?? MindFocusTodosSection._noProject,
+                        initialValue: selectedLinkId ?? MindFocusTodosSection._noProject,
                         decoration: InputDecoration(
                           labelText: l10n.mind_focus_linked_project,
                         ),
@@ -279,9 +347,11 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
     );
 
     if (saved == true) {
-      final taskId = await growthBlock.createNewTask(
-        titleController.text.trim(),
-        descController.text.trim(),
+      final taskId = await growthBlock.createTimeScopedTask(
+        period: _period,
+        title: titleController.text.trim(),
+        description: descController.text.trim(),
+        skillName: selectedSkill,
         projectID: selectedLinkId,
       );
       if (taskId != null && personId.isNotEmpty) {
@@ -289,9 +359,10 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
           personId: personId,
           trendId: trend.id,
           taskId: taskId,
+          period: _period,
         );
-        _dailyLoadKey = null;
-        await _refreshDaily();
+        _periodLoadKey = null;
+        await _refreshPeriod();
       }
     }
 
@@ -306,30 +377,36 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
     String personId,
     AppLocalizations l10n,
   ) async {
-    await growthBlock.completeGoal(
-      task.id,
+    final skillName = TaskGoalSkillCodec.decode(task.description);
+    final inPeriodList = _periodSnap.taskIds.contains(task.id);
+
+    await growthBlock.completeTimeScopedTask(
+      goalId: task.id,
       projectId: task.projectID,
+      skillName: skillName,
+      periodCategory: task.category,
     );
 
-    if (personId.isEmpty || !_daily.taskIds.contains(task.id)) {
-      _dailyLoadKey = null;
-      await _refreshDaily();
+    if (personId.isEmpty || !inPeriodList) {
+      _periodLoadKey = null;
+      await _refreshPeriod();
       return;
     }
 
     final completed = await MindFocusDailyTodosPrefs.registerCompletion(
       personId: personId,
       trendId: trend.id,
+      period: _period,
     );
 
-    final snap = _daily.copyWith(completedCount: completed);
-    final award = snap.shouldAwardMoodNow;
-    if (award) {
+    final snap = _periodSnap.copyWith(completedCount: completed);
+    if (snap.shouldAwardMoodNow) {
+      if (!context.mounted) return;
       await _logSpecialMoodReward(context, l10n, personId);
     }
 
-    _dailyLoadKey = null;
-    await _refreshDaily();
+    _periodLoadKey = null;
+    await _refreshPeriod();
   }
 
   @override
@@ -338,13 +415,14 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
     final growthBlock = context.read<GrowthBlock>();
     final projectBlock = context.read<ProjectBlock>();
     final personId = _personId(context) ?? '';
-    final daily = _daily;
+    final snap = _periodSnap;
 
     return Watch((context) {
       final projects = projectBlock.projects.value;
       final activeRoots = projects.where((p) => p.status == 0).rootsOnly.toList();
-      final tasks = _todayTasks(growthBlock.goals.value, daily);
-      final canAdd = daily.addedCount < MindFocusDailyTodosPrefs.maxAddsPerDay;
+      final skillOptions = _sessionSkillOptions(trend, growthBlock);
+      final tasks = _periodTasks(growthBlock.goals.value, snap);
+      final canAdd = snap.addedCount < MindFocusDailyTodosPrefs.maxAddsPerDay;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,19 +479,42 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          SegmentedButton<TaskPeriod>(
+            segments: [
+              for (final p in TaskPeriod.values)
+                ButtonSegment(
+                  value: p,
+                  label: Text(
+                    switch (p) {
+                      TaskPeriod.daily => l10n.mind_dashboard_today,
+                      TaskPeriod.weekly => l10n.finance_interval_weekly,
+                      TaskPeriod.monthly => l10n.finance_interval_monthly,
+                    },
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+            ],
+            selected: {_period},
+            onSelectionChanged: (set) => _onPeriodChanged(set.first),
+            style: ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             l10n.mind_focus_daily_progress(
-              daily.addedCount,
+              snap.addedCount,
               MindFocusDailyTodosPrefs.maxAddsPerDay,
-              daily.completedCount,
+              snap.completedCount,
             ),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: trend.color.withValues(alpha: 0.8),
             ),
           ),
           Text(
-            l10n.mind_focus_daily_hint,
+            '${_periodLabel(l10n)} · ${_periodHint(l10n)}',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: Theme.of(context)
                   .colorScheme
@@ -434,6 +535,7 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
               final projectName = _projectName(task, projects);
               final routeId = _projectRouteId(task, projects);
               final projectLinkId = _taskProjectLinkId(task, projects);
+              final skillName = TaskGoalSkillCodec.decode(task.description);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
@@ -482,14 +584,33 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                            task.title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                task.title,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (skillName != null)
+                                Text(
+                                  skillName,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        color: trend.color.withValues(
+                                          alpha: 0.75,
+                                        ),
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
                           ),
                         ),
                       ),
@@ -520,8 +641,9 @@ class _MindFocusTodosSectionState extends State<MindFocusTodosSection> {
                       context,
                       growthBlock,
                       activeRoots,
-                      daily,
+                      snap,
                       personId,
+                      skillOptions,
                     )
                   : null,
               icon: Icon(Icons.add_rounded, size: 18, color: trend.color),
@@ -546,11 +668,13 @@ extension on MindFocusDailyTodosSnapshot {
     List<String>? taskIds,
     int? completedCount,
     bool? moodAwarded,
+    TaskPeriod? period,
   }) {
     return MindFocusDailyTodosSnapshot(
       taskIds: taskIds ?? this.taskIds,
       completedCount: completedCount ?? this.completedCount,
       moodAwarded: moodAwarded ?? this.moodAwarded,
+      period: period ?? this.period,
     );
   }
 }

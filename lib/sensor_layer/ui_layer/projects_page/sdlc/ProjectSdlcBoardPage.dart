@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +10,9 @@ import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/TaskPeriodWindow.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/TaskItem.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 String sdlcPhaseTitle(AppLocalizations l10n, SdlcPhase phase) {
@@ -488,6 +489,16 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
     );
   }
 
+  void _disposeControllersAfterRoute(
+    TextEditingController title,
+    TextEditingController description,
+  ) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      title.dispose();
+      description.dispose();
+    });
+  }
+
   Future<void> _showAddTaskDialog(
     BuildContext context,
     GrowthBlock growthBlock, {
@@ -497,6 +508,7 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     var phase = initialPhase;
+    DateTime? dueDate;
 
     await showDialog<void>(
       context: context,
@@ -543,6 +555,32 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
                   if (v != null) setState(() => phase = v);
                 },
               ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.project_sdlc_due_date),
+                subtitle: Text(
+                  dueDate == null
+                      ? l10n.project_sdlc_due_date_none
+                      : DateFormat.yMMMd(l10n.localeName).format(dueDate!),
+                ),
+                trailing: dueDate == null
+                    ? const Icon(Icons.event_outlined)
+                    : IconButton(
+                        tooltip: l10n.project_sdlc_clear_due_date,
+                        onPressed: () => setState(() => dueDate = null),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: dueDate ?? DateTime.now().add(const Duration(days: 7)),
+                    firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                    lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+                  );
+                  if (picked != null) setState(() => dueDate = picked);
+                },
+              ),
             ],
           ),
           actions: [
@@ -559,6 +597,7 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
                   descriptionController.text.trim(),
                   projectID: ProjectBlock.linkId(widget.project),
                   category: SdlcPhaseCodec.toCategory(phase),
+                  targetDate: dueDate,
                 );
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
               },
@@ -568,8 +607,7 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
         ),
       ),
     );
-    titleController.dispose();
-    descriptionController.dispose();
+    _disposeControllersAfterRoute(titleController, descriptionController);
   }
 
   Future<void> _showTaskSheet(
@@ -582,16 +620,17 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
     final descriptionController =
         TextEditingController(text: task.description ?? '');
     var phase = SdlcPhaseCodec.fromCategory(task.category);
+    var dueDate = task.targetDate?.toLocal();
     final isDone = task.status == 'done';
 
-    try {
-      await showModalBottomSheet<void>(
-        context: context,
-        useRootNavigator: true,
-        isScrollControlled: true,
-        showDragHandle: true,
-        builder: (sheetContext) => StatefulBuilder(
-          builder: (context, setState) => Padding(
+    await showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setState) => SingleChildScrollView(
+          child: Padding(
             padding: EdgeInsets.fromLTRB(
               16,
               0,
@@ -629,7 +668,7 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<SdlcPhase>(
-                  value: phase,
+                  initialValue: phase,
                   decoration: InputDecoration(
                     labelText: l10n.project_sdlc_move_phase,
                     border: const OutlineInputBorder(),
@@ -646,6 +685,37 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
                       ? null
                       : (v) => setState(() => phase = v!),
                 ),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.project_sdlc_due_date),
+                  subtitle: Text(
+                    dueDate == null
+                        ? l10n.project_sdlc_due_date_none
+                        : DateFormat.yMMMd(l10n.localeName).format(dueDate!),
+                  ),
+                  trailing: isDone
+                      ? null
+                      : (dueDate == null
+                          ? const Icon(Icons.event_outlined)
+                          : IconButton(
+                              tooltip: l10n.project_sdlc_clear_due_date,
+                              onPressed: () => setState(() => dueDate = null),
+                              icon: const Icon(Icons.close_rounded),
+                            )),
+                  onTap: isDone
+                      ? null
+                      : () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate:
+                                dueDate ?? DateTime.now().add(const Duration(days: 7)),
+                            firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                            lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+                          );
+                          if (picked != null) setState(() => dueDate = picked);
+                        },
+                ),
                 const SizedBox(height: 16),
                 if (!isDone)
                   FilledButton.icon(
@@ -660,6 +730,7 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
                       if (SdlcPhaseCodec.fromCategory(task.category) != phase) {
                         await growthBlock.updateGoalSdlcPhase(task.id, phase);
                       }
+                      await growthBlock.updateGoalTargetDate(task.id, dueDate);
                       if (sheetContext.mounted) Navigator.pop(sheetContext);
                     },
                     icon: const Icon(Icons.save_outlined),
@@ -686,6 +757,10 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
                                 phase,
                               );
                             }
+                            await growthBlock.updateGoalTargetDate(
+                              task.id,
+                              dueDate,
+                            );
                             await growthBlock.completeGoal(task.id);
                             if (sheetContext.mounted) {
                               Navigator.pop(sheetContext);
@@ -719,11 +794,9 @@ class _ProjectSdlcBoardPageState extends State<ProjectSdlcBoardPage> {
             ),
           ),
         ),
-      );
-    } finally {
-      titleController.dispose();
-      descriptionController.dispose();
-    }
+      ),
+    );
+    _disposeControllersAfterRoute(titleController, descriptionController);
   }
 }
 
@@ -738,16 +811,16 @@ class _PurposeCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.35),
+        color: colorScheme.primaryContainer.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.35)),
       ),
       child: Text(
         text,
         style: TextStyle(
           fontSize: 13,
           height: 1.4,
-          color: colorScheme.onSurface.withValues(alpha: 0.85),
+          color: colorScheme.onSurface.withValues(alpha: 0.92),
         ),
       ),
     );
@@ -772,7 +845,7 @@ class _PhaseStatsRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.72),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: colorScheme.outlineVariant),
               ),
@@ -789,7 +862,7 @@ class _PhaseStatsRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: colorScheme.onSurface.withValues(alpha: 0.82),
                 ),
               ),
             ),
@@ -864,7 +937,7 @@ class _SdlcPhaseColumn extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: colorScheme.onSurface.withValues(alpha: 0.45),
+                      color: colorScheme.onSurface.withValues(alpha: 0.58),
                     ),
                   ),
                   Text(
@@ -882,7 +955,7 @@ class _SdlcPhaseColumn extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 10,
-                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: colorScheme.onSurface.withValues(alpha: 0.65),
                     ),
                   ),
                 ],
@@ -909,8 +982,8 @@ class _SdlcPhaseColumn extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isDropHovered
-                  ? colorScheme.primaryContainer.withValues(alpha: 0.45)
-                  : colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                  ? colorScheme.primaryContainer.withValues(alpha: 0.55)
+                  : colorScheme.surfaceContainerHighest.withValues(alpha: 0.58),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isDropHovered
@@ -932,7 +1005,7 @@ class _SdlcPhaseColumn extends StatelessWidget {
                             isDropHovered ? FontWeight.w700 : FontWeight.w500,
                         color: isDropHovered
                             ? colorScheme.primary
-                            : colorScheme.onSurface.withValues(alpha: 0.4),
+                            : colorScheme.onSurface.withValues(alpha: 0.55),
                       ),
                     ),
                   )
@@ -1190,7 +1263,7 @@ class _SdlcTaskCard extends StatelessWidget {
               Icon(
                 Icons.drag_indicator_rounded,
                 size: 18,
-                color: colorScheme.onSurface.withValues(alpha: 0.35),
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
               )
             else
               Icon(
@@ -1213,7 +1286,7 @@ class _SdlcTaskCard extends StatelessWidget {
                       decoration:
                           isDone ? TextDecoration.lineThrough : null,
                       color: isDone
-                          ? colorScheme.onSurface.withValues(alpha: 0.45)
+                          ? colorScheme.onSurface.withValues(alpha: 0.55)
                           : null,
                     ),
                   ),
@@ -1226,9 +1299,16 @@ class _SdlcTaskCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         color: colorScheme.onSurface.withValues(
-                          alpha: isDone ? 0.35 : 0.55,
+                          alpha: isDone ? 0.48 : 0.68,
                         ),
                       ),
+                    ),
+                  ],
+                  if (task.targetDate != null) ...[
+                    const SizedBox(height: 6),
+                    _SdlcDueDateChip(
+                      due: task.targetDate!.toLocal(),
+                      isDone: isDone,
                     ),
                   ],
                 ],
@@ -1239,13 +1319,58 @@ class _SdlcTaskCard extends StatelessWidget {
       ),
     );
 
-    if (!isDone) return card;
+    return card;
+  }
+}
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 0.8, sigmaY: 0.8),
-        child: Opacity(opacity: 0.88, child: card),
+class _SdlcDueDateChip extends StatelessWidget {
+  const _SdlcDueDateChip({required this.due, required this.isDone});
+
+  final DateTime due;
+  final bool isDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final today = TaskPeriodWindow.dateOnly(DateTime.now());
+    final dueDay = TaskPeriodWindow.dateOnly(due);
+    final overdue = !isDone && dueDay.isBefore(today);
+    final isToday = dueDay == today;
+    final thisWeek =
+        TaskPeriodWindow.weekStart(dueDay) == TaskPeriodWindow.weekStart(today);
+
+    final color = isDone
+        ? cs.onSurface.withValues(alpha: 0.45)
+        : overdue
+            ? cs.error
+            : isToday
+                ? cs.primary
+                : thisWeek
+                    ? cs.tertiary
+                    : cs.onSurface.withValues(alpha: 0.55);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.event_rounded, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            DateFormat.MMMd(l10n.localeName).format(due),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -385,7 +385,94 @@ class AppLocalizationsVi extends AppLocalizations {
   String get projects_tile_canvas => 'Bảng ghép';
 
   @override
+  String get projects_tile_whiteboard => 'Bảng trắng';
+
+  @override
+  String get projects_whiteboard_clear_title => 'Xóa bảng trắng?';
+
+  @override
+  String get projects_whiteboard_clear_message =>
+      'Mọi nét vẽ sẽ bị xóa. Không thể hoàn tác.';
+
+  @override
+  String get projects_whiteboard_clear_confirm => 'Xóa hết';
+
+  @override
+  String get undo => 'Hoàn tác';
+
+  @override
   String get projects_plan_section_title => 'Kế hoạch';
+
+  @override
+  String get projects_diagrams_title => 'Sơ đồ dự án';
+
+  @override
+  String get projects_diagrams_empty =>
+      'Chưa có sơ đồ. Chạm + chọn dự án để vẽ.';
+
+  @override
+  String get projects_diagrams_new => 'Sơ đồ mới';
+
+  @override
+  String get projects_diagrams_pick_project => 'Chọn dự án';
+
+  @override
+  String get projects_diagrams_no_projects => 'Hãy tạo dự án trước.';
+
+  @override
+  String get projects_diagrams_steps => 'bước';
+
+  @override
+  String get plan_workspace_breadcrumb => 'KHÔNG GIAN • DỰ ÁN';
+
+  @override
+  String get plan_schedule_card_title => 'Lịch trình';
+
+  @override
+  String get plan_schedule_empty => 'Chưa có bước nào.';
+
+  @override
+  String get plan_focus_notes_title => 'Ghi chú tập trung';
+
+  @override
+  String get plan_notes_hint => 'Gõ ghi chú tại đây…';
+
+  @override
+  String get plan_add_step => 'Thêm bước';
+
+  @override
+  String get plan_drop_steps => 'Thả bước vào đây';
+
+  @override
+  String get plan_add_first_step => 'Thêm bước đầu tiên';
+
+  @override
+  String get plan_add_block_schedule => 'Khối lịch trình';
+
+  @override
+  String get plan_add_block_notes => 'Khối ghi chú tập trung';
+
+  @override
+  String get plan_add_block_goals => 'Khối mục tiêu';
+
+  @override
+  String get plan_add_block_flow => 'Khối quy trình';
+
+  @override
+  String get plan_connect_hint =>
+      'Chạm block nguồn, rồi chạm block đích để nối.';
+
+  @override
+  String get plan_link_added => 'Đã nối block';
+
+  @override
+  String get plan_goals_empty => 'Chưa có mục tiêu.';
+
+  @override
+  String get plan_add_goal => 'Thêm mục tiêu';
+
+  @override
+  String get plan_manage_blocks => 'Quản lý khối';
 
   @override
   String get projects_tile_social_blocker => 'Chặn mạng xã hội';
@@ -523,6 +610,60 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get integrations_marketplace_soon => 'Chợ nguồn sắp ra mắt!';
+
+  @override
+  String get vault_breadcrumb_root => 'Kho ghi chú';
+
+  @override
+  String get vault_section_folders => 'Thư mục';
+
+  @override
+  String get vault_section_notes => 'Ghi chú';
+
+  @override
+  String get vault_section_media => 'Ảnh & media';
+
+  @override
+  String get vault_section_other => 'Tệp khác';
+
+  @override
+  String get vault_search_files => 'Tìm trong thư mục…';
+
+  @override
+  String get vault_empty_folder => 'Thư mục trống';
+
+  @override
+  String vault_stats_folders(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count thư mục',
+      one: '1 thư mục',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String vault_stats_notes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ghi chú',
+      one: '1 ghi chú',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String vault_stats_media(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tệp',
+      one: '1 tệp',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get projects_workspace_empty =>
@@ -1896,20 +2037,20 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa có thành tích nào được ghi nhận.';
 
   @override
-  String get achievement_story_section => 'Thành tích ảnh';
+  String get achievement_story_section => 'Khoảnh khắc';
 
   @override
   String get achievement_story_empty_hint =>
-      'Chạm + để lưu ảnh thành tích — hiển thị dạng story ở đây.';
+      'Chạm + để giữ lại một khoảnh khắc.';
 
   @override
   String get achievement_story_add => 'Thêm';
 
   @override
-  String get achievement_feats_section => 'Thành tích đã ghi';
+  String get achievement_feats_section => 'Dòng thời gian';
 
   @override
-  String get achievement_insights_title => 'Bảng phân tích';
+  String get achievement_insights_title => 'Nhìn lại';
 
   @override
   String achievement_insights_summary(
@@ -1940,6 +2081,28 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get achievement_filter_all_projects => 'Mọi dự án';
+
+  @override
+  String get achievement_on_this_day_title => 'Ngày này năm ấy';
+
+  @override
+  String achievement_on_this_day_subtitle(String date) {
+    return 'Kỷ niệm ngày $date';
+  }
+
+  @override
+  String achievement_years_ago(int years) {
+    return 'Cách đây $years năm';
+  }
+
+  @override
+  String get achievement_archive_empty =>
+      'Chưa có kỷ niệm. Ghi chép và ảnh journal sẽ hiện ở đây.';
+
+  @override
+  String achievement_archive_month_summary(int count) {
+    return '$count kỷ niệm trong khung nhìn này';
+  }
 
   @override
   String get achievement_open_project => 'Mở dự án';
@@ -2274,6 +2437,14 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get mind_focus_daily_hint =>
       'Thêm 2–5 việc mỗi ngày. Hoàn thành hơn 3 việc để nhận tâm trạng +6.';
+
+  @override
+  String get mind_focus_weekly_hint =>
+      'Thêm 2–5 việc mỗi tuần. Hoàn thành hơn 3 việc để nhận tâm trạng +6.';
+
+  @override
+  String get mind_focus_monthly_hint =>
+      'Thêm 2–5 việc mỗi tháng. Hoàn thành hơn 3 việc để nhận tâm trạng +6.';
 
   @override
   String get mind_focus_special_mood =>
@@ -2947,6 +3118,59 @@ class AppLocalizationsVi extends AppLocalizations {
   String get canvas_goal_center => 'Mục tiêu';
 
   @override
+  String get dev_quick_tabs_title => 'Dev Tools';
+
+  @override
+  String get dev_quick_tabs_subtitle =>
+      'Tab trình duyệt — Northflank, Supabase, n8n và hơn thế.';
+
+  @override
+  String get dev_quick_tabs_empty => 'Chưa có tab. Mặc định tải lần đầu mở.';
+
+  @override
+  String get dev_quick_tabs_add => 'Thêm tab';
+
+  @override
+  String get dev_quick_tabs_open => 'Mở';
+
+  @override
+  String get dev_quick_tabs_edit => 'Sửa tab';
+
+  @override
+  String get dev_quick_tabs_label => 'Tên';
+
+  @override
+  String get dev_quick_tabs_url => 'URL';
+
+  @override
+  String get dev_quick_tabs_delete_title => 'Xóa tab?';
+
+  @override
+  String dev_quick_tabs_delete_message(String title) {
+    return 'Xóa \"$title\" khỏi truy cập nhanh.';
+  }
+
+  @override
+  String get dev_quick_tabs_delete_confirm => 'Xóa';
+
+  @override
+  String get webview_connection_error => 'Lỗi kết nối';
+
+  @override
+  String get webview_retry => 'Thử lại';
+
+  @override
+  String get webview_ssl_trust_title => 'Tin chứng chỉ homelab?';
+
+  @override
+  String webview_ssl_trust_message(String host) {
+    return 'Chứng chỉ của $host không được tin (thường gặp với OPNsense/LAN). Chỉ tiếp tục trên mạng bạn tin tưởng.';
+  }
+
+  @override
+  String get webview_ssl_trust_continue => 'Tin và tiếp tục';
+
+  @override
   String get canvas_goal_desc => 'Điều chỉnh mục tiêu';
 
   @override
@@ -3566,6 +3790,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get project_notes_label => 'Ghi chú';
 
   @override
+  String get note_type_picker_title => 'Chọn loại ghi chú';
+
+  @override
+  String get note_type_markdown => 'Markdown (.md)';
+
+  @override
+  String get note_type_plain_text => 'Văn bản thuần (.txt)';
+
+  @override
+  String get note_type_word => 'Word (.docx)';
+
+  @override
   String get project_journal_label => 'Nhật ký';
 
   @override
@@ -3756,6 +3992,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get project_sdlc_move_phase => 'Giai đoạn SDLC';
+
+  @override
+  String get project_sdlc_due_date => 'Hạn hoàn thành';
+
+  @override
+  String get project_sdlc_due_date_none => 'Chưa đặt hạn';
+
+  @override
+  String get project_sdlc_clear_due_date => 'Xóa hạn';
 
   @override
   String get project_sdlc_default_purpose =>
@@ -4234,7 +4479,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notification_morning_briefing_subtitle =>
-      'Hiện tóm tắt buổi sáng lần đầu mở Home trong ngày.';
+      'Lịch hôm nay, tóm tắt hôm qua và động lực khi mở Home lần đầu (5:00–11:59).';
 
   @override
   String get notification_status_on => 'bật';
@@ -5463,14 +5708,36 @@ class AppLocalizationsVi extends AppLocalizations {
   String get daily_loop_projects => 'Dự án';
 
   @override
-  String get morning_loop_reminder_title => 'Tóm tắt buổi sáng';
+  String get morning_loop_reminder_title => 'Thông báo đẩy buổi sáng';
 
   @override
   String get morning_loop_reminder_subtitle =>
-      'Tóm tắt hôm qua & động lực hôm nay — mở Ice Gate đầu tiên mỗi sáng';
+      'Tùy chọn trên điện thoại — tóm tắt trong app trên Home vẫn hoạt động khi tắt';
 
   @override
   String get morning_briefing_toggle => 'Tóm tắt sáng trên Home';
+
+  @override
+  String get morning_briefing_today_schedule => 'Lịch hôm nay';
+
+  @override
+  String get morning_briefing_today_empty =>
+      'Không có sự kiện — một ngày trống để lên kế hoạch.';
+
+  @override
+  String get morning_briefing_today_connect_hint =>
+      'Kết nối Google hoặc lịch máy để xem sự kiện hôm nay tại đây.';
+
+  @override
+  String morning_briefing_today_more(int count) {
+    return '+$count sự kiện nữa trong lịch';
+  }
+
+  @override
+  String get morning_briefing_all_day => 'Cả ngày';
+
+  @override
+  String get morning_briefing_open_calendar => 'Mở lịch';
 
   @override
   String get morning_briefing_title => 'Chào buổi sáng';

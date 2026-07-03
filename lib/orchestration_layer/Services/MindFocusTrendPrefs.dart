@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:ice_gate/orchestration_layer/Services/TaskPeriodWindow.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// User-defined focus area (gym week, learn week, invest week, …).
@@ -139,7 +140,7 @@ abstract final class MindFocusTrendPrefs {
   }
 }
 
-/// Per-day focus to-do caps and completion tracking (local prefs).
+/// Per-window focus to-do caps and completion tracking (local prefs).
 abstract final class MindFocusDailyTodosPrefs {
   MindFocusDailyTodosPrefs._();
 
@@ -147,32 +148,34 @@ abstract final class MindFocusDailyTodosPrefs {
   static const maxAddsPerDay = 5;
   static const moodRewardMinCompletions = 3;
 
-  static String _dateSuffix(DateTime day) {
-    final y = day.year.toString().padLeft(4, '0');
-    final m = day.month.toString().padLeft(2, '0');
-    final d = day.day.toString().padLeft(2, '0');
-    return '$y$m$d';
+  static String _prefix(
+    String personId,
+    String trendId,
+    TaskPeriod period,
+    DateTime reference,
+  ) {
+    final window = TaskPeriodWindow.windowKeySuffix(period, reference);
+    return 'mind_focus_${period.name}_${personId}_${trendId}_$window';
   }
-
-  static String _prefix(String personId, String trendId, DateTime day) =>
-      'mind_focus_daily_${personId}_${trendId}_${_dateSuffix(day)}';
 
   static Future<MindFocusDailyTodosSnapshot> load({
     required String personId,
     required String trendId,
-    DateTime? day,
+    TaskPeriod period = TaskPeriod.daily,
+    DateTime? reference,
   }) async {
     if (personId.isEmpty || trendId.isEmpty) {
       return const MindFocusDailyTodosSnapshot();
     }
     final prefs = await SharedPreferences.getInstance();
-    final localDay = day ?? DateTime.now();
-    final prefix = _prefix(personId, trendId, localDay);
+    final ref = reference ?? DateTime.now();
+    final prefix = _prefix(personId, trendId, period, ref);
     final ids = prefs.getStringList('${prefix}_ids') ?? const [];
     return MindFocusDailyTodosSnapshot(
       taskIds: ids,
       completedCount: prefs.getInt('${prefix}_done') ?? 0,
       moodAwarded: prefs.getBool('${prefix}_mood6') ?? false,
+      period: period,
     );
   }
 
@@ -183,10 +186,11 @@ abstract final class MindFocusDailyTodosPrefs {
     required String personId,
     required String trendId,
     required String taskId,
+    TaskPeriod period = TaskPeriod.daily,
   }) async {
     if (personId.isEmpty || trendId.isEmpty || taskId.isEmpty) return;
     final prefs = await SharedPreferences.getInstance();
-    final prefix = _prefix(personId, trendId, DateTime.now());
+    final prefix = _prefix(personId, trendId, period, DateTime.now());
     final key = '${prefix}_ids';
     final ids = <String>[
       ...?prefs.getStringList(key),
@@ -198,10 +202,11 @@ abstract final class MindFocusDailyTodosPrefs {
   static Future<int> registerCompletion({
     required String personId,
     required String trendId,
+    TaskPeriod period = TaskPeriod.daily,
   }) async {
     if (personId.isEmpty || trendId.isEmpty) return 0;
     final prefs = await SharedPreferences.getInstance();
-    final prefix = _prefix(personId, trendId, DateTime.now());
+    final prefix = _prefix(personId, trendId, period, DateTime.now());
     final key = '${prefix}_done';
     final next = (prefs.getInt(key) ?? 0) + 1;
     await prefs.setInt(key, next);
@@ -211,10 +216,11 @@ abstract final class MindFocusDailyTodosPrefs {
   static Future<void> markMoodAwarded({
     required String personId,
     required String trendId,
+    TaskPeriod period = TaskPeriod.daily,
   }) async {
     if (personId.isEmpty || trendId.isEmpty) return;
     final prefs = await SharedPreferences.getInstance();
-    final prefix = _prefix(personId, trendId, DateTime.now());
+    final prefix = _prefix(personId, trendId, period, DateTime.now());
     await prefs.setBool('${prefix}_mood6', true);
   }
 }
@@ -224,11 +230,13 @@ class MindFocusDailyTodosSnapshot {
     this.taskIds = const [],
     this.completedCount = 0,
     this.moodAwarded = false,
+    this.period = TaskPeriod.daily,
   });
 
   final List<String> taskIds;
   final int completedCount;
   final bool moodAwarded;
+  final TaskPeriod period;
 
   int get addedCount => taskIds.length;
 

@@ -671,6 +671,18 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
     await _pushGoalById(id);
   }
 
+  Future<void> updateGoalTargetDateByUuid(String id, DateTime? targetDate) async {
+    await (update(goalsTable)..where((t) => t.id.equals(id))).write(
+      GoalsTableCompanion(
+        targetDate: targetDate == null
+            ? const Value(null)
+            : Value(targetDate.toUtc()),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    await _pushGoalById(id);
+  }
+
   Future<void> updateGoalStatusByIntId(String goalID, String status) async {
     await (update(goalsTable)..where((t) => t.goalID.equals(goalID))).write(
       GoalsTableCompanion(
@@ -960,7 +972,7 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
         remoteId != null && remoteId != row.id;
 
     if (localDuplicateOfRemote) {
-      targetId = remoteId!;
+      targetId = remoteId;
     }
 
     final payload = {

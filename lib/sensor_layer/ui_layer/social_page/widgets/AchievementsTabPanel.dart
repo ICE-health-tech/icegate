@@ -3,25 +3,22 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementFeedUtils.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementNostalgiaBanner.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryRail.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementUnifiedFeed.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/DomainAnalysisChart.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/project_note_archive_utils.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-/// Achievements tab: filters (C) + unified feed (B) + story grid (A).
+/// Memory archive tab — reads from [project_notes].
 class AchievementsTabPanel extends StatefulWidget {
   const AchievementsTabPanel({
     super.key,
-    required this.achievements,
+    required this.notes,
     required this.emptyState,
   });
 
-  final List<AchievementData> achievements;
+  final List<ProjectNoteData> notes;
   final Widget emptyState;
 
   @override
@@ -35,100 +32,119 @@ class _AchievementsTabPanelState extends State<AchievementsTabPanel> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final mindBlock = context.read<MindBlock>();
-    final personId = context.read<PersonBlock>().currentPersonID.value ?? '';
     final projects = context.watch<ProjectBlock>().projects.value;
 
-    final filtered = AchievementFeedUtils.applyFilters(
-      widget.achievements,
+    final filtered = ProjectNoteArchiveUtils.applyFilters(
+      widget.notes,
       month: _monthFilter,
       projectId: _projectFilter,
     );
-    final photoStories = achievementPhotoStories(filtered);
-    final textFeats = achievementLoggedFeats(filtered);
-    final unified = AchievementFeedUtils.unifiedFeed(filtered);
-    final filterProjects = AchievementFeedUtils.projectsWithAchievements(
-      widget.achievements,
+    final photoMemories = ProjectNoteArchiveUtils.photoMemories(filtered);
+    final timeline = ProjectNoteArchiveUtils.timeline(filtered);
+    final filterProjects = ProjectNoteArchiveUtils.projectsWithNotes(
+      widget.notes,
       projects,
     );
+    final onThisDay = ProjectNoteArchiveUtils.onThisDayMemories(widget.notes);
+    final nostalgiaIds = onThisDay.map((n) => n.id).toSet();
 
-    return StreamBuilder<List<MindLogData>>(
-      stream: mindBlock.watchMindLogsRange(personId, 60),
-      builder: (context, logSnap) {
-        final mindLogs = logSnap.data ?? const [];
+    if (filtered.isEmpty && widget.notes.isEmpty) {
+      return widget.emptyState;
+    }
 
-        if (filtered.isEmpty &&
-            widget.achievements.isEmpty &&
-            mindLogs.isEmpty) {
-          return widget.emptyState;
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: AchievementStoryRail.recordColumnFlex,
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: _AchievementFilters(
-                      month: _monthFilter,
-                      projectId: _projectFilter,
-                      projects: filterProjects,
-                      onMonthChanged: (m) => setState(() => _monthFilter = m),
-                      onProjectChanged: (id) =>
-                          setState(() => _projectFilter = id),
-                    ),
-                  ),
-                  if (textFeats.isNotEmpty ||
-                      countSkillSessionsInRange(mindLogs) > 0)
-                    SliverToBoxAdapter(
-                      child: DomainAnalysisChart(
-                        achievements: textFeats,
-                        mindLogs: mindLogs,
-                      ),
-                    ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 12, 2),
-                      child: Text(
-                        l10n.achievement_feats_section.toUpperCase(),
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          letterSpacing: 1.1,
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: AchievementUnifiedFeed(
-                      items: unified,
-                      projects: projects,
-                      photoStories: photoStories,
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 96)),
-                ],
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: AchievementStoryRail.recordColumnFlex,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: _ArchiveFilters(
+                  month: _monthFilter,
+                  projectId: _projectFilter,
+                  projects: filterProjects,
+                  onMonthChanged: (m) => setState(() => _monthFilter = m),
+                  onProjectChanged: (id) =>
+                      setState(() => _projectFilter = id),
+                ),
               ),
-            ),
-            Expanded(
-              flex: AchievementStoryRail.imageColumnFlex,
-              child: AchievementStoryRail(
-                achievements: filtered,
-                projects: projects,
+              if (onThisDay.isNotEmpty && _monthFilter == null)
+                SliverToBoxAdapter(
+                  child: AchievementNostalgiaBanner(
+                    memories: onThisDay,
+                    photoMemories: ProjectNoteArchiveUtils.photoMemories(
+                      widget.notes,
+                    ),
+                    projects: projects,
+                  ),
+                ),
+              if (filtered.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _ArchiveMonthSummary(count: filtered.length),
+                ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 12, 2),
+                  child: Text(
+                    l10n.achievement_feats_section.toUpperCase(),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      letterSpacing: 1.1,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
-        );
-      },
+              SliverToBoxAdapter(
+                child: AchievementUnifiedFeed(
+                  items: timeline,
+                  projects: projects,
+                  photoMemories: photoMemories,
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 96)),
+            ],
+          ),
+        ),
+        Expanded(
+          flex: AchievementStoryRail.imageColumnFlex,
+          child: AchievementStoryRail(
+            notes: filtered,
+            projects: projects,
+            nostalgiaIds: nostalgiaIds,
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _AchievementFilters extends StatelessWidget {
-  const _AchievementFilters({
+class _ArchiveMonthSummary extends StatelessWidget {
+  const _ArchiveMonthSummary({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 12, 4),
+      child: Text(
+        l10n.achievement_archive_month_summary(count),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: cs.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _ArchiveFilters extends StatelessWidget {
+  const _ArchiveFilters({
     required this.month,
     required this.projectId,
     required this.projects,
@@ -146,7 +162,7 @@ class _AchievementFilters extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final months = AchievementFeedUtils.recentMonths();
+    final months = ProjectNoteArchiveUtils.recentMonths();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 12, 4),

@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/orchestration_layer/Services/HomelabHostPolicy.dart';
 import 'package:ice_gate/orchestration_layer/Services/WebViewCredentialStore.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:webview_flutter/webview_flutter.dart' as wv;
@@ -157,6 +159,7 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
               });
             }
           },
+          onSslAuthError: _handleSslAuthError,
           onHttpAuthRequest: _handleHttpAuthRequest,
         ),
       )
@@ -203,6 +206,70 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
         await platformManager.setAcceptThirdPartyCookies(androidController, true);
       }
     } catch (_) {}
+  }
+
+  Future<void> _handleSslAuthError(wv.SslAuthError error) async {
+    final host = _pageUri.host;
+    if (!HomelabHostPolicy.isPrivateLan(host)) {
+      await error.cancel();
+      return;
+    }
+
+    if (await _credentialStore.isHomelabSslTrusted(host)) {
+      await error.proceed();
+      if (mounted) setState(() => _errorMessage = null);
+      return;
+    }
+
+    if (!mounted) {
+      await error.cancel();
+      return;
+    }
+
+    final trusted = await _promptHomelabSslTrust(host);
+    if (trusted) {
+      await _credentialStore.setHomelabSslTrusted(host, true);
+      await error.proceed();
+      if (mounted) setState(() => _errorMessage = null);
+    } else {
+      await error.cancel();
+    }
+  }
+
+  Future<bool> _promptHomelabSslTrust(String host) async {
+    final l10n = AppLocalizations.of(context)!;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.webview_ssl_trust_title),
+        content: Text(l10n.webview_ssl_trust_message(host)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.webview_ssl_trust_continue),
+          ),
+        ],
+      ),
+    );
+    return result == true;
+  }
+
+  bool _isCertificateError(String message) {
+    final lower = message.toLowerCase();
+    return lower.contains('certificate') || lower.contains('ssl');
+  }
+
+  Future<void> _trustHomelabAndReload() async {
+    final host = _pageUri.host;
+    if (!HomelabHostPolicy.isPrivateLan(host)) return;
+    await _credentialStore.setHomelabSslTrusted(host, true);
+    if (!mounted) return;
+    setState(() => _errorMessage = null);
+    await _controller.reload();
   }
 
   Future<void> _handleHttpAuthRequest(wv.HttpAuthRequest request) async {
@@ -272,6 +339,7 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final padding = widget.displayOptions.contentPadding ?? EdgeInsets.zero;
 
     return ColoredBox(
@@ -315,7 +383,7 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Connection Error',
+                          l10n.webview_connection_error,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
@@ -328,8 +396,17 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
                         FilledButton.icon(
                           onPressed: () => _controller.reload(),
                           icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
+                          label: Text(l10n.webview_retry),
                         ),
+                        if (_isCertificateError(_errorMessage!) &&
+                            HomelabHostPolicy.isPrivateLan(_pageUri.host)) ...[
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            onPressed: _trustHomelabAndReload,
+                            icon: const Icon(Icons.lock_open_rounded),
+                            label: Text(l10n.webview_ssl_trust_continue),
+                          ),
+                        ],
                       ],
                     ),
                   ),

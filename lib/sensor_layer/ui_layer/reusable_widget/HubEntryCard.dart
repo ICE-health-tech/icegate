@@ -11,6 +11,7 @@ class HubEntryCard extends StatelessWidget {
     required this.accent,
     required this.onTap,
     this.onLongPress,
+    this.trailing,
     this.compact = false,
   });
 
@@ -20,6 +21,7 @@ class HubEntryCard extends StatelessWidget {
   final Color accent;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final Widget? trailing;
   final bool compact;
 
   @override
@@ -115,6 +117,10 @@ class HubEntryCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (trailing != null) ...[
+                  trailing!,
+                  const SizedBox(width: 2),
+                ],
                 const SizedBox(width: 6),
                 Icon(
                   Icons.chevron_right_rounded,

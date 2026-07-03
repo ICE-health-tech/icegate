@@ -222,10 +222,7 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                       if (selectedType != 'expense' &&
                           selectedType != 'savings') {
                         selectedSourceAccountId = null;
-                      } else if (selectedSourceAccountId == null) {
-                        selectedSourceAccountId =
-                            widget.financeBlock.suggestSourceAccountId();
-                      }
+                      } else selectedSourceAccountId ??= widget.financeBlock.suggestSourceAccountId();
                     });
                   },
                 ),

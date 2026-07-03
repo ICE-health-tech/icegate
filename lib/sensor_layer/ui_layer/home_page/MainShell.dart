@@ -145,10 +145,10 @@ class _MainShellState extends State<MainShell> {
     // When the workspace rails are visible, shift the DynamicIsland to avoid
     // overlapping the left sidebar UI.
     final bool useWorkspaceRails = WorkspaceSidebarLayout.useWorkspace(width);
-    const double _analysisRailWidth = 40;
-    const double _pluginRailWidth = 56;
+    const double analysisRailWidth = 40;
+    const double pluginRailWidth = 56;
     final double leftRailInset =
-        useWorkspaceRails ? (_analysisRailWidth + _pluginRailWidth) : 0.0;
+        useWorkspaceRails ? (analysisRailWidth + pluginRailWidth) : 0.0;
     final double responsiveSize = wideLayout
         ? (width * 0.035).clamp(40.0, 50.0)
         : (width * 0.5).clamp(40.0, 68.0);

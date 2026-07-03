@@ -10,7 +10,7 @@ class MorningLoopPrefs {
   /// Daily push to open Ice Gate first thing.
   static Future<bool> getReminderEnabled() async {
     final p = await SharedPreferences.getInstance();
-    return p.getBool(_kReminderEnabled) ?? true;
+    return p.getBool(_kReminderEnabled) ?? false;
   }
 
   static Future<void> setReminderEnabled(bool value) async {

@@ -291,7 +291,7 @@ class _CreateCalendarEventDialogState extends State<_CreateCalendarEventDialog> 
                 )
               else if (_calendars.isNotEmpty && !widget.isEdit)
                 DropdownButtonFormField<CalendarProtocol>(
-                  value: _selectedCalendar,
+                  initialValue: _selectedCalendar,
                   decoration: InputDecoration(
                     labelText: l10n.projects_calendar_select_calendar,
                     border: const OutlineInputBorder(),
@@ -360,7 +360,7 @@ class _CreateCalendarEventDialogState extends State<_CreateCalendarEventDialog> 
       ),
       actions: [
         TextButton(
-          onPressed: _saving ? null : () => Navigator.pop(context, false),
+          onPressed: _saving ? null : () => Navigator.pop(context),
           child: Text(l10n.cancel),
         ),
         FilledButton(

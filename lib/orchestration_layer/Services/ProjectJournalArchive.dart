@@ -58,7 +58,7 @@ abstract final class ProjectJournalArchive {
               ? drift.Value(projectId)
               : const drift.Value.absent(),
           localImagePath: hasImage
-              ? drift.Value(imagePath!.trim())
+              ? drift.Value(imagePath.trim())
               : const drift.Value.absent(),
         ),
       );
@@ -75,7 +75,7 @@ abstract final class ProjectJournalArchive {
         personId: personId,
         title: title,
         storyDatetime: DateTime.now(),
-        imageS3Path: imagePath!.trim(),
+        imageS3Path: imagePath.trim(),
         isUploading: false,
       );
     } catch (e) {

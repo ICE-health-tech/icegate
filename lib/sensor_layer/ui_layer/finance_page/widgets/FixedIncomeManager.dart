@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/TaskPeriodWindow.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceInflowPillars.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceCurrencyToggle.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceEntryInsightPanel.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -19,8 +22,16 @@ void showFixedIncomeEditor(
 }) {
   final l10n = AppLocalizations.of(context)!;
   final isEdit = income != null;
+  final growthBlock = context.read<GrowthBlock>();
+  final skillOptions = growthBlock.personSkillNames();
+  final existingSkill = TaskGoalSkillCodec.decode(income?.description);
+  final existingLabel = income != null
+      ? TaskGoalSkillCodec.displayLabel(income.description)
+      : '';
   final nameController = TextEditingController(
-    text: income?.description ?? income?.category ?? '',
+    text: existingLabel.isNotEmpty
+        ? existingLabel
+        : (income?.description ?? income?.category ?? ''),
   );
 
   String initialAmount = '';
@@ -33,6 +44,10 @@ void showFixedIncomeEditor(
   String selectedCategory =
       income?.category ?? initialCategory ?? 'human_capital';
   String selectedInterval = income?.interval ?? 'monthly';
+  String? selectedSkill = existingSkill;
+  if (selectedSkill == null && skillOptions.length == 1) {
+    selectedSkill = skillOptions.first;
+  }
 
   showModalBottomSheet(
     context: context,
@@ -120,6 +135,18 @@ void showFixedIncomeEditor(
                     l10n,
                     (v) => setState(() => selectedCategory = v),
                   ),
+                  if (selectedCategory == 'human_capital' &&
+                      skillOptions.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _dropdown<String?>(
+                      value: selectedSkill,
+                      label: l10n.mind_dashboard_target_skills,
+                      items: {
+                        for (final name in skillOptions) name: name,
+                      },
+                      onChanged: (v) => setState(() => selectedSkill = v),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   FinanceEntryInsightPanel(
                     insight: buildFixedIncomeInsight(
@@ -140,12 +167,19 @@ void showFixedIncomeEditor(
                       final amount = double.tryParse(amountController.text);
                       if (amount == null || amount <= 0) return;
                       final stored = financeBlock.convertToBase(amount);
-                      final label = nameController.text.trim().isEmpty
+                      final rawLabel = nameController.text.trim();
+                      final label = rawLabel.isEmpty
                           ? FinancePage.getCategoryName(
                               l10n,
                               selectedCategory,
                             )
-                          : nameController.text.trim();
+                          : rawLabel;
+                      final description = selectedCategory == 'human_capital'
+                          ? TaskGoalSkillCodec.encode(
+                              skillName: selectedSkill,
+                              description: label,
+                            )
+                          : label;
 
                       if (isEdit) {
                         await financeBlock.deleteRecurringIncome(income.id);
@@ -153,7 +187,7 @@ void showFixedIncomeEditor(
                       await financeBlock.addRecurringIncome(
                         category: selectedCategory,
                         amount: stored,
-                        description: label,
+                        description: description,
                         interval: selectedInterval,
                       );
                       if (ctx.mounted) Navigator.pop(ctx);
@@ -255,11 +289,12 @@ Widget _categoryPicker(
   );
 }
 
-Widget _dropdown<T>(
-  {required T value,
+Widget _dropdown<T>({
+  required T value,
   required String label,
   required Map<T, String> items,
-  required ValueChanged<T> onChanged}) {
+  required ValueChanged<T> onChanged,
+}) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 12),
     decoration: BoxDecoration(
