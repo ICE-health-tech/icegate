@@ -32,14 +32,16 @@ class MorningScheduleSnapshot {
 
 /// Loads today's events from app log, Google, and device calendars (best effort).
 abstract final class MorningScheduleLoader {
+  /// [forDay] defaults to today; morning notification passes its fire day.
   static Future<MorningScheduleSnapshot> loadToday({
     required AppDatabase db,
     required String personId,
     required GoogleCalendarService google,
     required DeviceCalendarService device,
+    DateTime? forDay,
   }) async {
-    final now = DateTime.now();
-    final day = DateTime(now.year, now.month, now.day);
+    final base = forDay ?? DateTime.now();
+    final day = DateTime(base.year, base.month, base.day);
     final dayEnd = DateTime(day.year, day.month, day.day, 23, 59, 59, 999);
 
     final items = <MorningScheduleItem>[];

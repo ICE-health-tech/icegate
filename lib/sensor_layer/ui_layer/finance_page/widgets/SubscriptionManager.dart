@@ -637,18 +637,21 @@ class SubscriptionManager extends StatelessWidget {
     final daysLeft = _calculateDaysLeft(sub);
     final isYearly = sub.billingCycle == 'yearly';
 
+    final screenW = MediaQuery.sizeOf(context).width;
+    final cardW = (screenW < 400 ? (screenW - 60) / 2 : 170.0).clamp(140.0, 200.0);
+
     return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 16, bottom: 10, top: 10),
-      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 28),
+      width: cardW,
+      margin: const EdgeInsets.only(right: 14, bottom: 10, top: 10),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 24),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           onTap: () =>
               showSubscriptionEditor(context, financeBlock, subscription: sub),
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -681,22 +684,26 @@ class SubscriptionManager extends StatelessWidget {
                     color: FinanceSurface.mutedInk(isDark: isDark),
                     fontWeight: FontWeight.w900,
                     fontSize: 10,
-                    letterSpacing: 1,
+                    letterSpacing: 0.8,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  financeBlock.formatCurrency(sub.amount),
-                  style: TextStyle(
-                    color: FinanceSurface.ink(isDark: isDark),
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'JetBrainsMono',
+                const SizedBox(height: 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    financeBlock.formatCurrency(sub.amount),
+                    style: TextStyle(
+                      color: FinanceSurface.ink(isDark: isDark),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'JetBrainsMono',
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 _buildCountdownBadge(context, daysLeft, isDark: isDark),
               ],
             ),
@@ -767,7 +774,10 @@ class SubscriptionManager extends StatelessWidget {
     return due.difference(DateTime(today.year, today.month, today.day)).inDays;
   }
 
-  IconData _getCategoryIcon(String category) {
+  IconData _getCategoryIcon(String category) =>
+      _getCategoryIconStatic(category);
+
+  static IconData _getCategoryIconStatic(String category) {
     switch (category.toLowerCase()) {
       case 'software': return Icons.terminal_rounded;
       case 'entertainment': return Icons.play_circle_fill_rounded;
@@ -972,12 +982,14 @@ class _NextMonthPlanRow extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final dueLabel = DateFormat.MMMd(locale).format(due);
 
+    final icon = SubscriptionManager._getCategoryIconStatic(sub.category ?? 'software');
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           onTap: () => showSubscriptionEditor(
             context,
             financeBlock,
@@ -986,9 +998,23 @@ class _NextMonthPlanRow extends StatelessWidget {
             planMonth: planMonth,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             child: Row(
               children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: FinanceSurface.silverAccent()
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 16,
+                    color: FinanceSurface.silverAccent(),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1024,18 +1050,18 @@ class _NextMonthPlanRow extends StatelessWidget {
                     fontFamily: 'JetBrainsMono',
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 IconButton(
                   tooltip: l10n.finance_subscriptions_next_month_remove_tooltip,
                   onPressed: () => _confirmRemoveFromPlan(context),
                   icon: Icon(
                     Icons.close_rounded,
-                    size: 18,
+                    size: 16,
                     color: FinanceSurface.mutedInk(isDark: isDark),
                   ),
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 ),
               ],
             ),

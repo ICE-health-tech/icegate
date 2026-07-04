@@ -22,6 +22,8 @@ class NotificationEngine {
 
   Future<void> syncHealthNudges({
     required DailyMotivationResult motivation,
+    int? activeProjects,
+    int? activeTasks,
     bool force = false,
   }) async {
     if (kIsWeb) return;
@@ -48,14 +50,14 @@ class NotificationEngine {
     final weakest = MotivationEngine.weakestPillar(motivation);
 
     if (prefs.stepNudgeEnabled && now.hour < 20) {
-      final steps = motivation.pillars
-          .where((p) => p.id == 'steps')
-          .map((p) => p.progress)
-          .firstOrNull;
-      if (steps != null && steps < 0.5) {
+      final steps =
+          motivation.pillars.where((p) => p.id == 'steps').firstOrNull;
+      if (steps != null && steps.progress < 0.5) {
         final copy = MotivationEngine.nudgeCopy(
           pillarId: 'steps',
           vietnamese: vi,
+          value: steps.value,
+          goal: steps.goal,
         );
         await _notifications.scheduleDailyHealthNudge(
           id: stepNudgeId,
@@ -71,14 +73,14 @@ class NotificationEngine {
     }
 
     if (prefs.waterNudgeEnabled && now.hour < 18) {
-      final water = motivation.pillars
-          .where((p) => p.id == 'water')
-          .map((p) => p.progress)
-          .firstOrNull;
-      if (water != null && water < 0.4) {
+      final water =
+          motivation.pillars.where((p) => p.id == 'water').firstOrNull;
+      if (water != null && water.progress < 0.4) {
         final copy = MotivationEngine.nudgeCopy(
           pillarId: 'water',
           vietnamese: vi,
+          value: water.value,
+          goal: water.goal,
         );
         await _notifications.scheduleDailyHealthNudge(
           id: waterNudgeId,
@@ -104,12 +106,63 @@ class NotificationEngine {
         channelId: 'health_evening_recap',
         channelName: 'Evening health recap',
         title: copy.title,
-        body: copy.body,
+        body: _eveningRecapBody(
+          motivation: motivation,
+          activeProjects: activeProjects,
+          activeTasks: activeTasks,
+          vietnamese: vi,
+          fallback: copy.body,
+        ),
         hour: 20,
         minute: 0,
         payload: eveningRecapPayload,
       );
     }
+  }
+
+  /// STORY: First list the pillars still short of goal with their real
+  /// numbers. Then append open projects/tasks. So the 20:00 recap shows the
+  /// whole day, not one generic sentence.
+  static String _eveningRecapBody({
+    required DailyMotivationResult motivation,
+    required int? activeProjects,
+    required int? activeTasks,
+    required bool vietnamese,
+    required String fallback,
+  }) {
+    final lines = <String>[];
+
+    final unfinished = motivation.pillars
+        .where((p) => p.progress < 1 && p.goal > 0)
+        .toList()
+      ..sort((a, b) => a.progress.compareTo(b.progress));
+    if (unfinished.isNotEmpty) {
+      lines.add(
+        unfinished
+            .take(3)
+            .map(
+              (p) => MotivationEngine.formatPillarStat(
+                pillarId: p.id,
+                value: p.value,
+                goal: p.goal,
+                vietnamese: vietnamese,
+              ),
+            )
+            .join(' · '),
+      );
+    }
+
+    final projects = activeProjects ?? 0;
+    final tasks = activeTasks ?? 0;
+    if (projects > 0 || tasks > 0) {
+      lines.add(
+        vietnamese
+            ? '$projects dự án · $tasks task đang mở'
+            : '$projects projects · $tasks tasks open',
+      );
+    }
+
+    return lines.isEmpty ? fallback : lines.join('\n');
   }
 
   static Future<bool> _isVietnamese() async {

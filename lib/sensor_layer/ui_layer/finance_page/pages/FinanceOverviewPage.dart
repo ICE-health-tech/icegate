@@ -1,14 +1,18 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceAlertPanel.dart';
+import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceInflowPillars.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FixedIncomeManager.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinancePortfolioRecordSection.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SavingsStreakCard.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionBuilderDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceAssetPillars.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_form/AddAssetDialog.dart';
 import '../finance_form/AddAccountDialog.dart';
@@ -55,15 +59,10 @@ class FinanceOverviewPage extends StatelessWidget {
           const SizedBox(height: 24),
           FinanceInflowPillarsStrip(financeBlock: financeBlock),
           const SizedBox(height: 24),
-          FinancePortfolioRecordSection(financeBlock: financeBlock),
+          _FinanceQuickActions(financeBlock: financeBlock),
           const SizedBox(height: 24),
-
           Watch((context) {
             return FixedIncomeManager(financeBlock: financeBlock);
-          }),
-          const SizedBox(height: 24),
-          Watch((context) {
-            return _buildAssetPillarsRow(context, financeBlock);
           }),
           const SizedBox(height: 32),
 
@@ -73,9 +72,8 @@ class FinanceOverviewPage extends StatelessWidget {
           }),
           const SizedBox(height: 40),
 
-          // Finance health alerts (net worth + breakdown)
-          FinanceAlertPanel(financeBlock: financeBlock),
-          const SizedBox(height: 120), // Bottom space
+          _FinanceGoalsSection(financeBlock: financeBlock),
+          const SizedBox(height: 120),
             ],
           ),
         ),
@@ -98,7 +96,11 @@ class FinanceOverviewPage extends StatelessWidget {
     final gapAfterTitle = dense ? 18.0 : 28.0;
     final gapBeforeBar = dense ? 14.0 : 20.0;
 
-    return Container(
+    final limit = block.monthlyBudgetLimit.value;
+
+    return GestureDetector(
+      onTap: () => _showBudgetLimitEditor(context, block),
+      child: Container(
       width: double.infinity,
       padding: EdgeInsets.all(pad),
       decoration: FinanceSurface.panel(
@@ -109,14 +111,35 @@ class FinanceOverviewPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "MONTHLY BURN",
-            style: TextStyle(
-              color: FinanceSurface.mutedInk(isDark: isDark),
-              fontSize: 9,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 2,
-            ),
+          Row(
+            children: [
+              Text(
+                "MONTHLY BURN",
+                style: TextStyle(
+                  color: FinanceSurface.mutedInk(isDark: isDark),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                "LIMIT: ${block.formatCurrency(limit, compact: true)}"
+                "${block.budgetLimitPeriod.value == 'week' ? '/wk' : '/mo'}",
+                style: TextStyle(
+                  color: FinanceSurface.mutedInk(isDark: isDark),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.edit_rounded,
+                size: 12,
+                color: FinanceSurface.mutedInk(isDark: isDark),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Row(
@@ -195,6 +218,74 @@ class FinanceOverviewPage extends StatelessWidget {
           ),
         ],
       ),
+    ),
+    );
+  }
+
+  void _showBudgetLimitEditor(BuildContext context, FinanceBlock block) {
+    final l10n = AppLocalizations.of(context)!;
+    final ctrl = TextEditingController(
+      text: block.convertToDisplay(block.monthlyBudgetLimit.value)
+          .toStringAsFixed(0),
+    );
+    var period = block.budgetLimitPeriod.value;
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: Text(l10n.finance_budget_limit_title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: ctrl,
+                autofocus: true,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: l10n.finance_budget_limit_label,
+                  prefixText: block.useVnd.value ? '₫ ' : '\$ ',
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(
+                    value: 'week',
+                    label: Text(l10n.finance_budget_limit_per_week),
+                  ),
+                  ButtonSegment(
+                    value: 'month',
+                    label: Text(l10n.finance_budget_limit_per_month),
+                  ),
+                ],
+                selected: {period},
+                onSelectionChanged: (s) => setState(() => period = s.first),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                final parsed = double.tryParse(ctrl.text.trim());
+                if (parsed != null && parsed > 0) {
+                  block.setBudgetLimit(
+                    block.convertToBase(parsed),
+                    period: period,
+                  );
+                }
+                Navigator.pop(ctx);
+              },
+              child: Text(l10n.projects_calendar_save),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -239,98 +330,84 @@ class FinanceOverviewPage extends StatelessWidget {
   }
 
   Widget _buildSummaryCardRow(BuildContext context, FinanceBlock block) {
-    final dense = MediaQuery.sizeOf(context).width >= 900;
-    final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        Expanded(
-          child: _buildSimpleStatsCard(
-            context,
-            label: "SAVINGS",
-            value: block.formatCurrency(
-              block.totalSavings.value,
-              compact: true,
-            ),
-            color: FinanceSurface.silverAccent(),
-            icon: Icons.savings_rounded,
-            dense: dense,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildSimpleStatsCard(
-            context,
-            label: l10n.finance_fixed_income_title.toUpperCase(),
-            value: block.formatCurrency(
-              block.monthlyFixedIncome.value,
-              compact: true,
-            ),
-            color: FinanceSurface.mutedInk(isDark: Theme.of(context).brightness == Brightness.dark),
-            icon: Icons.trending_up_rounded,
-            dense: dense,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildSimpleStatsCard(
-            context,
-            label: "SPENDING",
-            value: block.formatCurrency(
-              block.monthlySpending.value,
-              compact: true,
-            ),
-            color: FinanceSurface.ink(
-              isDark: Theme.of(context).brightness == Brightness.dark,
-            ),
-            icon: Icons.shopping_cart_rounded,
-            dense: dense,
-          ),
-        ),
-      ],
-    );
-  }
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-  Widget _buildSimpleStatsCard(
-    BuildContext context, {
-    required String label,
-    required String value,
-    required Color color,
-    required IconData icon,
-    bool dense = false,
-  }) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    final pad = dense ? 12.0 : 16.0;
-    final radius = dense ? 20.0 : 24.0;
+    final income = block.monthlyFixedIncome.value;
+    final spending = block.monthlySpending.value;
+    final savings = block.totalSavings.value;
+    final total = income + spending;
+    final incomeRatio = total > 0 ? income / total : 0.5;
+
+    final incomeColor = FinanceSurface.silverAccent();
+    final spendingColor = isDark
+        ? Colors.white.withValues(alpha: 0.35)
+        : cs.onSurface.withValues(alpha: 0.3);
+
     return Container(
-      padding: EdgeInsets.all(pad),
-      decoration: FinanceSurface.panel(
-        cs,
-        isDark: isDark,
-        radius: radius,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(20),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 24),
+      child: Row(
         children: [
-          Icon(icon, color: color, size: dense ? 15 : 16),
-          SizedBox(height: dense ? 8 : 12),
-          Text(
-            label,
-            style: TextStyle(
-              color: FinanceSurface.mutedInk(isDark: isDark),
-              fontSize: 8,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
+          SizedBox(
+            width: 100,
+            height: 100,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CustomPaint(
+                  size: const Size(100, 100),
+                  painter: _CashflowDonutPainter(
+                    incomeRatio: incomeRatio,
+                    incomeColor: incomeColor,
+                    spendingColor: spendingColor,
+                    trackColor: cs.outline.withValues(alpha: 0.12),
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      block.formatCurrency(savings, compact: true),
+                      style: TextStyle(
+                        color: FinanceSurface.ink(isDark: isDark),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      'SAVINGS',
+                      style: TextStyle(
+                        color: FinanceSurface.mutedInk(isDark: isDark),
+                        fontSize: 7,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              color: FinanceSurface.ink(isDark: isDark),
-              fontSize: dense ? 16 : 18,
-              fontWeight: FontWeight.w900,
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _legendRow(
+                  color: incomeColor,
+                  label: 'INCOME',
+                  value: block.formatCurrency(income, compact: true),
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 14),
+                _legendRow(
+                  color: spendingColor,
+                  label: 'SPENDING',
+                  value: block.formatCurrency(spending, compact: true),
+                  isDark: isDark,
+                ),
+              ],
             ),
           ),
         ],
@@ -338,106 +415,47 @@ class FinanceOverviewPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAssetPillarsRow(BuildContext context, FinanceBlock block) {
-    final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final totals = block.netWorthByAssetPillar.value;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _legendRow({
+    required Color color,
+    required String label,
+    required String value,
+    required bool isDark,
+  }) {
+    return Row(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              l10n.finance_asset_pillars_title.toUpperCase(),
-              style: TextStyle(
-                color: cs.onSurface,
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2,
-              ),
-            ),
-            GestureDetector(
-              onTap: () => AddAssetDialog.show(context),
-              child: Text(
-                l10n.add.toUpperCase(),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
                 style: TextStyle(
-                  color: FinanceSurface.silverAccent(),
-                  fontSize: 9,
+                  color: FinanceSurface.mutedInk(isDark: isDark),
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  color: FinanceSurface.ink(isDark: isDark),
+                  fontSize: 16,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          l10n.finance_asset_pillars_subtitle,
-          style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final pillar in FinanceAssetPillar.ordered)
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: pillar == FinanceAssetPillar.investment
-                      ? () => AddAccountDialog.show(
-                            context,
-                            initialAccountType: 'investment',
-                          )
-                      : pillar == FinanceAssetPillar.liquidity
-                      ? () => AddAccountDialog.show(
-                            context,
-                            initialAccountType: 'checking',
-                          )
-                      : null,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          FinanceAssetPillar.icon(pillar),
-                          size: 14,
-                          color: FinanceSurface.mutedInk(isDark: isDark),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          FinanceAssetPillar.label(l10n, pillar),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: FinanceSurface.ink(isDark: isDark),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      block.formatCurrency(totals[pillar] ?? 0, compact: true),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: FinanceSurface.ink(isDark: isDark),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -709,6 +727,299 @@ class FinanceOverviewPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _FinanceQuickActions extends StatelessWidget {
+  const _FinanceQuickActions({required this.financeBlock});
+
+  final FinanceBlock financeBlock;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final actions = [
+      (
+        icon: Icons.receipt_long_rounded,
+        label: l10n.finance_shortcut_transaction,
+        onTap: () => TransactionBuilderDialog.show(
+          context,
+          financeBlock: financeBlock,
+        ),
+      ),
+      (
+        icon: Icons.account_balance_rounded,
+        label: l10n.finance_shortcut_account,
+        onTap: () => AddAccountDialog.show(context),
+      ),
+      (
+        icon: Icons.diamond_outlined,
+        label: l10n.finance_shortcut_asset,
+        onTap: () => AddAssetDialog.show(context),
+      ),
+      (
+        icon: Icons.trending_up_rounded,
+        label: l10n.finance_shortcut_income,
+        onTap: () => showFixedIncomeEditor(context, financeBlock),
+      ),
+    ];
+
+    return Row(
+      children: [
+        for (var i = 0; i < actions.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: actions[i].onTap,
+                borderRadius: BorderRadius.circular(14),
+                child: Ink(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 14),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: FinanceSurface.silverAccent()
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          actions[i].icon,
+                          size: 18,
+                          color: FinanceSurface.silverAccent(),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        actions[i].label,
+                        style: TextStyle(
+                          color: FinanceSurface.ink(isDark: isDark),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _CashflowDonutPainter extends CustomPainter {
+  _CashflowDonutPainter({
+    required this.incomeRatio,
+    required this.incomeColor,
+    required this.spendingColor,
+    required this.trackColor,
+  });
+
+  final double incomeRatio;
+  final Color incomeColor;
+  final Color spendingColor;
+  final Color trackColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 6;
+    const strokeWidth = 10.0;
+    const startAngle = -math.pi / 2;
+    const gap = 0.04;
+
+    final trackPaint = Paint()
+      ..color = trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, trackPaint);
+
+    final ratio = incomeRatio.clamp(0.0, 1.0);
+    final incomeAngle = ratio * (2 * math.pi) - gap;
+    final spendingAngle = (1 - ratio) * (2 * math.pi) - gap;
+
+    if (incomeAngle > 0.01) {
+      final incomePaint = Paint()
+        ..color = incomeColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        incomeAngle,
+        false,
+        incomePaint,
+      );
+    }
+
+    if (spendingAngle > 0.01) {
+      final spendingPaint = Paint()
+        ..color = spendingColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle + incomeAngle + gap * 2,
+        spendingAngle,
+        false,
+        spendingPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CashflowDonutPainter oldDelegate) =>
+      incomeRatio != oldDelegate.incomeRatio;
+}
+
+class _FinanceGoalsSection extends StatelessWidget {
+  const _FinanceGoalsSection({required this.financeBlock});
+
+  final FinanceBlock financeBlock;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Watch((context) {
+      final growthBlock = context.read<GrowthBlock>();
+      final allGoals = growthBlock.goals.value;
+      final financeGoals = allGoals
+          .where((g) => g.category == 'finance' && g.status == 'active')
+          .toList();
+
+      if (financeGoals.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'FINANCE GOALS',
+            style: TextStyle(
+              color: FinanceSurface.mutedInk(isDark: isDark),
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          for (final goal in financeGoals) ...[
+            _FinanceGoalCard(
+              goal: goal,
+              financeBlock: financeBlock,
+              isDark: isDark,
+              colorScheme: cs,
+            ),
+            const SizedBox(height: 10),
+          ],
+        ],
+      );
+    });
+  }
+}
+
+class _FinanceGoalCard extends StatelessWidget {
+  const _FinanceGoalCard({
+    required this.goal,
+    required this.financeBlock,
+    required this.isDark,
+    required this.colorScheme,
+  });
+
+  final GoalProtocol goal;
+  final FinanceBlock financeBlock;
+  final bool isDark;
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = (goal.progressPercentage / 100).clamp(0.0, 1.0);
+    final accent = progress >= 1.0
+        ? const Color(0xFF4CAF50)
+        : FinanceSurface.silverAccent();
+    final dateFmt = DateFormat.yMMMd();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: FinanceSurface.panel(colorScheme, isDark: isDark, radius: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                progress >= 1.0
+                    ? Icons.check_circle_rounded
+                    : Icons.flag_rounded,
+                size: 16,
+                color: accent,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  goal.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: FinanceSurface.ink(isDark: isDark),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '${goal.progressPercentage}%',
+                style: TextStyle(
+                  color: accent,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 5,
+              backgroundColor: colorScheme.outline.withValues(
+                alpha: isDark ? 0.2 : 0.15,
+              ),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
+          ),
+          if (goal.targetDate != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Target: ${dateFmt.format(goal.targetDate!)}',
+              style: TextStyle(
+                color: FinanceSurface.mutedInk(isDark: isDark),
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

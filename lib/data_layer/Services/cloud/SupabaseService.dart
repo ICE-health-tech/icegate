@@ -176,6 +176,10 @@ class SupabaseService {
       'heart_rate_logs',
       'oxygen_saturation_logs',
       'integration_accounts',
+      'dev_quick_tabs',
+      'recurring_incomes',
+      'job_positions',
+      'bonuses',
       'events',
     ];
 
@@ -385,6 +389,30 @@ class SupabaseService {
       case 'integration_accounts':
         for (final r in records) {
           await database.integrationAccountDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'dev_quick_tabs':
+        for (final r in records) {
+          await database.devQuickTabsDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'recurring_incomes':
+        for (final r in records) {
+          await database.financeDAO.upsertFromSupabaseRecurringIncome(r);
+        }
+        await database.financeDAO.reconcileRecurringIncomes(
+          records.map((r) => r['id'] as String).toSet(),
+          records.isNotEmpty ? records.first['person_id'] as String : '',
+        );
+        break;
+      case 'job_positions':
+        for (final r in records) {
+          await database.financeDAO.upsertFromSupabaseJobPosition(r);
+        }
+        break;
+      case 'bonuses':
+        for (final r in records) {
+          await database.financeDAO.upsertFromSupabaseBonus(r);
         }
         break;
       case 'events':

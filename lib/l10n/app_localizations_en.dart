@@ -3133,18 +3133,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get canvas_goal_center => 'Goal Evolution';
 
   @override
-  String get dev_quick_tabs_title => 'Dev Tools';
+  String get dev_quick_tabs_title => 'Software Dev';
 
   @override
   String get dev_quick_tabs_subtitle =>
       'Saved browser tabs — Northflank, Supabase, n8n, and more.';
 
   @override
-  String get dev_quick_tabs_empty =>
-      'No tabs yet. Defaults load on first open.';
+  String get dev_quick_tabs_empty => 'No tabs yet. Tap + to add one.';
 
   @override
   String get dev_quick_tabs_add => 'Add tab';
+
+  @override
+  String get dev_quick_tabs_validation_error => 'Title and URL are required';
 
   @override
   String get dev_quick_tabs_open => 'Open';
@@ -3168,6 +3170,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dev_quick_tabs_delete_confirm => 'Delete';
+
+  @override
+  String get dev_quick_tabs_credentials => 'Saved logins';
+
+  @override
+  String get dev_quick_tabs_credentials_subtitle =>
+      'HTTP login and SSL trust per host.';
+
+  @override
+  String get dev_quick_tabs_credentials_login => 'Login saved';
+
+  @override
+  String get dev_quick_tabs_credentials_ssl => 'SSL trusted';
+
+  @override
+  String get dev_quick_tabs_credentials_none => 'No saved data';
+
+  @override
+  String get dev_quick_tabs_credentials_set_login => 'Set login';
+
+  @override
+  String get dev_quick_tabs_credentials_username => 'Username';
+
+  @override
+  String get dev_quick_tabs_credentials_password => 'Password';
+
+  @override
+  String get dev_quick_tabs_credentials_passkey => 'Passkey / API key';
+
+  @override
+  String get dev_quick_tabs_credentials_saved => 'Credentials saved';
+
+  @override
+  String get dev_quick_tabs_credentials_ssl_hint =>
+      'For self-signed homelab HTTPS (e.g. OPNsense).';
+
+  @override
+  String get dev_quick_tabs_credentials_clear => 'Clear all';
+
+  @override
+  String get dev_quick_tabs_credentials_clear_title => 'Clear saved data?';
+
+  @override
+  String dev_quick_tabs_credentials_clear_message(String host) {
+    return 'Remove login and SSL trust for $host.';
+  }
+
+  @override
+  String get dev_quick_tabs_credentials_revoke_ssl => 'Revoke SSL trust';
+
+  @override
+  String get dev_quick_tabs_login_type => 'Login type';
+
+  @override
+  String get dev_quick_tabs_login_type_html_form =>
+      'HTML form (OPNsense, homelab)';
+
+  @override
+  String get dev_quick_tabs_login_type_email_password =>
+      'Email + password (SPA)';
+
+  @override
+  String get dev_quick_tabs_login_type_http_basic => 'HTTP Basic only';
+
+  @override
+  String get dev_quick_tabs_login_type_api_key => 'API key / token';
+
+  @override
+  String get dev_quick_tabs_login_type_oauth => 'OAuth / SSO (manual)';
+
+  @override
+  String get dev_quick_tabs_login_type_none => 'No autofill';
+
+  @override
+  String get dev_quick_tabs_credentials_email => 'Email';
+
+  @override
+  String get dev_quick_tabs_login_type_oauth_hint =>
+      'GitHub or Google sign-in cannot be auto-filled. Use manual login.';
 
   @override
   String get webview_connection_error => 'Connection Error';
@@ -4640,6 +4721,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finance_fixed_income_empty => 'No fixed income yet';
 
   @override
+  String get finance_shortcut_transaction => 'Transaction';
+
+  @override
+  String get finance_shortcut_account => 'Account';
+
+  @override
+  String get finance_shortcut_asset => 'Asset';
+
+  @override
+  String get finance_shortcut_income => 'Income';
+
+  @override
   String get finance_fixed_income_add => 'Add fixed income';
 
   @override
@@ -4982,6 +5075,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finance_account_type_investment => 'Investment account';
 
   @override
+  String get finance_budget_limit_title => 'Budget limit';
+
+  @override
+  String get finance_budget_limit_label => 'Limit amount';
+
+  @override
+  String get finance_budget_limit_per_week => 'Per week';
+
+  @override
+  String get finance_budget_limit_per_month => 'Per month';
+
+  @override
   String get finance_add_account_title => 'Add account';
 
   @override
@@ -5008,6 +5113,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_record_subscription_hint => 'Recurring expense';
+
+  @override
+  String get finance_record_contract_hint => 'One-time project or contract pay';
+
+  @override
+  String get finance_record_bonus_hint => 'One-time bonus payment';
+
+  @override
+  String get finance_bonus_section_title => 'Bonus & Contract';
+
+  @override
+  String get finance_bonus_section_subtitle =>
+      'One-time income from bonuses and contracts';
+
+  @override
+  String get finance_bonus_section_total => 'Total';
+
+  @override
+  String get finance_bonus_section_empty => 'No bonus or contract income yet';
+
+  @override
+  String get finance_total_income_title => 'Total income';
+
+  @override
+  String get finance_total_income_recurring => 'Recurring / month';
+
+  @override
+  String get finance_total_income_onetime => 'One-time';
 
   @override
   String get finance_hc_capacity_label => 'Capacity';
@@ -5055,6 +5188,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_asset_cat_cashflow => 'Cashflow (SaaS)';
+
+  @override
+  String get finance_cat_skills => 'Skills';
 
   @override
   String get finance_cat_salary => 'Salary';
@@ -5631,6 +5767,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_tab_achievements => 'ACHIEVEMENTS';
+
+  @override
+  String get finance_tab_career => 'CAREER';
+
+  @override
+  String get finance_job_title => 'Job positions';
+
+  @override
+  String get finance_job_subtitle => 'Track employers, contracts, and tenure';
+
+  @override
+  String get finance_job_empty => 'No job positions yet';
+
+  @override
+  String get finance_job_current => 'Current';
+
+  @override
+  String get finance_job_ended => 'Ended';
+
+  @override
+  String finance_job_tenure(int months) {
+    return '$months months';
+  }
+
+  @override
+  String get finance_job_add => 'Add position';
+
+  @override
+  String get finance_job_new => 'New position';
+
+  @override
+  String get finance_job_edit => 'Edit position';
+
+  @override
+  String get finance_job_employer => 'Employer / company';
+
+  @override
+  String get finance_job_role => 'Job title / role';
+
+  @override
+  String get finance_job_contract_type => 'Contract type';
+
+  @override
+  String get finance_job_contract_full_time => 'Full-time';
+
+  @override
+  String get finance_job_contract_part_time => 'Part-time';
+
+  @override
+  String get finance_job_contract_freelance => 'Freelance';
+
+  @override
+  String get finance_job_contract_internship => 'Internship';
+
+  @override
+  String get finance_job_contract_contract => 'Contract';
+
+  @override
+  String get finance_job_start_date => 'Start date';
+
+  @override
+  String get finance_job_end_date => 'End date';
+
+  @override
+  String get finance_job_end_date_hint => 'Leave empty if current';
+
+  @override
+  String get finance_job_notes => 'Notes';
+
+  @override
+  String get finance_job_salary => 'Monthly income';
+
+  @override
+  String get finance_job_salary_hint =>
+      'Creates a fixed income linked to this job';
+
+  @override
+  String get finance_job_income_type => 'Income type';
+
+  @override
+  String get finance_job_income_salary => 'Salary';
+
+  @override
+  String get finance_job_income_contract => 'Contract income';
+
+  @override
+  String get finance_job_income_bonus => 'Bonus';
+
+  @override
+  String finance_job_salary_suffix(String amount) {
+    return '$amount / mo';
+  }
+
+  @override
+  String get finance_job_on_day => 'Working that day';
+
+  @override
+  String get finance_job_delete_confirm => 'Delete this job position?';
+
+  @override
+  String get finance_job_end_confirm => 'Mark this position as ended today?';
 
   @override
   String get finance_achievements_subtitle =>

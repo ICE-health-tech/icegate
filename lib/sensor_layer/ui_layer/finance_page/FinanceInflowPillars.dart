@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FixedIncomeManager.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillsPage.dart';
+import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 /// Personal-finance inflow layers (quant / portfolio mindset).
 abstract final class FinanceInflowPillar {
-  static const humanCapital = 'human_capital';
   static const liquidity = 'liquidity';
   static const fixedIncome = 'fixed_income';
   static const investment = 'investment';
   static const cashflow = 'cashflow';
 
   static const ordered = [
-    humanCapital,
     liquidity,
     fixedIncome,
     investment,
@@ -26,12 +26,6 @@ abstract final class FinanceInflowPillar {
   static String? pillarForCategory(String? category) {
     if (category == null || category.isEmpty) return null;
     switch (category.toLowerCase()) {
-      case 'human_capital':
-        return humanCapital;
-      case 'salary':
-      case 'freelance':
-      case 'bonus':
-        return humanCapital;
       case 'rent':
         return fixedIncome;
       case 'investment':
@@ -44,8 +38,6 @@ abstract final class FinanceInflowPillar {
 
   static String label(AppLocalizations l10n, String pillar) {
     switch (pillar) {
-      case humanCapital:
-        return l10n.finance_inflow_pillar_human_capital;
       case liquidity:
         return l10n.finance_inflow_pillar_liquidity;
       case fixedIncome:
@@ -61,8 +53,6 @@ abstract final class FinanceInflowPillar {
 
   static IconData icon(String pillar) {
     switch (pillar) {
-      case humanCapital:
-        return Icons.psychology_alt_rounded;
       case liquidity:
         return Icons.account_balance_wallet_rounded;
       case fixedIncome:
@@ -113,30 +103,34 @@ class FinanceInflowPillarsStrip extends StatelessWidget {
         const SizedBox(height: 12),
         Watch((context) {
           final byPillar = financeBlock.monthlyInflowByPillar.value;
-          final capacity = financeBlock.monthlyHumanCapitalCapacity.value;
+          final growthBlock = context.read<GrowthBlock>();
+          final skillCount = growthBlock.skills.value
+              .where((s) => s.skillCategory == 'person:library')
+              .length;
           return Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
+              _PillarChip(
+                label: l10n.finance_cat_skills,
+                icon: Icons.auto_awesome_rounded,
+                amount: skillCount.toDouble(),
+                isDark: isDark,
+                colorScheme: cs,
+                emphasized: true,
+                isCount: true,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const MindSkillsPage()),
+                ),
+                format: financeBlock.formatCurrency,
+              ),
               for (final pillar in FinanceInflowPillar.ordered)
                 _PillarChip(
                   label: FinanceInflowPillar.label(l10n, pillar),
                   icon: FinanceInflowPillar.icon(pillar),
                   amount: byPillar[pillar] ?? 0,
-                  capacityHint: pillar == FinanceInflowPillar.humanCapital &&
-                          capacity > 0
-                      ? capacity
-                      : null,
                   isDark: isDark,
                   colorScheme: cs,
-                  emphasized: pillar == FinanceInflowPillar.humanCapital,
-                  onTap: pillar == FinanceInflowPillar.humanCapital
-                      ? () => showFixedIncomeEditor(
-                            context,
-                            financeBlock,
-                            initialCategory: 'human_capital',
-                          )
-                      : null,
                   format: financeBlock.formatCurrency,
                 ),
             ],
@@ -151,10 +145,10 @@ class _PillarChip extends StatelessWidget {
   final String label;
   final IconData icon;
   final double amount;
-  final double? capacityHint;
   final bool isDark;
   final ColorScheme colorScheme;
   final bool emphasized;
+  final bool isCount;
   final VoidCallback? onTap;
   final String Function(double, {bool compact}) format;
 
@@ -162,17 +156,16 @@ class _PillarChip extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.amount,
-    this.capacityHint,
     required this.isDark,
     required this.colorScheme,
     this.emphasized = false,
+    this.isCount = false,
     this.onTap,
     required this.format,
   });
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final accent = emphasized
         ? FinanceSurface.silverAccent()
         : FinanceSurface.mutedInk(isDark: isDark);
@@ -204,25 +197,16 @@ class _PillarChip extends StatelessWidget {
               ),
             ],
           ),
-          if (amount > 0 || capacityHint != null) ...[
+          if (amount > 0) ...[
             const SizedBox(height: 4),
-            if (amount > 0)
-              Text(
-                format(amount, compact: true),
-                style: TextStyle(
-                  color: FinanceSurface.ink(isDark: isDark),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                ),
+            Text(
+              isCount ? '${amount.toInt()}' : format(amount, compact: true),
+              style: TextStyle(
+                color: FinanceSurface.ink(isDark: isDark),
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
               ),
-            if (capacityHint != null && capacityHint! > 0)
-              Text(
-                '${l10n.finance_hc_capacity_label}: ${format(capacityHint!, compact: true)}',
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 9,
-                ),
-              ),
+            ),
           ],
         ],
       ),

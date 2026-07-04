@@ -3118,17 +3118,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get canvas_goal_center => 'Mục tiêu';
 
   @override
-  String get dev_quick_tabs_title => 'Dev Tools';
+  String get dev_quick_tabs_title => 'Software Dev';
 
   @override
   String get dev_quick_tabs_subtitle =>
       'Tab trình duyệt — Northflank, Supabase, n8n và hơn thế.';
 
   @override
-  String get dev_quick_tabs_empty => 'Chưa có tab. Mặc định tải lần đầu mở.';
+  String get dev_quick_tabs_empty => 'Chưa có tab. Bấm + để thêm.';
 
   @override
   String get dev_quick_tabs_add => 'Thêm tab';
+
+  @override
+  String get dev_quick_tabs_validation_error =>
+      'Tên và URL không được để trống';
 
   @override
   String get dev_quick_tabs_open => 'Mở';
@@ -3152,6 +3156,85 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get dev_quick_tabs_delete_confirm => 'Xóa';
+
+  @override
+  String get dev_quick_tabs_credentials => 'Đăng nhập đã lưu';
+
+  @override
+  String get dev_quick_tabs_credentials_subtitle =>
+      'HTTP login và tin SSL theo từng host.';
+
+  @override
+  String get dev_quick_tabs_credentials_login => 'Đã lưu đăng nhập';
+
+  @override
+  String get dev_quick_tabs_credentials_ssl => 'Đã tin SSL';
+
+  @override
+  String get dev_quick_tabs_credentials_none => 'Chưa lưu gì';
+
+  @override
+  String get dev_quick_tabs_credentials_set_login => 'Đặt đăng nhập';
+
+  @override
+  String get dev_quick_tabs_credentials_username => 'Tên đăng nhập';
+
+  @override
+  String get dev_quick_tabs_credentials_password => 'Mật khẩu';
+
+  @override
+  String get dev_quick_tabs_credentials_passkey => 'Passkey / API key';
+
+  @override
+  String get dev_quick_tabs_credentials_saved => 'Đã lưu thông tin đăng nhập';
+
+  @override
+  String get dev_quick_tabs_credentials_ssl_hint =>
+      'Cho HTTPS homelab tự ký (vd. OPNsense).';
+
+  @override
+  String get dev_quick_tabs_credentials_clear => 'Xóa hết';
+
+  @override
+  String get dev_quick_tabs_credentials_clear_title => 'Xóa dữ liệu đã lưu?';
+
+  @override
+  String dev_quick_tabs_credentials_clear_message(String host) {
+    return 'Xóa đăng nhập và tin SSL cho $host.';
+  }
+
+  @override
+  String get dev_quick_tabs_credentials_revoke_ssl => 'Thu hồi tin SSL';
+
+  @override
+  String get dev_quick_tabs_login_type => 'Kiểu đăng nhập';
+
+  @override
+  String get dev_quick_tabs_login_type_html_form =>
+      'Form HTML (OPNsense, homelab)';
+
+  @override
+  String get dev_quick_tabs_login_type_email_password =>
+      'Email + mật khẩu (SPA)';
+
+  @override
+  String get dev_quick_tabs_login_type_http_basic => 'Chỉ HTTP Basic';
+
+  @override
+  String get dev_quick_tabs_login_type_api_key => 'API key / token';
+
+  @override
+  String get dev_quick_tabs_login_type_oauth => 'OAuth / SSO (thủ công)';
+
+  @override
+  String get dev_quick_tabs_login_type_none => 'Không tự điền';
+
+  @override
+  String get dev_quick_tabs_credentials_email => 'Email';
+
+  @override
+  String get dev_quick_tabs_login_type_oauth_hint =>
+      'Đăng nhập GitHub/Google không tự điền được. Đăng nhập thủ công.';
 
   @override
   String get webview_connection_error => 'Lỗi kết nối';
@@ -4611,6 +4694,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get finance_fixed_income_empty => 'Chưa có thu nhập cố định';
 
   @override
+  String get finance_shortcut_transaction => 'Giao dịch';
+
+  @override
+  String get finance_shortcut_account => 'Tài khoản';
+
+  @override
+  String get finance_shortcut_asset => 'Tài sản';
+
+  @override
+  String get finance_shortcut_income => 'Thu nhập';
+
+  @override
   String get finance_fixed_income_add => 'Thêm thu nhập cố định';
 
   @override
@@ -4953,6 +5048,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get finance_account_type_investment => 'Tài khoản đầu tư';
 
   @override
+  String get finance_budget_limit_title => 'Giới hạn chi tiêu';
+
+  @override
+  String get finance_budget_limit_label => 'Số tiền giới hạn';
+
+  @override
+  String get finance_budget_limit_per_week => 'Theo tuần';
+
+  @override
+  String get finance_budget_limit_per_month => 'Theo tháng';
+
+  @override
   String get finance_add_account_title => 'Thêm tài khoản';
 
   @override
@@ -4979,6 +5086,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_record_subscription_hint => 'Chi phí lặp lại';
+
+  @override
+  String get finance_record_contract_hint => 'Thu nhập một lần theo hợp đồng';
+
+  @override
+  String get finance_record_bonus_hint => 'Thưởng một lần';
+
+  @override
+  String get finance_bonus_section_title => 'Thưởng & Hợp đồng';
+
+  @override
+  String get finance_bonus_section_subtitle =>
+      'Thu nhập một lần từ thưởng và hợp đồng';
+
+  @override
+  String get finance_bonus_section_total => 'Tổng';
+
+  @override
+  String get finance_bonus_section_empty =>
+      'Chưa có thu nhập thưởng hay hợp đồng';
+
+  @override
+  String get finance_total_income_title => 'Tổng thu nhập';
+
+  @override
+  String get finance_total_income_recurring => 'Định kỳ / tháng';
+
+  @override
+  String get finance_total_income_onetime => 'Một lần';
 
   @override
   String get finance_hc_capacity_label => 'Capacity';
@@ -5026,6 +5162,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_asset_cat_cashflow => 'Dòng tiền (SaaS)';
+
+  @override
+  String get finance_cat_skills => 'Kỹ năng';
 
   @override
   String get finance_cat_salary => 'Lương';
@@ -5599,6 +5738,108 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_tab_achievements => 'THÀNH TỰU';
+
+  @override
+  String get finance_tab_career => 'SỰ NGHIỆP';
+
+  @override
+  String get finance_job_title => 'Vị trí công việc';
+
+  @override
+  String get finance_job_subtitle =>
+      'Theo dõi nhà tuyển dụng, hợp đồng và thâm niên';
+
+  @override
+  String get finance_job_empty => 'Chưa có vị trí công việc';
+
+  @override
+  String get finance_job_current => 'Đang làm';
+
+  @override
+  String get finance_job_ended => 'Đã kết thúc';
+
+  @override
+  String finance_job_tenure(int months) {
+    return '$months tháng';
+  }
+
+  @override
+  String get finance_job_add => 'Thêm vị trí';
+
+  @override
+  String get finance_job_new => 'Vị trí mới';
+
+  @override
+  String get finance_job_edit => 'Sửa vị trí';
+
+  @override
+  String get finance_job_employer => 'Nhà tuyển dụng / công ty';
+
+  @override
+  String get finance_job_role => 'Chức danh / vai trò';
+
+  @override
+  String get finance_job_contract_type => 'Loại hợp đồng';
+
+  @override
+  String get finance_job_contract_full_time => 'Toàn thời gian';
+
+  @override
+  String get finance_job_contract_part_time => 'Bán thời gian';
+
+  @override
+  String get finance_job_contract_freelance => 'Freelance';
+
+  @override
+  String get finance_job_contract_internship => 'Thực tập';
+
+  @override
+  String get finance_job_contract_contract => 'Hợp đồng';
+
+  @override
+  String get finance_job_start_date => 'Ngày bắt đầu';
+
+  @override
+  String get finance_job_end_date => 'Ngày kết thúc';
+
+  @override
+  String get finance_job_end_date_hint => 'Để trống nếu đang làm';
+
+  @override
+  String get finance_job_notes => 'Ghi chú';
+
+  @override
+  String get finance_job_salary => 'Thu nhập / tháng';
+
+  @override
+  String get finance_job_salary_hint =>
+      'Tạo thu nhập cố định gắn với công việc này';
+
+  @override
+  String get finance_job_income_type => 'Loại thu nhập';
+
+  @override
+  String get finance_job_income_salary => 'Lương';
+
+  @override
+  String get finance_job_income_contract => 'Thu nhập hợp đồng';
+
+  @override
+  String get finance_job_income_bonus => 'Thưởng';
+
+  @override
+  String finance_job_salary_suffix(String amount) {
+    return '$amount / tháng';
+  }
+
+  @override
+  String get finance_job_on_day => 'Công việc trong ngày';
+
+  @override
+  String get finance_job_delete_confirm => 'Xóa vị trí công việc này?';
+
+  @override
+  String get finance_job_end_confirm => 'Đánh dấu vị trí này kết thúc hôm nay?';
 
   @override
   String get finance_achievements_subtitle =>

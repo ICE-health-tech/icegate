@@ -204,10 +204,6 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       appLog('Morning notification schedule skipped: $e');
     }
-    // Let home pillars paint first, then optional morning sheet.
-    await Future<void>.delayed(const Duration(milliseconds: 2200));
-    if (!mounted) return;
-    await MorningBriefingSheet.maybeShow(context);
   }
 
   void _fetchInitialData() {

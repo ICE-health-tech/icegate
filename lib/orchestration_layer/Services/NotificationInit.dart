@@ -38,6 +38,10 @@ class LocalNotificationService {
   /// Invoked when the user opens the app from the daily mail reminder.
   Future<void> Function()? onDailyMailSummaryTriggered;
 
+  /// Builds the morning loop body (calendar + projects) for the fire day.
+  /// Set by DataLayer; null/empty result falls back to rotation copy.
+  Future<String?> Function(DateTime fireDay)? morningDigestBuilder;
+
   /// Whether notifications are currently enabled
   final notificationsEnabled = signal<bool>(true);
 
@@ -253,19 +257,33 @@ class LocalNotificationService {
     final scheduledDate = _nextInstanceOfTime(scheduledClock);
     final copy = await MorningLoopPrefs.notificationCopy();
 
-    const android = AndroidNotificationDetails(
+    // STORY: First ask DataLayer for a digest of the day the notification
+    // will actually fire (may be tomorrow). Then fall back to the rotating
+    // motivational line if there is nothing to show or the build fails.
+    String body = copy.body;
+    try {
+      final digest = await morningDigestBuilder?.call(
+        DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day),
+      );
+      if (digest != null && digest.trim().isNotEmpty) body = digest;
+    } catch (e) {
+      debugPrint('🌅 Morning digest build failed, using fallback: $e');
+    }
+
+    final android = AndroidNotificationDetails(
       'morning_loop_channel',
       'Morning loop',
       channelDescription: 'Start your day with Ice Gate',
       importance: Importance.high,
       priority: Priority.high,
+      styleInformation: BigTextStyleInformation(body),
     );
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: android,
-      iOS: DarwinNotificationDetails(
+      iOS: const DarwinNotificationDetails(
         interruptionLevel: InterruptionLevel.active,
       ),
-      macOS: DarwinNotificationDetails(
+      macOS: const DarwinNotificationDetails(
         interruptionLevel: InterruptionLevel.active,
       ),
     );
@@ -273,7 +291,7 @@ class LocalNotificationService {
     await _notificationsPlugin.zonedSchedule(
       id: morningLoopNotificationId,
       title: copy.title,
-      body: copy.body,
+      body: body,
       scheduledDate: scheduledDate,
       notificationDetails: details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -306,6 +324,8 @@ class LocalNotificationService {
       channelDescription: 'Health motivation nudges from Ice Gate',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
+      // Multi-line recap bodies stay readable when expanded.
+      styleInformation: BigTextStyleInformation(body),
     );
     const ios = DarwinNotificationDetails(
       interruptionLevel: InterruptionLevel.passive,

@@ -42,6 +42,7 @@ part 'daos/SshSessionsDao.dart';
 part 'daos/AiPromptsDao.dart';
 part 'daos/ConfigsDao.dart';
 part 'daos/IntegrationAccountDao.dart';
+part 'daos/DevQuickTabsDao.dart';
 part 'daos/PortfolioSnapshotsDao.dart';
 part 'daos/LocalMediaIndexDao.dart';
 
@@ -852,6 +853,60 @@ class RecurringIncomesTable extends Table {
   DateTimeColumn get nextDueAt => dateTime().named('next_due_at')();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant(true)).named('is_active')();
+  /// Soft FK → job_positions.id. Job = master; its incomes over time form
+  /// the salary timeline (raise = deactivate old row, insert new one).
+  TextColumn get jobPositionId =>
+      text().nullable().named('job_position_id')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Employment / contract positions — links income + project.
+@DataClassName('JobPositionData')
+class JobPositionsTable extends Table {
+  @override
+  String get tableName => 'job_positions';
+  TextColumn get id => text()();
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get employer => text().withDefault(const Constant(''))();
+  TextColumn get jobTitle =>
+      text().withDefault(const Constant('')).named('job_title')();
+  /// full_time, part_time, freelance, internship, contract
+  TextColumn get contractType =>
+      text().withDefault(const Constant('full_time')).named('contract_type')();
+  DateTimeColumn get startDate => dateTime().named('start_date')();
+  DateTimeColumn get endDate => dateTime().nullable().named('end_date')();
+  TextColumn get linkedIncomeId =>
+      text().nullable().named('linked_income_id')();
+  TextColumn get linkedProjectId =>
+      text().nullable().named('linked_project_id')();
+  TextColumn get notes => text().withDefault(const Constant(''))();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('BonusData')
+class BonusesTable extends Table {
+  @override
+  String get tableName => 'bonuses';
+  TextColumn get id => text()();
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get jobPositionId =>
+      text().nullable().named('job_position_id')();
+  RealColumn get amount => real()();
+  TextColumn get description =>
+      text().withDefault(const Constant(''))();
+  DateTimeColumn get bonusDate => dateTime().named('bonus_date')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -3846,6 +3901,8 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     TransactionsTable,
     SubscriptionsTable,
     RecurringIncomesTable,
+    JobPositionsTable,
+    BonusesTable,
   ],
 )
 class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
@@ -3933,10 +3990,40 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
     RecurringIncomesTableCompanion income,
   ) async {
     await into(recurringIncomesTable).insert(income);
+    await _pushRecurringIncomeById(income.id.value);
   }
 
   Future<void> deleteRecurringIncome(String id) async {
     await (delete(recurringIncomesTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'recurring_incomes',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
+
+  /// Mirrors the full local row to Supabase so restarts never pull back a
+  /// stale schedule (a stale next_due_at re-posts income transactions).
+  Future<void> _pushRecurringIncomeById(String id) async {
+    final row = await (select(recurringIncomesTable)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    if (row == null) return;
+    await db.pushToSupabase(
+      table: 'recurring_incomes',
+      payload: {
+        'id': row.id,
+        'person_id': row.personID,
+        'category': row.category,
+        'amount': row.amount,
+        'description': row.description,
+        'interval': row.interval,
+        'next_due_at': row.nextDueAt.toUtc().toIso8601String(),
+        'is_active': row.isActive,
+        'job_position_id': row.jobPositionId,
+        'created_at': row.createdAt.toUtc().toIso8601String(),
+      },
+    );
   }
 
   Future<List<RecurringIncomeData>> getDueRecurringIncomes(
@@ -3960,12 +4047,309 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
     await (update(recurringIncomesTable)..where((t) => t.id.equals(id))).write(
       RecurringIncomesTableCompanion(nextDueAt: Value(nextDueAt)),
     );
+    await _pushRecurringIncomeById(id);
+  }
+
+  Future<void> updateRecurringIncomeAmount({
+    required String id,
+    required double amount,
+    String? description,
+    String? category,
+  }) async {
+    // Bonus/contract are one-time: force interval so the recurring poster
+    // never treats them as a monthly schedule.
+    final oneTime = category == 'bonus' || category == 'contract';
+    await (update(recurringIncomesTable)..where((t) => t.id.equals(id))).write(
+      RecurringIncomesTableCompanion(
+        amount: Value(amount),
+        description:
+            description != null ? Value(description) : const Value.absent(),
+        category:
+            category != null ? Value(category) : const Value.absent(),
+        interval: oneTime ? const Value('once') : const Value.absent(),
+        nextDueAt:
+            oneTime ? Value(DateTime(2099, 12, 31)) : const Value.absent(),
+      ),
+    );
+    await _pushRecurringIncomeById(id);
+  }
+
+  Future<void> setRecurringIncomeActive({
+    required String id,
+    required bool isActive,
+  }) async {
+    await (update(recurringIncomesTable)..where((t) => t.id.equals(id))).write(
+      RecurringIncomesTableCompanion(isActive: Value(isActive)),
+    );
+    await _pushRecurringIncomeById(id);
   }
 
   Future<void> deleteRecurringIncomesForPerson(String personId) async {
     await (delete(recurringIncomesTable)
           ..where((t) => t.personID.equals(personId)))
         .go();
+  }
+
+  /// Removes local recurring_incomes that no longer exist on Supabase.
+  Future<void> reconcileRecurringIncomes(
+    Set<String> cloudIds,
+    String personId,
+  ) async {
+    if (personId.isEmpty || cloudIds.isEmpty) return;
+    final localRows = await (select(recurringIncomesTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    for (final row in localRows) {
+      if (!cloudIds.contains(row.id)) {
+        await (delete(recurringIncomesTable)
+              ..where((t) => t.id.equals(row.id)))
+            .go();
+      }
+    }
+  }
+
+  // Job Positions
+  Stream<List<JobPositionData>> watchJobPositions(String personId) {
+    return (select(jobPositionsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(
+                  expression: t.endDate,
+                  mode: OrderingMode.asc,
+                ),
+          ]))
+        .watch();
+  }
+
+  Future<JobPositionData?> getCurrentJob(String personId) {
+    return (select(jobPositionsTable)
+          ..where(
+            (t) =>
+                t.personID.equals(personId) & t.endDate.isNull(),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<void> insertJobPosition(JobPositionsTableCompanion job) async {
+    await into(jobPositionsTable).insert(job);
+    await db.pushToSupabase(
+      table: 'job_positions',
+      payload: db.companionToMap(job, jobPositionsTable),
+    );
+  }
+
+  Future<void> updateJobPosition(JobPositionsTableCompanion job) async {
+    final id = job.id.value;
+    await (update(jobPositionsTable)..where((t) => t.id.equals(id))).write(job);
+    await db.pushToSupabase(
+      table: 'job_positions',
+      payload: db.companionToMap(job, jobPositionsTable),
+    );
+  }
+
+  Future<void> deleteJobPosition(String id) async {
+    await (delete(jobPositionsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'job_positions',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
+
+  Future<void> pushAllJobPositionsToCloud(String personId) async {
+    final rows = await (select(jobPositionsTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    for (final row in rows) {
+      await db.pushToSupabase(
+        table: 'job_positions',
+        payload: {
+          'id': row.id,
+          'person_id': row.personID,
+          'employer': row.employer,
+          'job_title': row.jobTitle,
+          'contract_type': row.contractType,
+          'start_date': row.startDate.toUtc().toIso8601String(),
+          'end_date': row.endDate?.toUtc().toIso8601String(),
+          'linked_income_id': row.linkedIncomeId,
+          'linked_project_id': row.linkedProjectId,
+          'notes': row.notes,
+          'created_at': row.createdAt.toUtc().toIso8601String(),
+        },
+      );
+    }
+  }
+
+  Future<void> pushAllRecurringIncomesToCloud(String personId) async {
+    final rows = await (select(recurringIncomesTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    for (final row in rows) {
+      await db.pushToSupabase(
+        table: 'recurring_incomes',
+        payload: {
+          'id': row.id,
+          'person_id': row.personID,
+          'category': row.category,
+          'amount': row.amount,
+          'description': row.description,
+          'interval': row.interval,
+          'next_due_at': row.nextDueAt.toUtc().toIso8601String(),
+          'is_active': row.isActive,
+          'job_position_id': row.jobPositionId,
+          'created_at': row.createdAt.toUtc().toIso8601String(),
+        },
+      );
+    }
+  }
+
+  Future<void> pushAllBonusesToCloud(String personId) async {
+    final rows = await (select(bonusesTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    for (final row in rows) {
+      await db.pushToSupabase(
+        table: 'bonuses',
+        payload: {
+          'id': row.id,
+          'person_id': row.personID,
+          'job_position_id': row.jobPositionId,
+          'amount': row.amount,
+          'description': row.description,
+          'bonus_date': row.bonusDate.toUtc().toIso8601String(),
+          'created_at': row.createdAt.toUtc().toIso8601String(),
+        },
+      );
+    }
+  }
+
+  // ── Sync down (Supabase → local) ──
+
+  Future<void> upsertFromSupabaseRecurringIncome(Map<String, dynamic> r) async {
+    final id = r['id'] as String;
+    final existing = await (select(recurringIncomesTable)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    var nextDue = r['next_due_at'] != null
+        ? DateTime.parse(r['next_due_at'].toString())
+        : DateTime.now();
+    // The cloud copy can lag behind the local schedule. Never roll
+    // next_due_at backwards, or the poster re-posts income after restart.
+    if (existing != null && existing.nextDueAt.isAfter(nextDue)) {
+      nextDue = existing.nextDueAt;
+    }
+    await into(recurringIncomesTable).insert(
+      RecurringIncomesTableCompanion(
+        id: Value(id),
+        personID: Value(r['person_id'] as String),
+        category: Value(r['category'] as String? ?? ''),
+        amount: Value((r['amount'] as num?)?.toDouble() ?? 0.0),
+        description: Value(r['description'] as String?),
+        interval: Value(r['interval'] as String? ?? 'monthly'),
+        nextDueAt: Value(nextDue),
+        isActive: Value(r['is_active'] == true || r['is_active'] == 1),
+        jobPositionId: Value(
+          r['job_position_id'] as String? ?? existing?.jobPositionId,
+        ),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> upsertFromSupabaseJobPosition(Map<String, dynamic> r) async {
+    await into(jobPositionsTable).insert(
+      JobPositionsTableCompanion(
+        id: Value(r['id'] as String),
+        personID: Value(r['person_id'] as String),
+        employer: Value(r['employer'] as String? ?? ''),
+        jobTitle: Value(r['job_title'] as String? ?? ''),
+        contractType: Value(r['contract_type'] as String? ?? 'full_time'),
+        startDate: Value(
+          r['start_date'] != null
+              ? DateTime.parse(r['start_date'].toString())
+              : DateTime.now(),
+        ),
+        endDate: Value(
+          r['end_date'] != null
+              ? DateTime.parse(r['end_date'].toString())
+              : null,
+        ),
+        linkedIncomeId: Value(r['linked_income_id'] as String?),
+        linkedProjectId: Value(r['linked_project_id'] as String?),
+        notes: Value(r['notes'] as String? ?? ''),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> upsertFromSupabaseBonus(Map<String, dynamic> r) async {
+    await into(bonusesTable).insert(
+      BonusesTableCompanion(
+        id: Value(r['id'] as String),
+        personID: Value(r['person_id'] as String),
+        jobPositionId: Value(r['job_position_id'] as String?),
+        amount: Value((r['amount'] as num?)?.toDouble() ?? 0.0),
+        description: Value(r['description'] as String? ?? ''),
+        bonusDate: Value(
+          r['bonus_date'] != null
+              ? DateTime.parse(r['bonus_date'].toString())
+              : DateTime.now(),
+        ),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  // Bonuses
+  Stream<List<BonusData>> watchBonuses(String personId) =>
+      (select(bonusesTable)..where((t) => t.personID.equals(personId)))
+          .watch();
+
+  Stream<List<BonusData>> watchBonusesByJob(String jobPositionId) =>
+      (select(bonusesTable)
+            ..where((t) => t.jobPositionId.equals(jobPositionId)))
+          .watch();
+
+  Future<void> insertBonus(BonusesTableCompanion bonus) async {
+    await into(bonusesTable).insert(bonus);
+    await db.pushToSupabase(
+      table: 'bonuses',
+      payload: db.companionToMap(bonus, bonusesTable),
+    );
+  }
+
+  Future<void> updateBonus(BonusesTableCompanion bonus) async {
+    final id = bonus.id.value;
+    await (update(bonusesTable)..where((t) => t.id.equals(id))).write(bonus);
+    await db.pushToSupabase(
+      table: 'bonuses',
+      payload: db.companionToMap(bonus, bonusesTable),
+    );
+  }
+
+  Future<void> deleteBonus(String id) async {
+    await (delete(bonusesTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'bonuses',
+      payload: {'id': id},
+      isDelete: true,
+    );
   }
 
   // Accounts
@@ -4254,6 +4638,26 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
     );
   }
 
+  Future<void> pushAllTransactionsToCloud(String personId) async {
+    final rows = await (select(transactionsTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    final payloads = rows.map((row) => <String, dynamic>{
+      'id': row.id,
+      'person_id': row.personID,
+      'category': row.category,
+      'type': row.type,
+      'amount': row.amount,
+      'mood_score': row.moodScore,
+      'description': row.description,
+      'transaction_date': row.transactionDate.toUtc().toIso8601String(),
+      'created_at': row.createdAt.toUtc().toIso8601String(),
+      'project_id': row.projectID,
+      'source_account_id': row.sourceAccountId,
+    }).toList();
+    await db.pushToSupabaseBatch(table: 'transactions', payloads: payloads);
+  }
+
   Stream<List<TransactionData>> watchAllTransactions(String personId) {
     return customSelect(
       'SELECT * FROM transactions WHERE person_id = ? ORDER BY transaction_date DESC',
@@ -4319,6 +4723,95 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
           ),
         )
         .toList();
+  }
+
+  /// Returns true if an income transaction with matching fingerprint already
+  /// exists for the given day — used to prevent duplicate posts from the
+  /// recurring-income poster.
+  Future<bool> incomeTransactionExists({
+    required String personId,
+    required String category,
+    required double amount,
+    required DateTime date,
+    String? description,
+  }) async {
+    final dayStart = DateTime(date.year, date.month, date.day);
+    final dayEnd = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+    final q = select(transactionsTable)
+      ..where(
+        (t) =>
+            t.personID.equals(personId) &
+            t.type.equals('income') &
+            t.category.equals(category) &
+            t.amount.equals(amount) &
+            t.transactionDate
+                .isBiggerOrEqualValue(dayStart) &
+            t.transactionDate
+                .isSmallerOrEqualValue(dayEnd),
+      )
+      ..limit(1);
+    final rows = await q.get();
+    return rows.isNotEmpty;
+  }
+
+  /// Finds duplicate income transactions (same person, category, amount,
+  /// description, and transaction_date) and deletes all but the oldest,
+  /// cleaning up damage from past sync-down overwrites.
+  Future<int> deduplicateIncomeTransactions(String personId) async {
+    final dupes = await customSelect(
+      '''
+      SELECT id FROM transactions t
+      WHERE person_id = ? AND type = 'income'
+        AND EXISTS (
+          SELECT 1 FROM transactions t2
+          WHERE t2.person_id = t.person_id
+            AND t2.type = t.type
+            AND t2.category = t.category
+            AND t2.amount = t.amount
+            AND COALESCE(t2.description,'') = COALESCE(t.description,'')
+            AND DATE(t2.transaction_date) = DATE(t.transaction_date)
+            AND t2.id < t.id
+        )
+      ''',
+      variables: [Variable.withString(personId)],
+      readsFrom: {transactionsTable},
+    ).get();
+    var removed = 0;
+    for (final row in dupes) {
+      final id = row.data['id'] as String;
+      await deleteTransaction(id);
+      removed++;
+    }
+    return removed;
+  }
+
+  /// Removes duplicate recurring_incomes keeping the oldest by id.
+  /// Matches on (person, description, amount) — ignores category so that
+  /// entries created with different categories but same name+amount are
+  /// still caught as duplicates.
+  Future<int> deduplicateRecurringIncomes(String personId) async {
+    final dupes = await customSelect(
+      '''
+      SELECT id FROM recurring_incomes r
+      WHERE person_id = ?
+        AND EXISTS (
+          SELECT 1 FROM recurring_incomes r2
+          WHERE r2.person_id = r.person_id
+            AND r2.amount = r.amount
+            AND COALESCE(r2.description,'') = COALESCE(r.description,'')
+            AND r2.id < r.id
+        )
+      ''',
+      variables: [Variable.withString(personId)],
+      readsFrom: {recurringIncomesTable},
+    ).get();
+    var removed = 0;
+    for (final row in dupes) {
+      final id = row.data['id'] as String;
+      await deleteRecurringIncome(id);
+      removed++;
+    }
+    return removed;
   }
 }
 
@@ -7286,6 +7779,40 @@ class AiPromptsTable extends Table {
 
 // AiPromptsDAO moved to daos/AiPromptsDao.dart
 
+@DataClassName('DevQuickTabData')
+class DevQuickTabsTable extends Table {
+  @override
+  String get tableName => 'dev_quick_tabs';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get title => text().withLength(min: 1, max: 500)();
+  TextColumn get fullUrl => text().named('full_url')();
+  IntColumn get sortOrder =>
+      integer().withDefault(const Constant(0)).named('sort_order')();
+  BoolColumn get isPinned =>
+      boolean().withDefault(const Constant(false)).named('is_pinned')();
+  TextColumn get username =>
+      text().withDefault(const Constant('')).named('username')();
+  TextColumn get password =>
+      text().withDefault(const Constant('')).named('password')();
+  TextColumn get loginType =>
+      text().withDefault(const Constant('html_form')).named('login_type')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// DevQuickTabsDAO moved to daos/DevQuickTabsDao.dart
+
 @DataClassName('IntegrationAccountData')
 class IntegrationAccountsTable extends Table {
   @override
@@ -7389,6 +7916,8 @@ class ConfigsTable extends Table {
     TransactionsTable,
     SubscriptionsTable,
     RecurringIncomesTable,
+    JobPositionsTable,
+    BonusesTable,
     FocusSessionsTable,
     CustomNotificationsTable,
     QuotesTable,
@@ -7412,6 +7941,7 @@ class ConfigsTable extends Table {
     AppUsageHistoryTable,
     AppTimeSpendingTable,
     IntegrationAccountsTable,
+    DevQuickTabsTable,
   ],
   daos: [
     ThemeDAO,
@@ -7438,6 +7968,7 @@ class ConfigsTable extends Table {
     AiPromptsDAO,
     ConfigsDAO,
     IntegrationAccountDAO,
+    DevQuickTabsDAO,
     QuestDAO,
     SSHHostsDAO,
     SSHSessionsDAO,
@@ -7643,6 +8174,7 @@ class AppDatabase extends _$AppDatabase {
     'feedbacks': {'status'},
     'subscriptions': {'tenant_id'},
     'achievements': {'local_image_path'},
+    'transactions': {'tenant_id'},
   };
 
   Map<String, dynamic> _transformOpData(
@@ -7735,6 +8267,7 @@ class AppDatabase extends _$AppDatabase {
   @override
   IntegrationAccountDAO get integrationAccountDAO =>
       IntegrationAccountDAO(this);
+  DevQuickTabsDAO get devQuickTabsDAO => DevQuickTabsDAO(this);
   @override
   MindLogsDAO get mindLogsDAO => MindLogsDAO(this);
   @override
@@ -7777,7 +8310,11 @@ class AppDatabase extends _$AppDatabase {
   // v87 → quotes.type_quote (e.g. focus_week for Mind weekly topic)
   // v88 → query indexes: goals (person_id, project_id), events (person_id, occurred_at)
   // v89 → achievements.project_id (link story/feats to projects)
-  int get schemaVersion => 89;
+  // v91 → username, password, login_type in dev_quick_tabs
+  // v92 → job_positions table
+  // v93 → bonuses table
+  // v94 → recurring_incomes.job_position_id (job = master; incomes = salary timeline)
+  int get schemaVersion => 94;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7845,6 +8382,132 @@ class AppDatabase extends _$AppDatabase {
       if (!names.contains('device')) {
         await customStatement(
           'ALTER TABLE project_notes ADD COLUMN device TEXT;',
+        );
+      }
+    } catch (_) {}
+  }
+
+  /// Ensures [dev_quick_tabs] exists (hot reload skips [onUpgrade]).
+  Future<void> repairDevQuickTabsTableForDrift() async {
+    try {
+      final rows = await customSelect(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'dev_quick_tabs'",
+      ).get();
+      if (rows.isNotEmpty) return;
+      await customStatement('''
+CREATE TABLE IF NOT EXISTS dev_quick_tabs (
+  id TEXT NOT NULL PRIMARY KEY,
+  person_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  full_url TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_pinned INTEGER NOT NULL DEFAULT 0,
+  username TEXT NOT NULL DEFAULT '',
+  password TEXT NOT NULL DEFAULT '',
+  login_type TEXT NOT NULL DEFAULT 'html_form',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+''');
+    } catch (_) {}
+  }
+
+  /// Hot reload skips [onUpgrade]; create [job_positions] if v92 migration did not run.
+  Future<void> _ensureJobPositionsTableReady() async {
+    try {
+      final exists = await customSelect(
+        "SELECT 1 AS ok FROM sqlite_master "
+        "WHERE type = 'table' AND name = 'job_positions' LIMIT 1",
+      ).get();
+      if (exists.isEmpty) {
+        await customStatement('''
+CREATE TABLE IF NOT EXISTS "job_positions" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "employer" TEXT NOT NULL DEFAULT '',
+  "job_title" TEXT NOT NULL DEFAULT '',
+  "contract_type" TEXT NOT NULL DEFAULT 'full_time',
+  "start_date" INTEGER NOT NULL,
+  "end_date" INTEGER,
+  "linked_income_id" TEXT,
+  "linked_project_id" TEXT,
+  "notes" TEXT NOT NULL DEFAULT '',
+  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  PRIMARY KEY ("id")
+);
+''');
+      }
+    } catch (_) {}
+  }
+
+  /// Hot reload skips [onUpgrade]; create [bonuses] if the v93 migration did not run.
+  Future<void> _ensureBonusesTableReady() async {
+    try {
+      final exists = await customSelect(
+        "SELECT 1 AS ok FROM sqlite_master "
+        "WHERE type = 'table' AND name = 'bonuses' LIMIT 1",
+      ).get();
+      if (exists.isEmpty) {
+        await customStatement('''
+CREATE TABLE IF NOT EXISTS "bonuses" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT,
+  "amount" REAL NOT NULL,
+  "description" TEXT NOT NULL DEFAULT '',
+  "bonus_date" INTEGER NOT NULL,
+  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  PRIMARY KEY ("id")
+);
+''');
+      }
+    } catch (_) {}
+  }
+
+  /// Hot reload skips [onUpgrade]; create [dev_quick_tabs] if the v90 migration did not run.
+  Future<void> ensureDevQuickTabsTableReady() async {
+    try {
+      final exists = await customSelect(
+        "SELECT 1 AS ok FROM sqlite_master "
+        "WHERE type = 'table' AND name = 'dev_quick_tabs' LIMIT 1",
+      ).get();
+      if (exists.isEmpty) {
+        await customStatement('''
+CREATE TABLE IF NOT EXISTS "dev_quick_tabs" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "title" TEXT NOT NULL,
+  "full_url" TEXT NOT NULL,
+  "sort_order" INTEGER NOT NULL DEFAULT 0,
+  "is_pinned" INTEGER NOT NULL DEFAULT 0 CHECK ("is_pinned" IN (0, 1)),
+  "username" TEXT NOT NULL DEFAULT '',
+  "password" TEXT NOT NULL DEFAULT '',
+  "login_type" TEXT NOT NULL DEFAULT 'html_form',
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  "updated_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id")
+);
+''');
+        appLog('Drift: created missing dev_quick_tabs table (repair).');
+        return;
+      }
+      final cols = await customSelect(
+        'PRAGMA table_info(dev_quick_tabs)',
+      ).get();
+      final names = cols.map((r) => r.read<String>('name')).toSet();
+      if (!names.contains('username')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN username TEXT NOT NULL DEFAULT '';",
+        );
+      }
+      if (!names.contains('password')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN password TEXT NOT NULL DEFAULT '';",
+        );
+      }
+      if (!names.contains('login_type')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN login_type TEXT NOT NULL DEFAULT 'html_form';",
         );
       }
     } catch (_) {}
@@ -8548,6 +9211,48 @@ class AppDatabase extends _$AppDatabase {
             );
           } catch (_) {}
         }
+        if (from < 90) {
+          try {
+            await m.createTable(devQuickTabsTable);
+          } catch (_) {}
+        }
+        if (from < 91) {
+          for (final stmt in [
+            "ALTER TABLE dev_quick_tabs ADD COLUMN username TEXT NOT NULL DEFAULT '';",
+            "ALTER TABLE dev_quick_tabs ADD COLUMN password TEXT NOT NULL DEFAULT '';",
+            "ALTER TABLE dev_quick_tabs ADD COLUMN login_type TEXT NOT NULL DEFAULT 'html_form';",
+          ]) {
+            try { await customStatement(stmt); } catch (_) {}
+          }
+        }
+        if (from < 92) {
+          try {
+            await m.createTable(jobPositionsTable);
+          } catch (_) {}
+        }
+        if (from < 93) {
+          try {
+            await m.createTable(bonusesTable);
+          } catch (_) {}
+        }
+        if (from < 94) {
+          try {
+            await m.addColumn(
+              recurringIncomesTable,
+              recurringIncomesTable.jobPositionId,
+            );
+          } catch (_) {}
+          // Backfill from the old 1-to-1 link so existing jobs keep their
+          // salary after the direction flip (job ← income).
+          try {
+            await customStatement(
+              'UPDATE recurring_incomes SET job_position_id = '
+              '(SELECT jp.id FROM job_positions jp '
+              ' WHERE jp.linked_income_id = recurring_incomes.id) '
+              'WHERE job_position_id IS NULL;',
+            );
+          } catch (_) {}
+        }
       },
       beforeOpen: (details) async {
         appLog(
@@ -8555,6 +9260,10 @@ class AppDatabase extends _$AppDatabase {
         );
         await repairFocusSessionsSchemaForDrift();
         await repairProjectNotesMediaColumnsForDrift();
+        await ensureDevQuickTabsTableReady();
+        await repairDevQuickTabsTableForDrift();
+        await _ensureJobPositionsTableReady();
+        await _ensureBonusesTableReady();
         // Consolidated cleanups
         try {
           await customStatement(

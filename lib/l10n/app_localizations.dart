@@ -5705,7 +5705,7 @@ abstract class AppLocalizations {
   /// No description provided for @dev_quick_tabs_title.
   ///
   /// In en, this message translates to:
-  /// **'Dev Tools'**
+  /// **'Software Dev'**
   String get dev_quick_tabs_title;
 
   /// No description provided for @dev_quick_tabs_subtitle.
@@ -5717,7 +5717,7 @@ abstract class AppLocalizations {
   /// No description provided for @dev_quick_tabs_empty.
   ///
   /// In en, this message translates to:
-  /// **'No tabs yet. Defaults load on first open.'**
+  /// **'No tabs yet. Tap + to add one.'**
   String get dev_quick_tabs_empty;
 
   /// No description provided for @dev_quick_tabs_add.
@@ -5725,6 +5725,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add tab'**
   String get dev_quick_tabs_add;
+
+  /// No description provided for @dev_quick_tabs_validation_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Title and URL are required'**
+  String get dev_quick_tabs_validation_error;
 
   /// No description provided for @dev_quick_tabs_open.
   ///
@@ -5767,6 +5773,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get dev_quick_tabs_delete_confirm;
+
+  /// No description provided for @dev_quick_tabs_credentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved logins'**
+  String get dev_quick_tabs_credentials;
+
+  /// No description provided for @dev_quick_tabs_credentials_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP login and SSL trust per host.'**
+  String get dev_quick_tabs_credentials_subtitle;
+
+  /// No description provided for @dev_quick_tabs_credentials_login.
+  ///
+  /// In en, this message translates to:
+  /// **'Login saved'**
+  String get dev_quick_tabs_credentials_login;
+
+  /// No description provided for @dev_quick_tabs_credentials_ssl.
+  ///
+  /// In en, this message translates to:
+  /// **'SSL trusted'**
+  String get dev_quick_tabs_credentials_ssl;
+
+  /// No description provided for @dev_quick_tabs_credentials_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved data'**
+  String get dev_quick_tabs_credentials_none;
+
+  /// No description provided for @dev_quick_tabs_credentials_set_login.
+  ///
+  /// In en, this message translates to:
+  /// **'Set login'**
+  String get dev_quick_tabs_credentials_set_login;
+
+  /// No description provided for @dev_quick_tabs_credentials_username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get dev_quick_tabs_credentials_username;
+
+  /// No description provided for @dev_quick_tabs_credentials_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get dev_quick_tabs_credentials_password;
+
+  /// No description provided for @dev_quick_tabs_credentials_passkey.
+  ///
+  /// In en, this message translates to:
+  /// **'Passkey / API key'**
+  String get dev_quick_tabs_credentials_passkey;
+
+  /// No description provided for @dev_quick_tabs_credentials_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials saved'**
+  String get dev_quick_tabs_credentials_saved;
+
+  /// No description provided for @dev_quick_tabs_credentials_ssl_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'For self-signed homelab HTTPS (e.g. OPNsense).'**
+  String get dev_quick_tabs_credentials_ssl_hint;
+
+  /// No description provided for @dev_quick_tabs_credentials_clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get dev_quick_tabs_credentials_clear;
+
+  /// No description provided for @dev_quick_tabs_credentials_clear_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear saved data?'**
+  String get dev_quick_tabs_credentials_clear_title;
+
+  /// No description provided for @dev_quick_tabs_credentials_clear_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove login and SSL trust for {host}.'**
+  String dev_quick_tabs_credentials_clear_message(String host);
+
+  /// No description provided for @dev_quick_tabs_credentials_revoke_ssl.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke SSL trust'**
+  String get dev_quick_tabs_credentials_revoke_ssl;
+
+  /// No description provided for @dev_quick_tabs_login_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Login type'**
+  String get dev_quick_tabs_login_type;
+
+  /// No description provided for @dev_quick_tabs_login_type_html_form.
+  ///
+  /// In en, this message translates to:
+  /// **'HTML form (OPNsense, homelab)'**
+  String get dev_quick_tabs_login_type_html_form;
+
+  /// No description provided for @dev_quick_tabs_login_type_email_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Email + password (SPA)'**
+  String get dev_quick_tabs_login_type_email_password;
+
+  /// No description provided for @dev_quick_tabs_login_type_http_basic.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Basic only'**
+  String get dev_quick_tabs_login_type_http_basic;
+
+  /// No description provided for @dev_quick_tabs_login_type_api_key.
+  ///
+  /// In en, this message translates to:
+  /// **'API key / token'**
+  String get dev_quick_tabs_login_type_api_key;
+
+  /// No description provided for @dev_quick_tabs_login_type_oauth.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth / SSO (manual)'**
+  String get dev_quick_tabs_login_type_oauth;
+
+  /// No description provided for @dev_quick_tabs_login_type_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No autofill'**
+  String get dev_quick_tabs_login_type_none;
+
+  /// No description provided for @dev_quick_tabs_credentials_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get dev_quick_tabs_credentials_email;
+
+  /// No description provided for @dev_quick_tabs_login_type_oauth_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub or Google sign-in cannot be auto-filled. Use manual login.'**
+  String get dev_quick_tabs_login_type_oauth_hint;
 
   /// No description provided for @webview_connection_error.
   ///
@@ -8426,6 +8576,30 @@ abstract class AppLocalizations {
   /// **'No fixed income yet'**
   String get finance_fixed_income_empty;
 
+  /// No description provided for @finance_shortcut_transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction'**
+  String get finance_shortcut_transaction;
+
+  /// No description provided for @finance_shortcut_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get finance_shortcut_account;
+
+  /// No description provided for @finance_shortcut_asset.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset'**
+  String get finance_shortcut_asset;
+
+  /// No description provided for @finance_shortcut_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get finance_shortcut_income;
+
   /// No description provided for @finance_fixed_income_add.
   ///
   /// In en, this message translates to:
@@ -9026,6 +9200,30 @@ abstract class AppLocalizations {
   /// **'Investment account'**
   String get finance_account_type_investment;
 
+  /// No description provided for @finance_budget_limit_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget limit'**
+  String get finance_budget_limit_title;
+
+  /// No description provided for @finance_budget_limit_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit amount'**
+  String get finance_budget_limit_label;
+
+  /// No description provided for @finance_budget_limit_per_week.
+  ///
+  /// In en, this message translates to:
+  /// **'Per week'**
+  String get finance_budget_limit_per_week;
+
+  /// No description provided for @finance_budget_limit_per_month.
+  ///
+  /// In en, this message translates to:
+  /// **'Per month'**
+  String get finance_budget_limit_per_month;
+
   /// No description provided for @finance_add_account_title.
   ///
   /// In en, this message translates to:
@@ -9079,6 +9277,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recurring expense'**
   String get finance_record_subscription_hint;
+
+  /// No description provided for @finance_record_contract_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time project or contract pay'**
+  String get finance_record_contract_hint;
+
+  /// No description provided for @finance_record_bonus_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time bonus payment'**
+  String get finance_record_bonus_hint;
+
+  /// No description provided for @finance_bonus_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus & Contract'**
+  String get finance_bonus_section_title;
+
+  /// No description provided for @finance_bonus_section_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time income from bonuses and contracts'**
+  String get finance_bonus_section_subtitle;
+
+  /// No description provided for @finance_bonus_section_total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get finance_bonus_section_total;
+
+  /// No description provided for @finance_bonus_section_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No bonus or contract income yet'**
+  String get finance_bonus_section_empty;
+
+  /// No description provided for @finance_total_income_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Total income'**
+  String get finance_total_income_title;
+
+  /// No description provided for @finance_total_income_recurring.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring / month'**
+  String get finance_total_income_recurring;
+
+  /// No description provided for @finance_total_income_onetime.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time'**
+  String get finance_total_income_onetime;
 
   /// No description provided for @finance_hc_capacity_label.
   ///
@@ -9169,6 +9421,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cashflow (SaaS)'**
   String get finance_asset_cat_cashflow;
+
+  /// No description provided for @finance_cat_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get finance_cat_skills;
 
   /// No description provided for @finance_cat_salary.
   ///
@@ -10261,6 +10519,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ACHIEVEMENTS'**
   String get finance_tab_achievements;
+
+  /// No description provided for @finance_tab_career.
+  ///
+  /// In en, this message translates to:
+  /// **'CAREER'**
+  String get finance_tab_career;
+
+  /// No description provided for @finance_job_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Job positions'**
+  String get finance_job_title;
+
+  /// No description provided for @finance_job_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track employers, contracts, and tenure'**
+  String get finance_job_subtitle;
+
+  /// No description provided for @finance_job_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No job positions yet'**
+  String get finance_job_empty;
+
+  /// No description provided for @finance_job_current.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get finance_job_current;
+
+  /// No description provided for @finance_job_ended.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get finance_job_ended;
+
+  /// No description provided for @finance_job_tenure.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} months'**
+  String finance_job_tenure(int months);
+
+  /// No description provided for @finance_job_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add position'**
+  String get finance_job_add;
+
+  /// No description provided for @finance_job_new.
+  ///
+  /// In en, this message translates to:
+  /// **'New position'**
+  String get finance_job_new;
+
+  /// No description provided for @finance_job_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit position'**
+  String get finance_job_edit;
+
+  /// No description provided for @finance_job_employer.
+  ///
+  /// In en, this message translates to:
+  /// **'Employer / company'**
+  String get finance_job_employer;
+
+  /// No description provided for @finance_job_role.
+  ///
+  /// In en, this message translates to:
+  /// **'Job title / role'**
+  String get finance_job_role;
+
+  /// No description provided for @finance_job_contract_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract type'**
+  String get finance_job_contract_type;
+
+  /// No description provided for @finance_job_contract_full_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Full-time'**
+  String get finance_job_contract_full_time;
+
+  /// No description provided for @finance_job_contract_part_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Part-time'**
+  String get finance_job_contract_part_time;
+
+  /// No description provided for @finance_job_contract_freelance.
+  ///
+  /// In en, this message translates to:
+  /// **'Freelance'**
+  String get finance_job_contract_freelance;
+
+  /// No description provided for @finance_job_contract_internship.
+  ///
+  /// In en, this message translates to:
+  /// **'Internship'**
+  String get finance_job_contract_internship;
+
+  /// No description provided for @finance_job_contract_contract.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract'**
+  String get finance_job_contract_contract;
+
+  /// No description provided for @finance_job_start_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get finance_job_start_date;
+
+  /// No description provided for @finance_job_end_date.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get finance_job_end_date;
+
+  /// No description provided for @finance_job_end_date_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty if current'**
+  String get finance_job_end_date_hint;
+
+  /// No description provided for @finance_job_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get finance_job_notes;
+
+  /// No description provided for @finance_job_salary.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly income'**
+  String get finance_job_salary;
+
+  /// No description provided for @finance_job_salary_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Creates a fixed income linked to this job'**
+  String get finance_job_salary_hint;
+
+  /// No description provided for @finance_job_income_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Income type'**
+  String get finance_job_income_type;
+
+  /// No description provided for @finance_job_income_salary.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary'**
+  String get finance_job_income_salary;
+
+  /// No description provided for @finance_job_income_contract.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract income'**
+  String get finance_job_income_contract;
+
+  /// No description provided for @finance_job_income_bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus'**
+  String get finance_job_income_bonus;
+
+  /// No description provided for @finance_job_salary_suffix.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} / mo'**
+  String finance_job_salary_suffix(String amount);
+
+  /// No description provided for @finance_job_on_day.
+  ///
+  /// In en, this message translates to:
+  /// **'Working that day'**
+  String get finance_job_on_day;
+
+  /// No description provided for @finance_job_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this job position?'**
+  String get finance_job_delete_confirm;
+
+  /// No description provided for @finance_job_end_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark this position as ended today?'**
+  String get finance_job_end_confirm;
 
   /// No description provided for @finance_achievements_subtitle.
   ///

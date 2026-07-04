@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/DevTools/DevQuickTabLoginType.dart';
 import 'package:ice_gate/data_layer/Protocol/DevTools/DevQuickTabProtocol.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/DevQuickTabStore.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DevQuickTabCredentialsSheet.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/HubEntryCard.dart';
 import 'package:provider/provider.dart';
@@ -31,7 +34,11 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
   }
 
   Future<void> _reload() async {
-    final rows = await DevQuickTabStore.listOrSeed(_personId);
+    final db = context.read<AppDatabase>();
+    if (_personId.isNotEmpty && db.supabaseSync != null) {
+      await db.supabaseSync!.syncTableDown('dev_quick_tabs', _personId);
+    }
+    final rows = await DevQuickTabStore.list(db, _personId);
     if (!mounted) return;
     setState(() {
       _tabs = rows;
@@ -52,40 +59,106 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     final isEdit = existing != null;
     final titleCtrl = TextEditingController(text: existing?.title ?? '');
     final urlCtrl = TextEditingController(text: existing?.fullUrl ?? '');
+    final userCtrl = TextEditingController(text: existing?.username ?? '');
+    final passCtrl = TextEditingController(text: existing?.password ?? '');
+    var loginType = existing != null
+        ? DevQuickTabLoginType.fromStorage(existing.loginType)
+        : DevQuickTabLoginType.htmlForm;
 
     final saved = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          isEdit ? l10n.dev_quick_tabs_edit : l10n.dev_quick_tabs_add,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleCtrl,
-              autofocus: true,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(labelText: l10n.dev_quick_tabs_label),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final showUserPass = loginType != DevQuickTabLoginType.apiKey &&
+              loginType != DevQuickTabLoginType.oauth &&
+              loginType != DevQuickTabLoginType.none;
+
+          return AlertDialog(
+            title: Text(
+              isEdit ? l10n.dev_quick_tabs_edit : l10n.dev_quick_tabs_add,
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: urlCtrl,
-              decoration: InputDecoration(labelText: l10n.dev_quick_tabs_url),
-              keyboardType: TextInputType.url,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleCtrl,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(labelText: l10n.dev_quick_tabs_label),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: urlCtrl,
+                    decoration: InputDecoration(labelText: l10n.dev_quick_tabs_url),
+                    keyboardType: TextInputType.url,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<DevQuickTabLoginType>(
+                    value: loginType,
+                    decoration: InputDecoration(
+                      labelText: l10n.dev_quick_tabs_login_type,
+                      isDense: true,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: DevQuickTabLoginType.values
+                        .map((t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(_loginTypeLabel(l10n, t)),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v == null) return;
+                      setDialogState(() => loginType = v);
+                    },
+                  ),
+                  if (showUserPass) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: userCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.dev_quick_tabs_credentials_username,
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: passCtrl,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: l10n.dev_quick_tabs_credentials_password,
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.projects_calendar_save),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (titleCtrl.text.trim().isEmpty ||
+                      urlCtrl.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.dev_quick_tabs_validation_error),
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pop(ctx, true);
+                },
+                child: Text(l10n.projects_calendar_save),
+              ),
+            ],
+          );
+        },
       ),
     );
 
@@ -94,23 +167,52 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     final url = urlCtrl.text.trim();
     if (title.isEmpty || url.isEmpty) return;
 
+    final db = context.read<AppDatabase>();
     if (isEdit) {
       await DevQuickTabStore.update(
+        db,
         _personId,
-        existing.copyWith(title: title, fullUrl: url),
+        existing.copyWith(
+          title: title,
+          fullUrl: url,
+          username: userCtrl.text.trim(),
+          password: passCtrl.text,
+          loginType: loginType.storageKey,
+        ),
       );
     } else {
       await DevQuickTabStore.create(
+        db,
         _personId,
         DevQuickTabProtocol(
           id: IDGen.generateUuid(),
           title: title,
           fullUrl: url,
           sortOrder: _tabs.length,
+          username: userCtrl.text.trim(),
+          password: passCtrl.text,
+          loginType: loginType.storageKey,
         ),
       );
     }
     await _reload();
+  }
+
+  String _loginTypeLabel(AppLocalizations l10n, DevQuickTabLoginType type) {
+    switch (type) {
+      case DevQuickTabLoginType.htmlForm:
+        return l10n.dev_quick_tabs_login_type_html_form;
+      case DevQuickTabLoginType.emailPassword:
+        return l10n.dev_quick_tabs_login_type_email_password;
+      case DevQuickTabLoginType.httpBasic:
+        return l10n.dev_quick_tabs_login_type_http_basic;
+      case DevQuickTabLoginType.apiKey:
+        return l10n.dev_quick_tabs_login_type_api_key;
+      case DevQuickTabLoginType.oauth:
+        return l10n.dev_quick_tabs_login_type_oauth;
+      case DevQuickTabLoginType.none:
+        return l10n.dev_quick_tabs_login_type_none;
+    }
   }
 
   Future<void> _confirmDelete(DevQuickTabProtocol tab) async {
@@ -133,7 +235,8 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
       ),
     );
     if (ok != true || !mounted) return;
-    await DevQuickTabStore.delete(_personId, tab.id);
+    final db = context.read<AppDatabase>();
+    await DevQuickTabStore.delete(db, _personId, tab.id);
     await _reload();
   }
 
@@ -195,6 +298,15 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     );
   }
 
+  void _openCredentialsManager() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DevQuickTabCredentialsSheet(tabs: _tabs),
+    );
+  }
+
   static const _accents = [
     HealthMetricColors.pillarBlue,
     HealthMetricColors.pillarViolet,
@@ -214,6 +326,13 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
+        actions: [
+          IconButton(
+            tooltip: l10n.dev_quick_tabs_credentials,
+            icon: const Icon(Icons.vpn_key_outlined),
+            onPressed: _openCredentialsManager,
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showEditor(),

@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/data_layer/Protocol/DevTools/DevQuickTabLoginType.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/Services/HomelabHostPolicy.dart';
 import 'package:ice_gate/orchestration_layer/Services/WebViewCredentialStore.dart';
+import 'package:ice_gate/orchestration_layer/Services/WebViewLoginAutofillScript.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:webview_flutter/webview_flutter.dart' as wv;
 import 'package:webview_flutter_android/webview_flutter_android.dart';
@@ -148,6 +150,7 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
                 await controller.runJavaScript(_calendarChromeScript);
               } catch (_) {}
             }
+            await _tryAutofillSavedLogin(controller, url);
             _notifyHistoryChanged();
           },
           onUrlChange: (_) => _notifyHistoryChanged(),
@@ -206,6 +209,60 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
         await platformManager.setAcceptThirdPartyCookies(androidController, true);
       }
     } catch (_) {}
+  }
+
+  Future<void> _tryAutofillSavedLogin(
+    wv.WebViewController controller,
+    String url,
+  ) async {
+    try {
+      final host = Uri.tryParse(url)?.host ?? _pageUri.host;
+      if (host.isEmpty) return;
+      final creds = await _credentialStore.readHostCredentials(host);
+      final type = creds.loginType;
+      if (!type.usesJsAutofill) return;
+      if (!_hasAutofillData(type, creds)) return;
+
+      // STORY: JS-rendered UIs (Proxmox ExtJS, SPAs) build the login form
+      // after onPageFinished — one shot misses it on slow devices. So we
+      // retry; scripts skip fields that are already filled or user-typed.
+      await _runAutofillScript(controller, type, creds);
+      for (final ms in [600, 1500, 3000]) {
+        await Future<void>.delayed(Duration(milliseconds: ms));
+        if (!mounted) return;
+        await _runAutofillScript(controller, type, creds);
+      }
+    } catch (_) {}
+  }
+
+  bool _hasAutofillData(
+    DevQuickTabLoginType type,
+    WebViewHostCredentials creds,
+  ) {
+    switch (type) {
+      case DevQuickTabLoginType.apiKey:
+        return creds.passkey.isNotEmpty;
+      case DevQuickTabLoginType.htmlForm:
+      case DevQuickTabLoginType.emailPassword:
+        return creds.username.isNotEmpty && creds.password.isNotEmpty;
+      default:
+        return false;
+    }
+  }
+
+  Future<void> _runAutofillScript(
+    wv.WebViewController controller,
+    DevQuickTabLoginType type,
+    WebViewHostCredentials creds,
+  ) async {
+    await controller.runJavaScript(
+      WebViewLoginAutofill.buildScript(
+        type: type,
+        username: creds.username,
+        password: creds.password,
+        passkey: creds.passkey,
+      ),
+    );
   }
 
   Future<void> _handleSslAuthError(wv.SslAuthError error) async {

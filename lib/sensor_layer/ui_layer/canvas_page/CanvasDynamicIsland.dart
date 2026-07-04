@@ -115,7 +115,7 @@ class CanvasDynamicIsland extends StatelessWidget {
         case 3:
           return l10n.finance_tab_saving;
         case 4:
-          return l10n.finance_tab_achievements;
+          return l10n.finance_tab_career;
         default:
           return l10n.finance.toUpperCase();
       }
@@ -1240,8 +1240,8 @@ class CanvasDynamicIsland extends StatelessWidget {
             _buildAdaptiveTabIcon(
               context,
               index: 4,
-              icon: Icons.emoji_events_rounded,
-              label: l10n.finance_tab_achievements,
+              icon: Icons.work_outline_rounded,
+              label: l10n.finance_tab_career,
               activeIndex: activeIndex,
               onTap: (idx) => financeBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,

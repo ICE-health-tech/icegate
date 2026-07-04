@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/orchestration_layer/Constraint/FinanceConstraint.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
@@ -65,6 +66,18 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
 
   bool get _isEdit => widget.account != null;
 
+  /// Stored balance (USD base) → display in the account's own currency.
+  static double _toDisplayCurrency(double usdBase, CurrencyType currency) {
+    if (currency == CurrencyType.VND) return usdBase * USD_TO_VND_RATE;
+    return usdBase;
+  }
+
+  /// User-entered amount in account currency → USD base for storage.
+  static double _toBaseCurrency(double amount, CurrencyType currency) {
+    if (currency == CurrencyType.VND) return amount / USD_TO_VND_RATE;
+    return amount;
+  }
+
   String? _resolveAccountId(FinanceBlock financeBlock) {
     final a = widget.account;
     if (a == null) return null;
@@ -83,12 +96,15 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
     final a = widget.account;
     if (a != null) {
       _nameController.text = a.accountName;
-      _balanceController.text = a.balance.toString();
       _selectedType = a.accountType;
       _selectedCurrency = CurrencyType.values.firstWhere(
         (e) => e.name == a.currency,
         orElse: () => CurrencyType.USD,
       );
+      final displayBalance = _toDisplayCurrency(a.balance, _selectedCurrency);
+      _balanceController.text = displayBalance == displayBalance.roundToDouble()
+          ? displayBalance.toStringAsFixed(0)
+          : displayBalance.toString();
     } else if (widget.initialAccountType != null) {
       _selectedType = widget.initialAccountType!;
     }
@@ -109,12 +125,12 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
     }
 
     final balanceText = _balanceController.text.trim();
-    final balance = double.tryParse(balanceText) ?? 0.0;
-
     if (balanceText.isNotEmpty && double.tryParse(balanceText) == null) {
       _showSnackBar("Please enter a valid balance", isError: true);
       return;
     }
+    final enteredAmount = double.tryParse(balanceText) ?? 0.0;
+    final balance = _toBaseCurrency(enteredAmount, _selectedCurrency);
 
     final personID = context.read<PersonBlock>().currentPersonID.value;
     if (personID == null) {
@@ -351,9 +367,7 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide.none,
                               ),
-                              prefixIcon: const Icon(
-                                Icons.attach_money_rounded,
-                              ),
+                              prefixText: '${_selectedCurrency.symbol} ',
                             ),
                           ),
                         ),

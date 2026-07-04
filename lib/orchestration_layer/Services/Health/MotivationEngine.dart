@@ -1,4 +1,5 @@
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
 
 /// Daily pillar progress tiers (Motivation Engine).
 enum DailyMotivationTier { empty, low, mid, strong, allDone }
@@ -30,10 +31,20 @@ class DailyMotivationInput {
 }
 
 class PillarProgress {
-  const PillarProgress({required this.id, required this.progress});
+  const PillarProgress({
+    required this.id,
+    required this.progress,
+    required this.value,
+    required this.goal,
+  });
 
   final String id;
   final double progress;
+
+  /// Raw numbers survive the pipeline so notifications/UI can show
+  /// "3.200/8.000" instead of only a 0..1 ratio.
+  final num value;
+  final num goal;
 }
 
 class DailyMotivationResult {
@@ -59,18 +70,26 @@ abstract final class MotivationEngine {
       PillarProgress(
         id: 'steps',
         progress: _progress(input.steps, input.stepGoal),
+        value: input.steps,
+        goal: input.stepGoal,
       ),
       PillarProgress(
         id: 'water',
         progress: _progress(input.waterMl, input.waterGoal),
+        value: input.waterMl,
+        goal: input.waterGoal,
       ),
       PillarProgress(
         id: 'sleep',
         progress: _progress(input.sleepHours, input.sleepGoal),
+        value: input.sleepHours,
+        goal: input.sleepGoal,
       ),
       PillarProgress(
         id: 'exercise',
         progress: _progress(input.exerciseMinutes, input.exerciseGoal),
+        value: input.exerciseMinutes,
+        goal: input.exerciseGoal,
       ),
     ];
 
@@ -196,8 +215,46 @@ abstract final class MotivationEngine {
     return weakest;
   }
 
+  /// "3.200/8.000 bước" — unit-aware stat line for one pillar.
+  static String formatPillarStat({
+    required String pillarId,
+    required num value,
+    required num goal,
+    required bool vietnamese,
+  }) {
+    final nf = NumberFormat.decimalPattern(vietnamese ? 'vi' : 'en');
+    return switch (pillarId) {
+      'steps' =>
+        '${nf.format(value)}/${nf.format(goal)} ${vietnamese ? 'bước' : 'steps'}',
+      'water' => '${nf.format(value)}/${nf.format(goal)}ml',
+      'sleep' =>
+        '${value.toStringAsFixed(1)}/${goal.toStringAsFixed(1)}h',
+      'exercise' =>
+        '${nf.format(value)}/${nf.format(goal)} ${vietnamese ? 'phút' : 'min'}',
+      _ => '${nf.format(value)}/${nf.format(goal)}',
+    };
+  }
+
   /// Local notification copy (no [BuildContext] at schedule time).
+  /// With [value] + [goal] the body leads with the real numbers.
   static ({String title, String body}) nudgeCopy({
+    required String pillarId,
+    required bool vietnamese,
+    num? value,
+    num? goal,
+  }) {
+    final base = _baseNudgeCopy(pillarId: pillarId, vietnamese: vietnamese);
+    if (value == null || goal == null || goal <= 0) return base;
+    final stat = formatPillarStat(
+      pillarId: pillarId,
+      value: value,
+      goal: goal,
+      vietnamese: vietnamese,
+    );
+    return (title: base.title, body: '$stat — ${base.body}');
+  }
+
+  static ({String title, String body}) _baseNudgeCopy({
     required String pillarId,
     required bool vietnamese,
   }) {

@@ -232,7 +232,7 @@ class DailySummaryPayloadBuilder {
       'savings_rate_percent': finance.savingsRate.value,
       'spending_efficiency_percent': finance.spendingEfficiency.value,
       'monthly_burn_rate': finance.monthlyBurnRate.value,
-      'monthly_budget_limit': finance.monthlyBudgetLimit.value,
+      'monthly_budget_limit': finance.monthlyLimitEquivalent.value,
       'budget_usage_percent': finance.budgetUsagePercent.value,
       'remaining_budget': finance.remainingBudget.value,
       if (topCategory != null) 'top_expense_category': topCategory,

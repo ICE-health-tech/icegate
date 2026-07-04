@@ -8,6 +8,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBu
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/widgets/AppSessionCalendar.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 enum _PeriodMode { month, year }
 
 class FinanceAchievementsPage extends StatefulWidget {
@@ -43,6 +44,20 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
     return all
         .where((a) => a.domain.toLowerCase().contains('finance'))
         .toList();
+  }
+
+  // STORY: A job "covers" a day when the day is on or after its start
+  // and on or before its end (no end = still working). So picking any
+  // day on the calendar shows which jobs you held that day.
+  List<JobPositionData> _jobsOnDay(DateTime day) {
+    final d = _dateOnly(day);
+    return widget.financeBlock.jobPositions.value.where((job) {
+      final start = _dateOnly(job.startDate.toLocal());
+      if (d.isBefore(start)) return false;
+      final end = job.endDate;
+      if (end == null) return true;
+      return !d.isAfter(_dateOnly(end.toLocal()));
+    }).toList();
   }
 
   Set<DateTime> _markedDays(
@@ -226,6 +241,27 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
                     _focusedMonth = DateTime(d.year, d.month);
                   }),
                 ),
+                Watch((context) {
+                  final jobs = _jobsOnDay(_selectedDay);
+                  if (jobs.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.finance_job_on_day.toUpperCase(),
+                        style: TextStyle(
+                          color: FinanceSurface.mutedInk(isDark: isDark),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...jobs.map((job) => _jobTile(job, l10n, isDark, cs)),
+                    ],
+                  );
+                }),
                 if (onSelectedDay.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   ...onSelectedDay.map((a) => _achievementTile(a, l10n, isDark, cs)),
@@ -327,6 +363,70 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
                 const SizedBox(height: 6),
                 Text(
                   DateFormat.yMMMd(l10n.localeName).format(a.createdAt.toLocal()),
+                  style: TextStyle(
+                    color: FinanceSurface.mutedInk(isDark: isDark),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _jobTile(
+    JobPositionData job,
+    AppLocalizations l10n,
+    bool isDark,
+    ColorScheme cs,
+  ) {
+    final isCurrent = job.endDate == null;
+    final fmt = DateFormat.yMMMd(l10n.localeName);
+    final range = isCurrent
+        ? '${fmt.format(job.startDate.toLocal())} — ${l10n.finance_job_current}'
+        : '${fmt.format(job.startDate.toLocal())} — ${fmt.format(job.endDate!.toLocal())}';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 20),
+      child: Row(
+        children: [
+          Icon(
+            Icons.work_outline_rounded,
+            color: isCurrent
+                ? Colors.greenAccent
+                : FinanceSurface.silverAccent(),
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  job.jobTitle.isNotEmpty ? job.jobTitle : job.employer,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: FinanceSurface.ink(isDark: isDark),
+                  ),
+                ),
+                if (job.employer.isNotEmpty && job.jobTitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    job.employer,
+                    style: TextStyle(
+                      color: FinanceSurface.mutedInk(isDark: isDark),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 4),
+                Text(
+                  range,
                   style: TextStyle(
                     color: FinanceSurface.mutedInk(isDark: isDark),
                     fontSize: 10,

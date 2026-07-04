@@ -19,18 +19,10 @@ class FinanceSavingsPage extends StatelessWidget {
 
     return Watch((context) {
       final txns = financeBlock.transactions.value;
-      final now = DateTime.now();
       final savingsTxns = txns.where((t) => t.type == 'savings').toList()
         ..sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
 
-      final monthlySavings = savingsTxns
-          .where(
-            (t) =>
-                t.transactionDate.month == now.month &&
-                t.transactionDate.year == now.year,
-          )
-          .fold(0.0, (sum, t) => sum + t.amount);
-
+      final monthlySavings = financeBlock.monthlySavings.value;
       final total = financeBlock.totalSavings.value;
       final rate = financeBlock.savingsRate.value;
 

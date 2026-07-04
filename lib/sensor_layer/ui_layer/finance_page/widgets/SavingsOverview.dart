@@ -13,12 +13,11 @@ class SavingsOverview extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     
     return Watch((context) {
-      final savings = financeBlock.totalSavings.value;
+      final savings = financeBlock.monthlySavings.value;
       final spending = financeBlock.monthlySpending.value;
       final income = financeBlock.monthlyIncome.value;
-      
-      // Calculate savings rate
-      final savingsRate = (income > 0) ? (savings / income) * 100 : 0.0;
+
+      final savingsRate = financeBlock.savingsRate.value;
       
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),

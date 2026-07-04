@@ -161,7 +161,54 @@ void showFixedIncomeEditor(
                       editing: income,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  if (isEdit) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final ok = await showDialog<bool>(
+                          context: ctx,
+                          builder: (dlg) => AlertDialog(
+                            title: Text(l10n.delete),
+                            content: Text(
+                              l10n.finance_fixed_income_delete_confirm,
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dlg, false),
+                                child: Text(l10n.cancel),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(dlg, true),
+                                child: Text(
+                                  l10n.delete,
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (ok != true || !ctx.mounted) return;
+                        await financeBlock.deleteRecurringIncome(income.id);
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                      ),
+                      label: Text(l10n.delete),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        side: const BorderSide(color: Colors.redAccent),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
                   FilledButton(
                     onPressed: () async {
                       final amount = double.tryParse(amountController.text);
@@ -338,7 +385,10 @@ class FixedIncomeManager extends StatelessWidget {
     final dateFmt = DateFormat.MMMd(l10n.localeName);
 
     return Watch((context) {
-      final items = financeBlock.recurringIncomes.value;
+      // One-time bonus/contract entries live in the bonus section, not here.
+      final items = financeBlock.recurringIncomes.value
+          .where((i) => !FinanceBlock.isOneTimeIncome(i))
+          .toList();
       final monthlyTotal = financeBlock.monthlyFixedIncome.value;
 
       return Column(
@@ -467,7 +517,7 @@ class FixedIncomeManager extends StatelessWidget {
             )
           else
             SizedBox(
-              height: 118,
+              height: 132,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
@@ -520,11 +570,36 @@ class _IncomeCard extends StatelessWidget {
     }
   }
 
+  bool _hasLinkedJob() {
+    for (final job in financeBlock.jobPositions.peek()) {
+      if (job.linkedIncomeId == item.id) return true;
+    }
+    return false;
+  }
+
+  Future<void> _createJobFromIncome(BuildContext context) async {
+    final title = (item.description?.trim().isNotEmpty ?? false)
+        ? item.description!.trim()
+        : item.category;
+    await financeBlock.addJobPosition(
+      employer: title,
+      jobTitle: title,
+      startDate: item.createdAt,
+      linkedIncomeId: item.id,
+    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${title.toUpperCase()} → Job position created')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = (item.description?.trim().isNotEmpty ?? false)
         ? item.description!.trim()
         : FinancePage.getCategoryName(l10n, item.category);
+    final isJob = _hasLinkedJob();
 
     return Container(
       width: 168,
@@ -574,17 +649,26 @@ class _IncomeCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: FinanceSurface.silverAccent()
-                                .withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.south_west_rounded,
-                            color: FinanceSurface.silverAccent(),
-                            size: 16,
+                        GestureDetector(
+                          onTap: isJob ? null : () => _createJobFromIncome(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isJob
+                                  ? Colors.greenAccent.withValues(alpha: 0.18)
+                                  : FinanceSurface.silverAccent()
+                                      .withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              isJob
+                                  ? Icons.work_rounded
+                                  : Icons.work_outline_rounded,
+                              color: isJob
+                                  ? Colors.greenAccent
+                                  : FinanceSurface.silverAccent(),
+                              size: 16,
+                            ),
                           ),
                         ),
                         const Spacer(),

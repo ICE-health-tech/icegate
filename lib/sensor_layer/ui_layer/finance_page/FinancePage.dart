@@ -21,9 +21,9 @@ import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceOvervie
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceDailyPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSubscriptionsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSavingsPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceAchievementsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceJobPositionsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/JobPositionManager.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SubscriptionManager.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
 
 class FinancePage extends StatefulWidget {
   const FinancePage({super.key});
@@ -108,7 +108,7 @@ class FinancePage extends StatefulWidget {
           } else if (tab == 3) {
             QuickSaveSheet.show(context, financeBlock);
           } else if (tab == 4) {
-            AchievementBuilderDialog.show(context, initialDomain: 'finance');
+            showJobPositionEditor(context, financeBlock);
           } else {
             TransactionBuilderDialog.show(context, financeBlock: financeBlock);
           }
@@ -192,6 +192,10 @@ class _FinancePageState extends State<FinancePage>
       if (newIndex == 2) {
         unawaited(_financeBlock.refreshSubscriptions());
       }
+      if (newIndex == 4) {
+        unawaited(_financeBlock.refreshJobPositions());
+        unawaited(_financeBlock.refreshRecurringIncomes());
+      }
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -263,7 +267,7 @@ class _FinancePageState extends State<FinancePage>
       case 3:
         return l10n.finance_tab_saving;
       case 4:
-        return l10n.finance_tab_achievements;
+        return l10n.finance_tab_career;
       default:
         return l10n.finance.toUpperCase();
     }
@@ -305,7 +309,7 @@ class _FinancePageState extends State<FinancePage>
                     FinanceDailyPage(financeBlock: financeBlock),
                     FinanceSubscriptionsPage(financeBlock: financeBlock),
                     FinanceSavingsPage(financeBlock: financeBlock),
-                    FinanceAchievementsPage(financeBlock: financeBlock),
+                    FinanceJobPositionsPage(financeBlock: financeBlock),
                   ],
                 ),
               ),
@@ -477,7 +481,7 @@ class _FinancePageState extends State<FinancePage>
               Tab(text: AppLocalizations.of(context)!.finance_tab_daily),
               Tab(text: AppLocalizations.of(context)!.finance_tab_billing),
               Tab(text: AppLocalizations.of(context)!.finance_tab_saving),
-              Tab(text: AppLocalizations.of(context)!.finance_tab_achievements),
+              Tab(text: AppLocalizations.of(context)!.finance_tab_career),
             ],
           ),
         ],

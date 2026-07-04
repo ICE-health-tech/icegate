@@ -21,6 +21,7 @@ class FinanceBlock {
   final transactions = listSignal<TransactionData>([]);
   final subscriptions = listSignal<SubscriptionData>([]);
   final recurringIncomes = listSignal<RecurringIncomeData>([]);
+  final jobPositions = listSignal<JobPositionData>([]);
   final isSyncing = signal(false);
 
   StreamSubscription? _accountsSubscription;
@@ -28,6 +29,7 @@ class FinanceBlock {
   StreamSubscription? _transactionsSubscription;
   StreamSubscription? _subscriptionsSubscription;
   StreamSubscription? _recurringIncomesSubscription;
+  StreamSubscription? _jobPositionsSubscription;
 
   late FinanceDAO _dao;
   late PortfolioSnapshotsDAO _snapshotDao;
@@ -70,6 +72,19 @@ class FinanceBlock {
         .fold(0.0, (sum, t) => sum + t.amount);
   });
 
+  /// Savings recorded in the current month.
+  late final monthlySavings = computed(() {
+    final now = DateTime.now();
+    return transactions.value
+        .where(
+          (t) =>
+              t.type == 'savings' &&
+              t.transactionDate.month == now.month &&
+              t.transactionDate.year == now.year,
+        )
+        .fold(0.0, (sum, t) => sum + t.amount);
+  });
+
   /// Monthly spending for the current month
   late final monthlySpending = computed(() {
     final now = DateTime.now();
@@ -83,9 +98,19 @@ class FinanceBlock {
         .fold(0.0, (sum, t) => sum + t.amount);
   });
 
+  /// One-time money (bonus/contract) — never part of monthly recurring math.
+  /// STORY: Category is the user's intent, interval is derived — trust either
+  /// signal so a row with a dirty interval still classifies correctly.
+  static bool isOneTimeIncome(RecurringIncomeData item) =>
+      item.interval == 'once' ||
+      item.category == 'bonus' ||
+      item.category == 'contract';
+
   /// Sum of active fixed/recurring incomes normalized to a monthly amount.
+  /// Excludes one-time bonus/contract entries.
   late final monthlyFixedIncome = computed(() {
     return recurringIncomes.value.fold(0.0, (sum, item) {
+      if (isOneTimeIncome(item)) return sum;
       return sum + _recurringToMonthly(item.amount, item.interval);
     });
   });
@@ -101,7 +126,7 @@ class FinanceBlock {
     final now = DateTime.now();
     for (final t in transactions.value) {
       if (t.type == 'income' &&
-          t.category == 'human_capital' &&
+       
           t.transactionDate.month == now.month &&
           t.transactionDate.year == now.year) {
         sum += t.amount;
@@ -131,11 +156,10 @@ class FinanceBlock {
     return sum;
   });
 
-  /// Monthly cash inflow by pillar (excludes imputed human_capital capacity).
+  /// Monthly cash inflow by pillar.
   late final monthlyInflowByPillar = computed(() {
     final map = {for (final p in FinanceInflowPillar.ordered) p: 0.0};
     for (final item in recurringIncomes.value) {
-      if (item.category == 'human_capital') continue;
       final pillar = FinanceInflowPillar.pillarForCategory(item.category);
       if (pillar != null) {
         map[pillar] =
@@ -145,7 +169,6 @@ class FinanceBlock {
     final now = DateTime.now();
     for (final t in transactions.value) {
       if (t.type != 'income' ||
-          t.category == 'human_capital' ||
           t.transactionDate.month != now.month ||
           t.transactionDate.year != now.year) {
         continue;
@@ -154,11 +177,6 @@ class FinanceBlock {
       if (pillar != null) {
         map[pillar] = (map[pillar] ?? 0) + t.amount;
       }
-    }
-    final realized = monthlyHumanCapitalRealized.value;
-    if (realized > 0) {
-      map[FinanceInflowPillar.humanCapital] =
-          (map[FinanceInflowPillar.humanCapital] ?? 0) + realized;
     }
     return map;
   });
@@ -177,6 +195,8 @@ class FinanceBlock {
         return amount * 52 / 12;
       case 'yearly':
         return amount / 12;
+      case 'once':
+        return 0; // one-offs have no monthly equivalent
       case 'monthly':
       default:
         return amount;
@@ -317,11 +337,13 @@ class FinanceBlock {
     return map;
   });
 
-  /// Savings rate (Savings / Income)
+  /// Savings rate — this month's savings vs this month's income.
+  /// STORY: Both numbers must cover the same period; all-time savings over
+  /// one month's income inflates the rate (4M lifetime / 500k month = 800%).
   late final savingsRate = computed(() {
     final inc = monthlyIncome.value;
     if (inc <= 0) return 0.0;
-    return (totalSavings.value / inc) * 100;
+    return (monthlySavings.value / inc) * 100;
   });
 
   /// Spending Efficiency (1 - Expense / Income)
@@ -332,8 +354,55 @@ class FinanceBlock {
     return (1 - (exp / inc)).clamp(0.0, 1.0) * 100;
   });
 
-  /// Monthly budget limit (Default $1500)
+  /// Budget limit as the user entered it — per week or per month
+  /// ([budgetLimitPeriod]). Persisted per person in SharedPreferences.
   final monthlyBudgetLimit = signal<double>(1500.0);
+
+  /// 'week' | 'month'. STORY: First we keep the number exactly as typed with
+  /// its period. Then [monthlyLimitEquivalent] converts once. So every
+  /// consumer keeps comparing against a monthly amount without knowing weeks
+  /// exist.
+  final budgetLimitPeriod = signal<String>('month');
+
+  /// Average weeks per month (52 weeks / 12 months).
+  static const double _weeksPerMonth = 52 / 12;
+
+  /// The limit normalized to one month — all budget math uses this.
+  late final monthlyLimitEquivalent = computed(() {
+    final raw = monthlyBudgetLimit.value;
+    return budgetLimitPeriod.value == 'week' ? raw * _weeksPerMonth : raw;
+  });
+
+  static String _budgetLimitKey(String personId) =>
+      'finance_monthly_budget_limit_$personId';
+
+  static String _budgetLimitPeriodKey(String personId) =>
+      'finance_budget_limit_period_$personId';
+
+  Future<void> loadBudgetLimit() async {
+    if (_personId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getDouble(_budgetLimitKey(_personId));
+    if (saved != null) monthlyBudgetLimit.value = saved;
+    final period = prefs.getString(_budgetLimitPeriodKey(_personId));
+    if (period == 'week' || period == 'month') {
+      budgetLimitPeriod.value = period!;
+    }
+  }
+
+  Future<void> setBudgetLimit(double limit, {String? period}) async {
+    monthlyBudgetLimit.value = limit;
+    if (period == 'week' || period == 'month') {
+      budgetLimitPeriod.value = period!;
+    }
+    if (_personId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_budgetLimitKey(_personId), limit);
+    await prefs.setString(
+      _budgetLimitPeriodKey(_personId),
+      budgetLimitPeriod.value,
+    );
+  }
 
   /// Total billing for subscriptions and bills this month
   late final totalSubscriptionsBilling = computed(() {
@@ -365,16 +434,15 @@ class FinanceBlock {
 
   /// Remaining budget for the month
   late final remainingBudget = computed(() {
-    return (monthlyBudgetLimit.value - totalSubscriptionsBilling.value).clamp(
-      0.0,
-      double.infinity,
-    );
+    return (monthlyLimitEquivalent.value - totalSubscriptionsBilling.value)
+        .clamp(0.0, double.infinity);
   });
 
-  /// Budget usage %: active **subscriptions** burn rate vs [monthlyBudgetLimit] (same base currency as DB).
+  /// Budget usage %: active **subscriptions** burn rate vs the monthly
+  /// equivalent of the limit (same base currency as DB).
   late final budgetUsagePercent = computed(() {
-    if (monthlyBudgetLimit.value <= 0) return 0.0;
-    return (monthlyBurnRate.value / monthlyBudgetLimit.value) * 100;
+    if (monthlyLimitEquivalent.value <= 0) return 0.0;
+    return (monthlyBurnRate.value / monthlyLimitEquivalent.value) * 100;
   });
 
   /// Next major milestone (next $5000 or $10000 depending on current balance)
@@ -436,6 +504,7 @@ class FinanceBlock {
     _snapshotDao = snapshotDao;
     _configBlock.value = configBlock;
     await _loadLastSourceAccount();
+    await loadBudgetLimit();
 
     // Load persistent ATH and latest timestamp
     DateTime? lastSnapshotTime;
@@ -554,9 +623,39 @@ class FinanceBlock {
         });
       });
     });
+    _jobPositionsSubscription?.cancel();
+    _jobPositionsSubscription =
+        dao.watchJobPositions(personId).listen((data) {
+      Timer(Duration.zero, () {
+        untracked(() {
+          jobPositions.value = data;
+        });
+      });
+    });
     unawaited(_reloadSubscriptionsFromDb());
     unawaited(_reloadRecurringIncomesFromDb());
-    unawaited(processDueRecurringIncomes());
+    unawaited(_reloadJobPositionsFromDb());
+    unawaited(_startupIncomeProcessing());
+  }
+
+  Future<void> _startupIncomeProcessing() async {
+    await cleanupDuplicateIncomes();
+    await _cleanupDuplicateRecurringIncomes();
+    await processDueRecurringIncomes();
+    try {
+      await _dao.pushAllRecurringIncomesToCloud(_personId);
+    } catch (e) {
+      debugPrint('🔄 Recurring-income push-up failed: $e');
+    }
+  }
+
+  Future<void> _cleanupDuplicateRecurringIncomes() async {
+    if (_personId.isEmpty) return;
+    final removed = await _dao.deduplicateRecurringIncomes(_personId);
+    if (removed > 0) {
+      debugPrint('🧹 Removed $removed duplicate recurring income(s)');
+      await _reloadRecurringIncomesFromDb();
+    }
   }
 
   static DateTime advanceRecurringDue(DateTime from, String interval) {
@@ -565,33 +664,63 @@ class FinanceBlock {
         return from.add(const Duration(days: 7));
       case 'yearly':
         return DateTime(from.year + 1, from.month, from.day);
+      case 'once':
+        return DateTime(2099, 12, 31);
       case 'monthly':
       default:
         return DateTime(from.year, from.month + 1, from.day);
     }
   }
 
+  bool _postingDueIncomes = false;
+
   /// Posts income transactions for any recurring schedules that are due.
+  /// Skips posting if a matching transaction already exists for that day
+  /// (guards against duplicates from stale sync-down overwrites).
   Future<void> processDueRecurringIncomes() async {
-    if (_personId.isEmpty) return;
-    final now = DateTime.now();
-    final due = await _dao.getDueRecurringIncomes(_personId, now);
-    for (final schedule in due) {
-      var next = schedule.nextDueAt;
-      while (!next.isAfter(now)) {
-        await addTransaction(
-          category: schedule.category,
-          type: 'income',
-          amount: schedule.amount,
-          description: schedule.description,
-          date: next,
+    if (_personId.isEmpty || _postingDueIncomes) return;
+    _postingDueIncomes = true;
+    try {
+      final now = DateTime.now();
+      final due = await _dao.getDueRecurringIncomes(_personId, now);
+      for (final schedule in due) {
+        var next = schedule.nextDueAt;
+        while (!next.isAfter(now)) {
+          final alreadyExists = await _dao.incomeTransactionExists(
+            personId: _personId,
+            category: schedule.category,
+            amount: schedule.amount,
+            date: next,
+            description: schedule.description,
+          );
+          if (!alreadyExists) {
+            await addTransaction(
+              category: schedule.category,
+              type: 'income',
+              amount: schedule.amount,
+              description: schedule.description,
+              date: next,
+            );
+          }
+          next = advanceRecurringDue(next, schedule.interval);
+        }
+        await _dao.updateRecurringIncomeNextDue(
+          id: schedule.id,
+          nextDueAt: next,
         );
-        next = advanceRecurringDue(next, schedule.interval);
       }
-      await _dao.updateRecurringIncomeNextDue(
-        id: schedule.id,
-        nextDueAt: next,
-      );
+    } finally {
+      _postingDueIncomes = false;
+    }
+  }
+
+  /// Removes duplicate income transactions caused by previous sync bugs.
+  /// Safe to call on every startup — it's a no-op when there are no dupes.
+  Future<void> cleanupDuplicateIncomes() async {
+    if (_personId.isEmpty) return;
+    final removed = await _dao.deduplicateIncomeTransactions(_personId);
+    if (removed > 0) {
+      debugPrint('🧹 Removed $removed duplicate income transaction(s)');
     }
   }
 
@@ -625,8 +754,66 @@ class FinanceBlock {
     await _reloadRecurringIncomesFromDb();
   }
 
+  /// Creates or updates the monthly salary income linked to a job position.
+  /// Returns the recurring income id (existing or newly created).
+  Future<String> upsertJobSalaryIncome({
+    String? existingIncomeId,
+    required double amount,
+    required String label,
+    String category = 'salary',
+    String? jobPositionId,
+  }) async {
+    if (_personId.isEmpty) return '';
+    if (existingIncomeId != null && existingIncomeId.isNotEmpty) {
+      await _dao.updateRecurringIncomeAmount(
+        id: existingIncomeId,
+        amount: amount,
+        description: label,
+        category: category,
+      );
+      await _reloadRecurringIncomesFromDb();
+      return existingIncomeId;
+    }
+    final id = IDGen.UUIDV7();
+    final anchor = DateTime.now();
+    final interval = (category == 'contract' || category == 'bonus') ? 'once' : 'monthly';
+    await _dao.insertRecurringIncome(
+      RecurringIncomesTableCompanion.insert(
+        id: id,
+        personID: _personId,
+        category: category,
+        amount: amount,
+        description: Value(label),
+        interval: Value(interval),
+        nextDueAt: advanceRecurringDue(anchor, interval),
+        jobPositionId: Value(jobPositionId),
+        createdAt: Value(anchor),
+      ),
+    );
+    await _reloadRecurringIncomesFromDb();
+    return id;
+  }
+
+  List<RecurringIncomeData> incomesForJob(String jobId) {
+    return recurringIncomes.peek().where((i) => i.jobPositionId == jobId).toList();
+  }
+
   Future<void> _reloadRecurringIncomesFromDb() async {
     if (_personId.isEmpty) return;
+    // Repair legacy rows saved as bonus/contract with a monthly interval —
+    // otherwise processDueRecurringIncomes would re-post them every month.
+    await (_dao.update(_dao.recurringIncomesTable)
+          ..where(
+            (t) =>
+                t.category.isIn(const ['bonus', 'contract']) &
+                t.interval.equals('once').not(),
+          ))
+        .write(
+      RecurringIncomesTableCompanion(
+        interval: const Value('once'),
+        nextDueAt: Value(DateTime(2099, 12, 31)),
+      ),
+    );
     final rows = await (_dao.select(_dao.recurringIncomesTable)
           ..where(
             (t) => t.personID.equals(_personId) & t.isActive.equals(true),
@@ -641,6 +828,142 @@ class FinanceBlock {
   }
 
   Future<void> refreshRecurringIncomes() => _reloadRecurringIncomesFromDb();
+
+  // ─── Job Positions ───────────────────────────────────────────────
+
+  /// Current job = first position where end_date is null.
+  late final currentJob = computed<JobPositionData?>(() {
+    for (final job in jobPositions.value) {
+      if (job.endDate == null) return job;
+    }
+    return null;
+  });
+
+  /// Tenure in months of the current job (0 if none).
+  late final currentJobTenureMonths = computed<int>(() {
+    final job = currentJob.value;
+    if (job == null) return 0;
+    final now = DateTime.now();
+    return (now.year - job.startDate.year) * 12 +
+        (now.month - job.startDate.month);
+  });
+
+  Future<String> addJobPosition({
+    required String employer,
+    required String jobTitle,
+    required DateTime startDate,
+    DateTime? endDate,
+    String contractType = 'full_time',
+    String? linkedIncomeId,
+    String? linkedProjectId,
+    String notes = '',
+  }) async {
+    final id = IDGen.generateUuid();
+    final companion = JobPositionsTableCompanion.insert(
+      id: id,
+      personID: _personId,
+      employer: Value(employer),
+      jobTitle: Value(jobTitle),
+      contractType: Value(contractType),
+      startDate: startDate,
+      endDate: Value(endDate),
+      linkedIncomeId: Value(linkedIncomeId),
+      linkedProjectId: Value(linkedProjectId),
+      notes: Value(notes),
+    );
+    await _dao.insertJobPosition(companion);
+    await _reloadJobPositionsFromDb();
+    return id;
+  }
+
+  Future<void> updateJobPosition({
+    required String id,
+    String? employer,
+    String? jobTitle,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? contractType,
+    String? linkedIncomeId,
+    String? linkedProjectId,
+    String? notes,
+    bool clearEndDate = false,
+  }) async {
+    final companion = JobPositionsTableCompanion(
+      id: Value(id),
+      employer: employer != null ? Value(employer) : const Value.absent(),
+      jobTitle: jobTitle != null ? Value(jobTitle) : const Value.absent(),
+      startDate: startDate != null ? Value(startDate) : const Value.absent(),
+      endDate: clearEndDate ? const Value(null) : (endDate != null ? Value(endDate) : const Value.absent()),
+      contractType:
+          contractType != null ? Value(contractType) : const Value.absent(),
+      linkedIncomeId:
+          linkedIncomeId != null ? Value(linkedIncomeId) : const Value.absent(),
+      linkedProjectId: linkedProjectId != null
+          ? Value(linkedProjectId)
+          : const Value.absent(),
+      notes: notes != null ? Value(notes) : const Value.absent(),
+    );
+    await _dao.updateJobPosition(companion);
+
+    // STORY: First the job row is saved. Then we check if the job just
+    // ended (endDate set) or became current again (endDate cleared).
+    // So the linked salary income switches off when the job ends and
+    // switches back on when the job is current — monthly income totals
+    // never count salary from a job that already ended.
+    final salaryId = linkedIncomeId ?? _linkedIncomeIdFor(id);
+    if (salaryId != null && salaryId.isNotEmpty) {
+      if (endDate != null) {
+        await _dao.setRecurringIncomeActive(id: salaryId, isActive: false);
+        await _reloadRecurringIncomesFromDb();
+      } else if (clearEndDate) {
+        await _dao.setRecurringIncomeActive(id: salaryId, isActive: true);
+        await _reloadRecurringIncomesFromDb();
+      }
+    }
+
+    await _reloadJobPositionsFromDb();
+  }
+
+  Future<void> endJobPosition(String id, {DateTime? endDate}) async {
+    await updateJobPosition(id: id, endDate: endDate ?? DateTime.now());
+  }
+
+  Future<void> deleteJobPosition(String id) async {
+    // STORY: First find the salary income tied to this job. Then delete
+    // the job and deactivate that income. So a deleted job never leaves
+    // a ghost salary inflating the monthly income numbers.
+    final salaryId = _linkedIncomeIdFor(id);
+    await _dao.deleteJobPosition(id);
+    if (salaryId != null && salaryId.isNotEmpty) {
+      await _dao.setRecurringIncomeActive(id: salaryId, isActive: false);
+      await _reloadRecurringIncomesFromDb();
+    }
+    await _reloadJobPositionsFromDb();
+  }
+
+  String? _linkedIncomeIdFor(String jobId) {
+    for (final job in jobPositions.peek()) {
+      if (job.id == jobId) return job.linkedIncomeId;
+    }
+    return null;
+  }
+
+  Future<void> _reloadJobPositionsFromDb() async {
+    if (_personId.isEmpty) return;
+    final rows = await (_dao.select(_dao.jobPositionsTable)
+          ..where((t) => t.personID.equals(_personId))
+          ..orderBy([(t) => OrderingTerm(expression: t.endDate)]))
+        .get();
+    Timer(Duration.zero, () {
+      untracked(() {
+        jobPositions.value = rows;
+      });
+    });
+  }
+
+  Future<void> refreshJobPositions() => _reloadJobPositionsFromDb();
+
+  // ─────────────────────────────────────────────────────────────────
 
   /// One-shot load + call after local writes so the list updates even if table [watch] lags (e.g. sync/replication).
   Future<void> _reloadSubscriptionsFromDb() async {
@@ -722,13 +1045,17 @@ class FinanceBlock {
     if (_personId.isEmpty) return;
     isSyncing.value = true;
     try {
-      // Access the SupabaseService via the database's reference if available,
-      // but in this architecture, we usually call it directly if we have the reference.
-      // Looking at main.dart or SupabaseService usage, we can see how it's wired.
-      // For now, I'll call the DAOs if they have sync methods or the db directly.
+      await _dao.pushAllTransactionsToCloud(_personId);
+      await _dao.pushAllRecurringIncomesToCloud(_personId);
+      await _dao.pushAllJobPositionsToCloud(_personId);
+      await _dao.pushAllBonusesToCloud(_personId);
       await _dao.db.syncTableDown('transactions', _personId);
       await _dao.db.syncTableDown('subscriptions', _personId);
+      await _dao.db.syncTableDown('recurring_incomes', _personId);
+      await _dao.db.syncTableDown('job_positions', _personId);
       await _reloadSubscriptionsFromDb();
+      await _reloadRecurringIncomesFromDb();
+      await _reloadJobPositionsFromDb();
     } catch (e) {
       debugPrint("FinanceBlock: Sync failed: $e");
     } finally {

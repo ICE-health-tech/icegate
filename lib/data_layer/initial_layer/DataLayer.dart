@@ -13,6 +13,10 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Integrations/Integrat
 import 'package:ice_gate/orchestration_layer/Services/IntegrationSyncCoordinator.dart';
 import 'package:ice_gate/orchestration_layer/Services/google_auth_utils.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSummaryAutoSend.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryPayloadBuilder.dart';
+import 'package:ice_gate/orchestration_layer/Services/MorningScheduleLoader.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DatabaseAgent.dart'
     as DatabaseAgent;
 import 'package:ice_gate/orchestration_layer/Services/CustomAuthService.dart';
@@ -426,6 +430,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       motivationEngineBlock = MotivationEngineBlock();
       motivationEngineBlock.bindHealth(healthBlock);
       notificationEngine = NotificationEngine(notificationService);
+      notificationService.morningDigestBuilder = _buildMorningDigest;
       growthBlock = GrowthBlock();
       scoreBlock = ScoreBlock();
       projectBlock = ProjectBlock();
@@ -563,8 +568,13 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   }
                   // Reschedule notifications once cloud data is local
                   notificationService.syncAllNotifications(personId);
-                _resyncHealthNudges(force: true);
+                  _resyncHealthNudges(force: true);
                   financeBlock.refreshFromLocalDatabase();
+                  try {
+                    await financeBlock.sync();
+                  } catch (e) {
+                    debugPrint('📡 [CloudSync] Finance sync failed: $e');
+                  }
                 });
 
                 // Initialize Remote Controller
@@ -717,7 +727,15 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
           final motivation = motivationEngineBlock.dailyResult.value;
           if (motivation == null) return;
           untracked(() {
-            notificationEngine.syncHealthNudges(motivation: motivation);
+            final projects = DailySummaryPayloadBuilder.projectsSection(
+              growth: growthBlock,
+              project: projectBlock,
+            );
+            notificationEngine.syncHealthNudges(
+              motivation: motivation,
+              activeProjects: projects['projects_active'] as int,
+              activeTasks: projects['tasks_active'] as int,
+            );
           });
         }),
       );
@@ -796,12 +814,63 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     }
   }
 
+  /// Morning loop notification body — calendar for [fireDay] + open
+  /// projects/tasks. Null → caller keeps the rotating motivational copy.
+  Future<String?> _buildMorningDigest(DateTime fireDay) async {
+    final personId = personBlock.information.value.profiles.id ?? '';
+    final prefs = await SharedPreferences.getInstance();
+    final vi = (prefs.getString('app_locale') ?? 'vi') == 'vi';
+
+    final lines = <String>[];
+
+    try {
+      final schedule = await MorningScheduleLoader.loadToday(
+        db: database,
+        personId: personId,
+        google: googleCalendarService,
+        device: deviceCalendarService,
+        forDay: fireDay,
+      );
+      if (schedule.items.isNotEmpty) {
+        final parts = schedule.items.take(3).map((e) {
+          if (e.allDay) return e.title;
+          return '${DateFormat.Hm().format(e.start)} ${e.title}';
+        });
+        lines.add(parts.join(' · '));
+      }
+    } catch (e) {
+      debugPrint('DataLayer: morning digest calendar load failed: $e');
+    }
+
+    final projects = DailySummaryPayloadBuilder.projectsSection(
+      growth: growthBlock,
+      project: projectBlock,
+    );
+    final activeProjects = projects['projects_active'] as int;
+    final activeTasks = projects['tasks_active'] as int;
+    if (activeProjects > 0 || activeTasks > 0) {
+      lines.add(
+        vi
+            ? '$activeProjects dự án · $activeTasks task đang mở'
+            : '$activeProjects projects · $activeTasks tasks open',
+      );
+    }
+
+    return lines.isEmpty ? null : lines.join('\n');
+  }
+
   Future<void> _resyncHealthNudges({bool force = false}) async {
     final motivation = motivationEngineBlock.dailyResult.value;
     if (motivation == null) return;
     try {
+      final projects = DailySummaryPayloadBuilder.projectsSection(
+        growth: growthBlock,
+        project: projectBlock,
+      );
       await notificationEngine.syncHealthNudges(
         motivation: motivation,
+        activeProjects: projects['projects_active'] as int,
+        activeTasks: projects['tasks_active'] as int,
         force: force,
       );
     } catch (e) {
