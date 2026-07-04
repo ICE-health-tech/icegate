@@ -44,3 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .env
+
+# Large iOS archive/dSYM files
+ios/Runner*/
+*.xcarchive/
+*.dSYM/
