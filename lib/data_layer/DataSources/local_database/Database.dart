@@ -7798,6 +7798,8 @@ class DevQuickTabsTable extends Table {
       text().withDefault(const Constant('')).named('password')();
   TextColumn get loginType =>
       text().withDefault(const Constant('html_form')).named('login_type')();
+  TextColumn get passkey =>
+      text().withDefault(const Constant('')).named('passkey')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -8314,7 +8316,8 @@ class AppDatabase extends _$AppDatabase {
   // v92 → job_positions table
   // v93 → bonuses table
   // v94 → recurring_incomes.job_position_id (job = master; incomes = salary timeline)
-  int get schemaVersion => 94;
+  // v95 → dev_quick_tabs.passkey (bearer token / API key sync)
+  int get schemaVersion => 95;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -8508,6 +8511,11 @@ CREATE TABLE IF NOT EXISTS "dev_quick_tabs" (
       if (!names.contains('login_type')) {
         await customStatement(
           "ALTER TABLE dev_quick_tabs ADD COLUMN login_type TEXT NOT NULL DEFAULT 'html_form';",
+        );
+      }
+      if (!names.contains('passkey')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN passkey TEXT NOT NULL DEFAULT '';",
         );
       }
     } catch (_) {}
@@ -9251,6 +9259,11 @@ CREATE TABLE IF NOT EXISTS "dev_quick_tabs" (
               ' WHERE jp.linked_income_id = recurring_incomes.id) '
               'WHERE job_position_id IS NULL;',
             );
+          } catch (_) {}
+        }
+        if (from < 95) {
+          try {
+            await m.addColumn(devQuickTabsTable, devQuickTabsTable.passkey);
           } catch (_) {}
         }
       },

@@ -64,6 +64,7 @@ class DevQuickTabsDAO extends DatabaseAccessor<AppDatabase>
         isPinned: Value(record['is_pinned'] as bool? ?? false),
         username: Value(record['username'] as String? ?? ''),
         password: Value(record['password'] as String? ?? ''),
+        passkey: Value(record['passkey'] as String? ?? ''),
         loginType: Value(record['login_type'] as String? ?? 'html_form'),
         createdAt: Value(
           record['created_at'] != null
@@ -90,6 +91,7 @@ class DevQuickTabsDAO extends DatabaseAccessor<AppDatabase>
       'is_pinned': row.isPinned,
       'username': row.username,
       'password': row.password,
+      'passkey': row.passkey,
       'login_type': row.loginType,
       'created_at': row.createdAt.toUtc().toIso8601String(),
       'updated_at': row.updatedAt.toUtc().toIso8601String(),

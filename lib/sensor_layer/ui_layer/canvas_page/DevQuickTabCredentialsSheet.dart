@@ -190,6 +190,7 @@ class _HostCredentialCardState extends State<_HostCredentialCard> {
         host: widget.host,
         username: _userCtrl.text.trim(),
         password: _passCtrl.text,
+        passkey: _passkeyCtrl.text.trim(),
         loginType: _loginType.storageKey,
       );
     }
@@ -231,6 +232,7 @@ class _HostCredentialCardState extends State<_HostCredentialCard> {
         host: widget.host,
         username: '',
         password: '',
+        passkey: '',
         loginType: DevQuickTabLoginType.inferForHost(widget.host).storageKey,
       );
     }
@@ -254,6 +256,10 @@ class _HostCredentialCardState extends State<_HostCredentialCard> {
         return l10n.dev_quick_tabs_login_type_http_basic;
       case DevQuickTabLoginType.apiKey:
         return l10n.dev_quick_tabs_login_type_api_key;
+      case DevQuickTabLoginType.bearerToken:
+        return l10n.dev_quick_tabs_login_type_bearer_token;
+      case DevQuickTabLoginType.externalBrowser:
+        return l10n.dev_quick_tabs_login_type_external_browser;
       case DevQuickTabLoginType.oauth:
         return l10n.dev_quick_tabs_login_type_oauth;
       case DevQuickTabLoginType.none:
@@ -262,11 +268,14 @@ class _HostCredentialCardState extends State<_HostCredentialCard> {
   }
 
   bool get _showUserPass =>
-      _loginType != DevQuickTabLoginType.apiKey &&
+      ! _loginType.usesTokenField &&
       _loginType != DevQuickTabLoginType.oauth &&
-      _loginType != DevQuickTabLoginType.none;
+      _loginType != DevQuickTabLoginType.none &&
+      !_loginType.opensExternally;
 
-  bool get _showPasskey => _loginType == DevQuickTabLoginType.apiKey;
+  bool get _showPasskey => _loginType.usesTokenField;
+
+  bool get _showExternalHint => _loginType.opensExternally;
 
   bool get _showOAuthHint => _loginType == DevQuickTabLoginType.oauth;
 
@@ -327,6 +336,15 @@ class _HostCredentialCardState extends State<_HostCredentialCard> {
                 setState(() => _loginType = v);
               },
             ),
+            if (_showExternalHint) ...[
+              const SizedBox(height: 10),
+              Text(
+                l10n.dev_quick_tabs_login_type_external_browser_hint,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
             if (_showOAuthHint) ...[
               const SizedBox(height: 10),
               Text(
@@ -371,9 +389,12 @@ class _HostCredentialCardState extends State<_HostCredentialCard> {
               const SizedBox(height: 10),
               TextField(
                 controller: _passkeyCtrl,
-                obscureText: true,
+                obscureText: _loginType != DevQuickTabLoginType.bearerToken,
+                maxLines: _loginType == DevQuickTabLoginType.bearerToken ? 4 : 1,
                 decoration: InputDecoration(
-                  labelText: l10n.dev_quick_tabs_credentials_passkey,
+                  labelText: _loginType == DevQuickTabLoginType.bearerToken
+                      ? l10n.dev_quick_tabs_credentials_bearer_token
+                      : l10n.dev_quick_tabs_credentials_passkey,
                   isDense: true,
                   border: const OutlineInputBorder(),
                 ),

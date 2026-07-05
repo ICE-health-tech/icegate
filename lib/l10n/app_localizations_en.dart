@@ -3238,13 +3238,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dev_quick_tabs_login_type_api_key => 'API key / token';
 
   @override
-  String get dev_quick_tabs_login_type_oauth => 'OAuth / SSO (manual)';
+  String get dev_quick_tabs_login_type_bearer_token =>
+      'Bearer token (K8s Dashboard)';
+
+  @override
+  String get dev_quick_tabs_login_type_external_browser =>
+      'Open in Safari / Chrome';
+
+  @override
+  String get dev_quick_tabs_login_type_oauth =>
+      'OAuth / SSO (manual in WebView)';
 
   @override
   String get dev_quick_tabs_login_type_none => 'No autofill';
 
   @override
   String get dev_quick_tabs_credentials_email => 'Email';
+
+  @override
+  String get dev_quick_tabs_credentials_bearer_token => 'Bearer token';
+
+  @override
+  String get dev_quick_tabs_login_type_external_browser_hint =>
+      'Opens this site in your system browser — best for GitHub, Google SSO, and passkeys.';
 
   @override
   String get dev_quick_tabs_login_type_oauth_hint =>

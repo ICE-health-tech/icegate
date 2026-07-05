@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceDailyCalendar.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionCard.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/user_page/widgets/AppSessionCalendar.dart';
 import 'package:intl/intl.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -41,8 +41,13 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
 
     return Watch((context) {
       final txns = widget.financeBlock.transactions.value;
-      final marked =
-          txns.map((t) => _dateOnly(t.transactionDate.toLocal())).toSet();
+      final jobs = widget.financeBlock.jobPositions.value;
+      final incomes = widget.financeBlock.recurringIncomes.value;
+      final dayData = buildFinanceDayData(
+        transactions: txns,
+        jobs: jobs,
+        incomes: incomes,
+      );
 
       final onDay = txns
           .where((t) => _dateOnly(t.transactionDate.toLocal()) == _selectedDay)
@@ -72,12 +77,17 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
               ),
             ),
             const SizedBox(height: 12),
-            AppSessionCalendar(
-              markedDays: marked,
+            FinanceDailyCalendar(
+              dayData: dayData,
+              financeBlock: widget.financeBlock,
               focusedMonth: _focusedMonth,
               selectedDay: _selectedDay,
-              accentColor: FinanceSurface.ink(isDark: isDark),
-              outerDecoration: FinanceSurface.panel(cs, isDark: isDark, radius: 20),
+              outerDecoration: FinanceSurface.panel(
+                cs,
+                isDark: isDark,
+                radius: 20,
+                elevated: true,
+              ),
               onMonthChanged: (m) =>
                   setState(() => _focusedMonth = DateTime(m.year, m.month)),
               onDaySelected: (d) => setState(() {

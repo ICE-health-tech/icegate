@@ -11,10 +11,16 @@ enum DevQuickTabLoginType {
   /// HTTP Basic Auth challenge only — no JS injection.
   httpBasic('http_basic'),
 
-  /// API key / bearer token field.
+  /// API key field (Northflank, generic APIs).
   apiKey('api_key'),
 
-  /// GitHub / Google SSO — manual login only.
+  /// Bearer token only (Kubernetes Dashboard, JWT login).
+  bearerToken('bearer_token'),
+
+  /// GitHub / Google SSO — open in Safari/Chrome, no WebView autofill.
+  externalBrowser('external_browser'),
+
+  /// GitHub / Google SSO — manual login in WebView.
   oauth('oauth'),
 
   /// Do not autofill.
@@ -36,8 +42,16 @@ enum DevQuickTabLoginType {
   static DevQuickTabLoginType inferForHost(String host) {
     final h = host.trim().toLowerCase();
     if (h.isEmpty) return DevQuickTabLoginType.none;
+    if (h.contains('k8s') || h.contains('kubernetes')) {
+      return DevQuickTabLoginType.bearerToken;
+    }
     if (HomelabHostPolicy.isPrivateLan(host)) {
       return DevQuickTabLoginType.htmlForm;
+    }
+    if (h.contains('github') ||
+        h.contains('google') ||
+        h.contains('accounts.google')) {
+      return DevQuickTabLoginType.externalBrowser;
     }
     if (h.contains('supabase') ||
         h.contains('northflank') ||
@@ -47,6 +61,24 @@ enum DevQuickTabLoginType {
     return DevQuickTabLoginType.emailPassword;
   }
 
+  /// URL-aware inference (dashboard paths on bare IPs).
+  static DevQuickTabLoginType inferForUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return DevQuickTabLoginType.none;
+    final blob = '${uri.host} ${uri.path} ${uri.fragment}'.toLowerCase();
+    if (blob.contains('k8s') || blob.contains('kubernetes')) {
+      return DevQuickTabLoginType.bearerToken;
+    }
+    return inferForHost(uri.host);
+  }
+
+  bool get usesTokenField => this == apiKey || this == bearerToken;
+
+  bool get opensExternally => this == externalBrowser;
+
   bool get usesJsAutofill =>
-      this == htmlForm || this == emailPassword || this == apiKey;
+      this == htmlForm ||
+      this == emailPassword ||
+      this == apiKey ||
+      this == bearerToken;
 }

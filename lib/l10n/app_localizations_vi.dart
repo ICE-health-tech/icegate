@@ -3224,13 +3224,28 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dev_quick_tabs_login_type_api_key => 'API key / token';
 
   @override
-  String get dev_quick_tabs_login_type_oauth => 'OAuth / SSO (thủ công)';
+  String get dev_quick_tabs_login_type_bearer_token =>
+      'Bearer token (K8s Dashboard)';
+
+  @override
+  String get dev_quick_tabs_login_type_external_browser => 'Mở Safari / Chrome';
+
+  @override
+  String get dev_quick_tabs_login_type_oauth =>
+      'OAuth / SSO (WebView thủ công)';
 
   @override
   String get dev_quick_tabs_login_type_none => 'Không tự điền';
 
   @override
   String get dev_quick_tabs_credentials_email => 'Email';
+
+  @override
+  String get dev_quick_tabs_credentials_bearer_token => 'Bearer token';
+
+  @override
+  String get dev_quick_tabs_login_type_external_browser_hint =>
+      'Mở bằng trình duyệt hệ thống — phù hợp GitHub, Google SSO và passkey.';
 
   @override
   String get dev_quick_tabs_login_type_oauth_hint =>

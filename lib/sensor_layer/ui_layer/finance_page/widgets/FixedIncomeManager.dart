@@ -517,10 +517,11 @@ class FixedIncomeManager extends StatelessWidget {
             )
           else
             SizedBox(
-              height: 132,
+              height: 148,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 6),
                 itemCount: items.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 12),
                 itemBuilder: (context, index) {
@@ -601,121 +602,117 @@ class _IncomeCard extends StatelessWidget {
         : FinancePage.getCategoryName(l10n, item.category);
     final isJob = _hasLinkedJob();
 
-    return Container(
+    return SizedBox(
       width: 168,
-      decoration: FinanceSurface.panel(
-        colorScheme,
-        isDark: isDark,
-        radius: 24,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
+      child: GestureDetector(
+        onLongPress: () async {
+          final ok = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(l10n.delete),
+              content: Text(l10n.finance_fixed_income_delete_confirm),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(l10n.cancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(
+                    l10n.delete,
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+                ),
+              ],
+            ),
+          );
+          if (ok == true && context.mounted) {
+            await financeBlock.deleteRecurringIncome(item.id);
+          }
+        },
+        child: FinanceSurface.card(
+          cs: colorScheme,
+          isDark: isDark,
+          radius: 24,
+          padding: FinanceSurface.cardPaddingCompact,
+          margin: const EdgeInsets.only(bottom: 8),
+          elevated: true,
           onTap: () => showFixedIncomeEditor(
             context,
             financeBlock,
             income: item,
           ),
-          onLongPress: () async {
-                final ok = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: Text(l10n.delete),
-                    content: Text(l10n.finance_fixed_income_delete_confirm),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: Text(l10n.cancel),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: isJob ? null : () => _createJobFromIncome(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isJob
+                            ? Colors.greenAccent.withValues(alpha: 0.18)
+                            : FinanceSurface.silverAccent()
+                                .withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: Text(
-                          l10n.delete,
-                          style: const TextStyle(color: Colors.redAccent),
-                        ),
+                      child: Icon(
+                        isJob
+                            ? Icons.work_rounded
+                            : Icons.work_outline_rounded,
+                        color: isJob
+                            ? Colors.greenAccent
+                            : FinanceSurface.silverAccent(),
+                        size: 16,
                       ),
-                    ],
+                    ),
                   ),
-                );
-                if (ok == true && context.mounted) {
-                  await financeBlock.deleteRecurringIncome(item.id);
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: isJob ? null : () => _createJobFromIncome(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: isJob
-                                  ? Colors.greenAccent.withValues(alpha: 0.18)
-                                  : FinanceSurface.silverAccent()
-                                      .withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              isJob
-                                  ? Icons.work_rounded
-                                  : Icons.work_outline_rounded,
-                              color: isJob
-                                  ? Colors.greenAccent
-                                  : FinanceSurface.silverAccent(),
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          _intervalLabel(item.interval).toUpperCase(),
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant,
-                            fontSize: 8,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
+                  const Spacer(),
+                  Text(
+                    _intervalLabel(item.interval).toUpperCase(),
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w900,
                     ),
-                    const Spacer(),
-                    Text(
-                      title.toUpperCase(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 10,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      financeBlock.formatCurrency(item.amount, compact: true),
-                      style: TextStyle(
-                        color: colorScheme.onSurface,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${l10n.finance_fixed_income_next}: ${dateFmt.format(item.nextDueAt.toLocal())}',
-                      style: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 9,
-                      ),
-                    ),
-                  ],
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                title.toUpperCase(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  letterSpacing: 0.5,
                 ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                financeBlock.formatCurrency(item.amount, compact: true),
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${l10n.finance_fixed_income_next}: ${dateFmt.format(item.nextDueAt.toLocal())}',
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 9,
+                ),
+              ),
+            ],
           ),
+        ),
+      ),
     );
   }
 }

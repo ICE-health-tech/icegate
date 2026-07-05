@@ -15,6 +15,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SavingsStrea
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionBuilderDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceAssetPillars.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_form/AddAssetDialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import '../finance_form/AddAccountDialog.dart';
 
 class FinanceOverviewPage extends StatelessWidget {
@@ -26,8 +27,26 @@ class FinanceOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
     final isDesktop = w >= 900;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
-    return Align(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isDark
+              ? [
+                  cs.surface,
+                  EntryColors.obsidianBase.withValues(alpha: 0.35),
+                ]
+              : [
+                  const Color(0xFFF4F7FA),
+                  cs.surface,
+                ],
+        ),
+      ),
+      child: Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -35,42 +54,47 @@ class FinanceOverviewPage extends StatelessWidget {
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 28 : 16),
+          padding: EdgeInsets.fromLTRB(
+            isDesktop ? 32 : 20,
+            8,
+            isDesktop ? 32 : 20,
+            0,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: isDesktop ? 12 : 16),
+              SizedBox(height: isDesktop ? 16 : 20),
           Watch((context) {
             return Align(
               alignment: Alignment.centerRight,
               child: FinanceOverviewStreakChip(financeBlock: financeBlock),
             );
           }),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           // Main Billing Card
           Watch((context) {
             return _buildPremiumIceCard(context, financeBlock);
           }),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
 
           Watch((context) {
             return _buildSummaryCardRow(context, financeBlock);
           }),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           FinanceInflowPillarsStrip(financeBlock: financeBlock),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           _FinanceQuickActions(financeBlock: financeBlock),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           Watch((context) {
             return FixedIncomeManager(financeBlock: financeBlock);
           }),
-          const SizedBox(height: 32),
+          const SizedBox(height: 36),
 
           // Accounts Section
           Watch((context) {
             return _buildAccountsSection(context, financeBlock);
           }),
-          const SizedBox(height: 40),
+          const SizedBox(height: 44),
 
           _FinanceGoalsSection(financeBlock: financeBlock),
           const SizedBox(height: 120),
@@ -78,6 +102,7 @@ class FinanceOverviewPage extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -90,7 +115,7 @@ class FinanceOverviewPage extends StatelessWidget {
     final totalSpent = block.monthlySpending.value;
     final progress = block.budgetUsagePercent.value / 100;
 
-    final pad = dense ? 20.0 : 28.0;
+    final pad = dense ? 24.0 : 28.0;
     final radius = dense ? 24.0 : 32.0;
     final mainAmtSize = dense ? 30.0 : 42.0;
     final gapAfterTitle = dense ? 18.0 : 28.0;
@@ -98,16 +123,14 @@ class FinanceOverviewPage extends StatelessWidget {
 
     final limit = block.monthlyBudgetLimit.value;
 
-    return GestureDetector(
-      onTap: () => _showBudgetLimitEditor(context, block),
-      child: Container(
-      width: double.infinity,
+    return FinanceSurface.card(
+      cs: cs,
+      isDark: isDark,
+      radius: radius,
       padding: EdgeInsets.all(pad),
-      decoration: FinanceSurface.panel(
-        cs,
-        isDark: isDark,
-        radius: radius,
-      ),
+      margin: FinanceSurface.cardMargin,
+      elevated: true,
+      onTap: () => _showBudgetLimitEditor(context, block),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -218,7 +241,6 @@ class FinanceOverviewPage extends StatelessWidget {
           ),
         ],
       ),
-    ),
     );
   }
 
@@ -344,9 +366,13 @@ class FinanceOverviewPage extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.35)
         : cs.onSurface.withValues(alpha: 0.3);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 24),
+    return FinanceSurface.card(
+      cs: cs,
+      isDark: isDark,
+      radius: 24,
+      padding: FinanceSurface.cardPadding,
+      margin: FinanceSurface.cardMargin,
+      elevated: true,
       child: Row(
         children: [
           SizedBox(
@@ -576,10 +602,11 @@ class FinanceOverviewPage extends StatelessWidget {
     required bool isDark,
   }) {
     return SizedBox(
-      height: 100,
+      height: 118,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 4),
         itemCount: accounts.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
@@ -602,54 +629,49 @@ class FinanceOverviewPage extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+    return SizedBox(
+      width: 176,
+      child: FinanceSurface.card(
+        cs: cs,
+        isDark: isDark,
+        radius: 24,
+        padding: FinanceSurface.cardPaddingCompact,
+        margin: const EdgeInsets.only(right: 4, bottom: 8),
+        elevated: true,
         onTap: () => AddAccountDialog.show(context, account: account),
-        onLongPress: () => AddAccountDialog.show(context, account: account),
-        child: Container(
-          width: 160,
-          padding: const EdgeInsets.all(16),
-          decoration: FinanceSurface.panel(
-            cs,
-            isDark: isDark,
-            radius: 24,
-          ),
-          child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              _getAccountIcon(account.accountType, isDark: isDark),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  account.accountName.toUpperCase(),
-                  style: TextStyle(
-                    color: cs.onSurfaceVariant,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                _getAccountIcon(account.accountType, isDark: isDark),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    account.accountName.toUpperCase(),
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-          Text(
-            block.formatCurrency(account.balance, compact: true),
-            style: TextStyle(
-              color: cs.onSurface,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
+              ],
             ),
-          ),
-        ],
-          ),
+            Text(
+              block.formatCurrency(account.balance, compact: true),
+              style: TextStyle(
+                color: cs.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -691,42 +713,40 @@ class FinanceOverviewPage extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    return GestureDetector(
+    return FinanceSurface.card(
+      cs: cs,
+      isDark: isDark,
+      radius: 24,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+      margin: FinanceSurface.cardMargin,
+      elevated: true,
       onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 32),
-        decoration: FinanceSurface.panel(
-          cs,
-          isDark: isDark,
-          radius: 24,
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: cs.onSurfaceVariant,
+            size: 32,
+          ),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            style: TextStyle(
+              color: cs.onSurface,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
               color: cs.onSurfaceVariant,
-              size: 32,
+              fontSize: 11,
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                color: cs.onSurface,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: cs.onSurfaceVariant,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -772,43 +792,41 @@ class _FinanceQuickActions extends StatelessWidget {
     return Row(
       children: [
         for (var i = 0; i < actions.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
+          if (i > 0) const SizedBox(width: 10),
           Expanded(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: actions[i].onTap,
-                borderRadius: BorderRadius.circular(14),
-                child: Ink(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 14),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: FinanceSurface.silverAccent()
-                              .withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          actions[i].icon,
-                          size: 18,
-                          color: FinanceSurface.silverAccent(),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        actions[i].label,
-                        style: TextStyle(
-                          color: FinanceSurface.ink(isDark: isDark),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
+            child: FinanceSurface.card(
+              cs: cs,
+              isDark: isDark,
+              radius: 16,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+              margin: const EdgeInsets.only(bottom: 6),
+              elevated: true,
+              onTap: actions[i].onTap,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: FinanceSurface.silverAccent()
+                          .withValues(alpha: isDark ? 0.16 : 0.14),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      actions[i].icon,
+                      size: 18,
+                      color: FinanceSurface.silverAccent(),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 6),
+                  Text(
+                    actions[i].label,
+                    style: TextStyle(
+                      color: FinanceSurface.ink(isDark: isDark),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

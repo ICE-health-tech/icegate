@@ -22,6 +22,7 @@ abstract final class DevQuickTabStore {
     isPinned: row.isPinned,
     username: row.username,
     password: row.password,
+    passkey: row.passkey,
     loginType: row.loginType,
   );
 
@@ -50,7 +51,11 @@ abstract final class DevQuickTabStore {
     final store = WebViewCredentialStore();
     final seen = <String>{};
     for (final tab in tabs) {
-      if (tab.username.isEmpty && tab.password.isEmpty) continue;
+      if (tab.username.isEmpty &&
+          tab.password.isEmpty &&
+          tab.passkey.isEmpty) {
+        continue;
+      }
       final host = Uri.tryParse(tab.fullUrl)?.host ?? '';
       if (host.isEmpty || !seen.add(host)) continue;
       final existing = await store.readHostCredentials(host);
@@ -58,7 +63,7 @@ abstract final class DevQuickTabStore {
         host: host,
         username: tab.username.isNotEmpty ? tab.username : existing.username,
         password: tab.password.isNotEmpty ? tab.password : existing.password,
-        passkey: existing.passkey,
+        passkey: tab.passkey.isNotEmpty ? tab.passkey : existing.passkey,
         sslTrusted: existing.sslTrusted,
         loginType: DevQuickTabLoginType.fromStorage(tab.loginType),
       );
@@ -73,6 +78,7 @@ abstract final class DevQuickTabStore {
     required String host,
     required String username,
     required String password,
+    required String passkey,
     required String loginType,
   }) async {
     if (personId.isEmpty || host.isEmpty) return;
@@ -87,6 +93,7 @@ abstract final class DevQuickTabStore {
         _fromRow(row).copyWith(
           username: username,
           password: password,
+          passkey: passkey,
           loginType: loginType,
         ),
       );
@@ -120,6 +127,7 @@ abstract final class DevQuickTabStore {
         isPinned: Value(tab.isPinned),
         username: Value(tab.username),
         password: Value(tab.password),
+        passkey: Value(tab.passkey),
         loginType: Value(tab.loginType),
         createdAt: Value(now),
         updatedAt: Value(now),
@@ -143,6 +151,7 @@ abstract final class DevQuickTabStore {
       isPinned: tab.isPinned,
       username: tab.username,
       password: tab.password,
+      passkey: tab.passkey,
       loginType: tab.loginType,
       updatedAt: DateTime.now(),
     );

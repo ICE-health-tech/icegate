@@ -100,7 +100,7 @@ class FinanceInflowPillarsStrip extends StatelessWidget {
             height: 1.3,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         Watch((context) {
           final byPillar = financeBlock.monthlyInflowByPillar.value;
           final growthBlock = context.read<GrowthBlock>();
@@ -108,8 +108,8 @@ class FinanceInflowPillarsStrip extends StatelessWidget {
               .where((s) => s.skillCategory == 'person:library')
               .length;
           return Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 10,
+            runSpacing: 10,
             children: [
               _PillarChip(
                 label: l10n.finance_cat_skills,
@@ -169,56 +169,53 @@ class _PillarChip extends StatelessWidget {
     final accent = emphasized
         ? FinanceSurface.silverAccent()
         : FinanceSurface.mutedInk(isDark: isDark);
-    final child = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: FinanceSurface.panel(
-        colorScheme,
-        isDark: isDark,
-        radius: 12,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 14, color: accent),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: emphasized
-                      ? FinanceSurface.ink(isDark: isDark)
-                      : FinanceSurface.mutedInk(isDark: isDark),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          if (amount > 0) ...[
-            const SizedBox(height: 4),
+    final chip = FinanceSurface.card(
+      cs: colorScheme,
+      isDark: isDark,
+      radius: 12,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: EdgeInsets.zero,
+      elevated: emphasized,
+      onTap: onTap,
+      child: _chipContent(accent),
+    );
+    return chip;
+  }
+
+  Widget _chipContent(Color accent) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: accent),
+            const SizedBox(width: 6),
             Text(
-              isCount ? '${amount.toInt()}' : format(amount, compact: true),
+              label,
               style: TextStyle(
-                color: FinanceSurface.ink(isDark: isDark),
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
+                color: emphasized
+                    ? FinanceSurface.ink(isDark: isDark)
+                    : FinanceSurface.mutedInk(isDark: isDark),
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],
+        ),
+        if (amount > 0) ...[
+          const SizedBox(height: 4),
+          Text(
+            isCount ? '${amount.toInt()}' : format(amount, compact: true),
+            style: TextStyle(
+              color: FinanceSurface.ink(isDark: isDark),
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
         ],
-      ),
-    );
-    if (onTap == null) return child;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: child,
-      ),
+      ],
     );
   }
 }

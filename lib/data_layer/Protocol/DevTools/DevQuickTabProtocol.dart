@@ -11,6 +11,7 @@ class DevQuickTabProtocol {
     this.isPinned = false,
     this.username = '',
     this.password = '',
+    this.passkey = '',
     this.loginType = 'html_form',
   });
 
@@ -21,6 +22,7 @@ class DevQuickTabProtocol {
   final bool isPinned;
   final String username;
   final String password;
+  final String passkey;
   final String loginType;
 
   Map<String, dynamic> toJson() => {
@@ -31,6 +33,7 @@ class DevQuickTabProtocol {
     'isPinned': isPinned,
     'username': username,
     'password': password,
+    'passkey': passkey,
     'loginType': loginType,
   };
 
@@ -43,6 +46,7 @@ class DevQuickTabProtocol {
       isPinned: json['isPinned'] as bool? ?? false,
       username: json['username'] as String? ?? '',
       password: json['password'] as String? ?? '',
+      passkey: json['passkey'] as String? ?? '',
       loginType: json['loginType'] as String? ?? 'html_form',
     );
   }
@@ -63,6 +67,7 @@ class DevQuickTabProtocol {
     bool? isPinned,
     String? username,
     String? password,
+    String? passkey,
     String? loginType,
   }) {
     return DevQuickTabProtocol(
@@ -73,6 +78,7 @@ class DevQuickTabProtocol {
       isPinned: isPinned ?? this.isPinned,
       username: username ?? this.username,
       password: password ?? this.password,
+      passkey: passkey ?? this.passkey,
       loginType: loginType ?? this.loginType,
     );
   }

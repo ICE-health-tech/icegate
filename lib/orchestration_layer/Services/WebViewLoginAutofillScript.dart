@@ -16,8 +16,10 @@ abstract final class WebViewLoginAutofill {
       case DevQuickTabLoginType.emailPassword:
         return _emailPasswordScript(username, password);
       case DevQuickTabLoginType.apiKey:
+      case DevQuickTabLoginType.bearerToken:
         return _apiKeyScript(passkey);
       case DevQuickTabLoginType.httpBasic:
+      case DevQuickTabLoginType.externalBrowser:
       case DevQuickTabLoginType.oauth:
       case DevQuickTabLoginType.none:
         return '(function(){})();';
@@ -92,14 +94,68 @@ abstract final class WebViewLoginAutofill {
   try {
     var key = '$k';
     if (!key) return;
-    var el = document.querySelector(
-      'input[name*="api" i], input[name*="key" i], input[name*="token" i], '
-      + 'input[placeholder*="api" i], input[placeholder*="key" i], textarea[name*="key" i]'
-    );
-    if (!el || el.value) return;
-    $_setValHelper
-    $_reactSetValHelper
-    reactSet(el, key);
+
+    function setVal(el, v) {
+      if (!el || el.value) return false;
+      try {
+        var proto = window.HTMLInputElement.prototype;
+        var setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+        setter.call(el, v);
+      } catch (err) {
+        el.value = v;
+      }
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      el.dispatchEvent(new Event('blur', { bubbles: true }));
+      return true;
+    }
+
+    function findTokenInput() {
+      var selectors = [
+        'input[formcontrolname="token" i]',
+        'input[name*="token" i]',
+        'input[placeholder*="token" i]',
+        'input[aria-label*="token" i]',
+        'input[aria-label*="bearer" i]',
+        'input[id*="token" i]',
+        'textarea[name*="token" i]'
+      ];
+      for (var i = 0; i < selectors.length; i++) {
+        var el = document.querySelector(selectors[i]);
+        if (el) return el;
+      }
+      var labels = document.querySelectorAll('label, mat-label, .mat-form-field-label');
+      for (var j = 0; j < labels.length; j++) {
+        var txt = (labels[j].textContent || '').toLowerCase();
+        if (txt.indexOf('bearer') >= 0 && txt.indexOf('token') >= 0) {
+          var wrap = labels[j].closest('.mat-form-field, form, .login-form, kd-login');
+          if (wrap) {
+            var inp = wrap.querySelector('input, textarea');
+            if (inp) return inp;
+          }
+        }
+      }
+      var pwd = document.querySelector('input[type="password"]');
+      if (pwd && document.querySelectorAll('input[type="password"]').length === 1) {
+        return pwd;
+      }
+      return null;
+    }
+
+    var el = findTokenInput();
+    if (!el) return;
+    if (!setVal(el, key)) return;
+
+    setTimeout(function() {
+      var buttons = document.querySelectorAll('button, input[type="submit"]');
+      for (var i = 0; i < buttons.length; i++) {
+        var t = (buttons[i].textContent || buttons[i].value || '').trim().toLowerCase();
+        if (t.indexOf('sign in') >= 0 || t === 'login' || t.indexOf('đăng nhập') >= 0) {
+          buttons[i].click();
+          break;
+        }
+      }
+    }, 500);
   } catch (e) {}
 })();
 ''';

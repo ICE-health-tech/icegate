@@ -39747,6 +39747,18 @@ class $DevQuickTabsTableTable extends DevQuickTabsTable
     requiredDuringInsert: false,
     defaultValue: const Constant('html_form'),
   );
+  static const VerificationMeta _passkeyMeta = const VerificationMeta(
+    'passkey',
+  );
+  @override
+  late final GeneratedColumn<String> passkey = GeneratedColumn<String>(
+    'passkey',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -39778,6 +39790,7 @@ class $DevQuickTabsTableTable extends DevQuickTabsTable
     username,
     password,
     loginType,
+    passkey,
     createdAt,
     updatedAt,
   ];
@@ -39852,6 +39865,12 @@ class $DevQuickTabsTableTable extends DevQuickTabsTable
         loginType.isAcceptableOrUnknown(data['login_type']!, _loginTypeMeta),
       );
     }
+    if (data.containsKey('passkey')) {
+      context.handle(
+        _passkeyMeta,
+        passkey.isAcceptableOrUnknown(data['passkey']!, _passkeyMeta),
+      );
+    }
     return context;
   }
 
@@ -39897,6 +39916,10 @@ class $DevQuickTabsTableTable extends DevQuickTabsTable
         DriftSqlType.string,
         data['${effectivePrefix}login_type'],
       )!,
+      passkey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}passkey'],
+      )!,
       createdAt: $DevQuickTabsTableTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -39933,6 +39956,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
   final String username;
   final String password;
   final String loginType;
+  final String passkey;
   final DateTime createdAt;
   final DateTime updatedAt;
   const DevQuickTabData({
@@ -39945,6 +39969,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     required this.username,
     required this.password,
     required this.loginType,
+    required this.passkey,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -39960,6 +39985,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     map['username'] = Variable<String>(username);
     map['password'] = Variable<String>(password);
     map['login_type'] = Variable<String>(loginType);
+    map['passkey'] = Variable<String>(passkey);
     {
       map['created_at'] = Variable<DateTime>(
         $DevQuickTabsTableTable.$convertercreatedAt.toSql(createdAt),
@@ -39984,6 +40010,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
       username: Value(username),
       password: Value(password),
       loginType: Value(loginType),
+      passkey: Value(passkey),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -40004,6 +40031,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
       username: serializer.fromJson<String>(json['username']),
       password: serializer.fromJson<String>(json['password']),
       loginType: serializer.fromJson<String>(json['loginType']),
+      passkey: serializer.fromJson<String>(json['passkey']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -40021,6 +40049,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
       'username': serializer.toJson<String>(username),
       'password': serializer.toJson<String>(password),
       'loginType': serializer.toJson<String>(loginType),
+      'passkey': serializer.toJson<String>(passkey),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -40036,6 +40065,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     String? username,
     String? password,
     String? loginType,
+    String? passkey,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => DevQuickTabData(
@@ -40048,6 +40078,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     username: username ?? this.username,
     password: password ?? this.password,
     loginType: loginType ?? this.loginType,
+    passkey: passkey ?? this.passkey,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -40062,6 +40093,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
       username: data.username.present ? data.username.value : this.username,
       password: data.password.present ? data.password.value : this.password,
       loginType: data.loginType.present ? data.loginType.value : this.loginType,
+      passkey: data.passkey.present ? data.passkey.value : this.passkey,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -40079,6 +40111,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
           ..write('username: $username, ')
           ..write('password: $password, ')
           ..write('loginType: $loginType, ')
+          ..write('passkey: $passkey, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -40096,6 +40129,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     username,
     password,
     loginType,
+    passkey,
     createdAt,
     updatedAt,
   );
@@ -40112,6 +40146,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
           other.username == this.username &&
           other.password == this.password &&
           other.loginType == this.loginType &&
+          other.passkey == this.passkey &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -40126,6 +40161,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
   final Value<String> username;
   final Value<String> password;
   final Value<String> loginType;
+  final Value<String> passkey;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -40139,6 +40175,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     this.username = const Value.absent(),
     this.password = const Value.absent(),
     this.loginType = const Value.absent(),
+    this.passkey = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -40153,6 +40190,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     this.username = const Value.absent(),
     this.password = const Value.absent(),
     this.loginType = const Value.absent(),
+    this.passkey = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -40170,6 +40208,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     Expression<String>? username,
     Expression<String>? password,
     Expression<String>? loginType,
+    Expression<String>? passkey,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -40184,6 +40223,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
       if (username != null) 'username': username,
       if (password != null) 'password': password,
       if (loginType != null) 'login_type': loginType,
+      if (passkey != null) 'passkey': passkey,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -40200,6 +40240,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     Value<String>? username,
     Value<String>? password,
     Value<String>? loginType,
+    Value<String>? passkey,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -40214,6 +40255,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
       username: username ?? this.username,
       password: password ?? this.password,
       loginType: loginType ?? this.loginType,
+      passkey: passkey ?? this.passkey,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -40250,6 +40292,9 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     if (loginType.present) {
       map['login_type'] = Variable<String>(loginType.value);
     }
+    if (passkey.present) {
+      map['passkey'] = Variable<String>(passkey.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $DevQuickTabsTableTable.$convertercreatedAt.toSql(createdAt.value),
@@ -40278,6 +40323,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
           ..write('username: $username, ')
           ..write('password: $password, ')
           ..write('loginType: $loginType, ')
+          ..write('passkey: $passkey, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -59655,6 +59701,7 @@ typedef $$DevQuickTabsTableTableCreateCompanionBuilder =
       Value<String> username,
       Value<String> password,
       Value<String> loginType,
+      Value<String> passkey,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -59670,6 +59717,7 @@ typedef $$DevQuickTabsTableTableUpdateCompanionBuilder =
       Value<String> username,
       Value<String> password,
       Value<String> loginType,
+      Value<String> passkey,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -59726,6 +59774,11 @@ class $$DevQuickTabsTableTableFilterComposer
 
   ColumnFilters<String> get loginType => $composableBuilder(
     column: $table.loginType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get passkey => $composableBuilder(
+    column: $table.passkey,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -59796,6 +59849,11 @@ class $$DevQuickTabsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get passkey => $composableBuilder(
+    column: $table.passkey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -59842,6 +59900,9 @@ class $$DevQuickTabsTableTableAnnotationComposer
 
   GeneratedColumn<String> get loginType =>
       $composableBuilder(column: $table.loginType, builder: (column) => column);
+
+  GeneratedColumn<String> get passkey =>
+      $composableBuilder(column: $table.passkey, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -59899,6 +59960,7 @@ class $$DevQuickTabsTableTableTableManager
                 Value<String> username = const Value.absent(),
                 Value<String> password = const Value.absent(),
                 Value<String> loginType = const Value.absent(),
+                Value<String> passkey = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -59912,6 +59974,7 @@ class $$DevQuickTabsTableTableTableManager
                 username: username,
                 password: password,
                 loginType: loginType,
+                passkey: passkey,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -59927,6 +59990,7 @@ class $$DevQuickTabsTableTableTableManager
                 Value<String> username = const Value.absent(),
                 Value<String> password = const Value.absent(),
                 Value<String> loginType = const Value.absent(),
+                Value<String> passkey = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -59940,6 +60004,7 @@ class $$DevQuickTabsTableTableTableManager
                 username: username,
                 password: password,
                 loginType: loginType,
+                passkey: passkey,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

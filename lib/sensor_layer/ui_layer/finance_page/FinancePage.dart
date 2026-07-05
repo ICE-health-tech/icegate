@@ -281,26 +281,24 @@ class _FinancePageState extends State<FinancePage>
     super.dispose();
   }
 
+  /// Clears [MainShell]'s Dynamic Island (SafeArea + 54px bar + 2px pad).
+  static double _islandTopInset(BuildContext context) =>
+      MediaQuery.paddingOf(context).top + 56 + 8;
+
   @override
   Widget build(BuildContext context) {
     final financeBlock = context.read<FinanceBlock>();
     final colorScheme = Theme.of(context).colorScheme;
+    final topInset = _islandTopInset(context);
 
     return Scaffold(
         backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          toolbarHeight: 80,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-        ),
-        extendBodyBehindAppBar: true,
         body: SwipeablePage(
           onSwipe: () => context.pop(),
           direction: SwipeablePageDirection.leftToRight,
           child: Column(
             children: [
-              const SizedBox(height: 120),
+              SizedBox(height: topInset),
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
@@ -370,140 +368,6 @@ class _FinancePageState extends State<FinancePage>
             ],
           ),
         ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, FinanceBlock block) {
-    return Container(
-      // Padding-top is now handled by AppBar, so we only need a small gap
-      padding: const EdgeInsets.only(top: 80, bottom: 10, left: 24, right: 24),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  Navigator.maybePop(context);
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: Colors.white70,
-                    size: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Text(
-                "FINANCE",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
-                ),
-              ),
-              const Spacer(),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      HapticFeedback.mediumImpact();
-                      TransactionBuilderDialog.show(
-                        context,
-                        financeBlock: block,
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.add_box_rounded,
-                      color: EntryColors.financeSilverAccent,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Watch((context) {
-                    final isSyncing = block.isSyncing.value;
-                    return IconButton(
-                      onPressed: isSyncing ? null : () => block.sync(),
-                      icon: isSyncing
-                          ? SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.5,
-                                color: EntryColors.financeSilverAccent.withValues(alpha: 0.5),
-                              ),
-                            )
-                          : const Icon(
-                              Icons.sync_rounded,
-                              size: 18,
-                              color: EntryColors.financeSilverAccent,
-                            ),
-                    );
-                  }),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            indicatorSize: TabBarIndicatorSize.label,
-            labelColor: EntryColors.financeSilverAccent,
-            unselectedLabelColor: Colors.white24,
-            dividerColor: Colors.transparent,
-            indicator: UnderlineTabIndicator(
-              borderSide: BorderSide(
-                width: 3,
-                color: EntryColors.financeSilverAccent,
-              ),
-              borderRadius: BorderRadius.circular(3),
-            ),
-            labelStyle: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
-            ),
-            tabs: [
-              Tab(text: AppLocalizations.of(context)!.finance_tab_overview),
-              Tab(text: AppLocalizations.of(context)!.finance_tab_daily),
-              Tab(text: AppLocalizations.of(context)!.finance_tab_billing),
-              Tab(text: AppLocalizations.of(context)!.finance_tab_saving),
-              Tab(text: AppLocalizations.of(context)!.finance_tab_career),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGlowSphere(Color color, double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 100,
-            spreadRadius: 20,
-          ),
-        ],
-      ),
     );
   }
 

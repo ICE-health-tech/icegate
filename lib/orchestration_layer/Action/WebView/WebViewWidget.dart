@@ -219,7 +219,16 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
       final host = Uri.tryParse(url)?.host ?? _pageUri.host;
       if (host.isEmpty) return;
       final creds = await _credentialStore.readHostCredentials(host);
-      final type = creds.loginType;
+      var type = creds.loginType;
+      if (type == DevQuickTabLoginType.htmlForm) {
+        final inferred = DevQuickTabLoginType.inferForUrl(url);
+        if (inferred.usesTokenField) type = inferred;
+      }
+      if (creds.passkey.isNotEmpty) {
+        type = type == DevQuickTabLoginType.apiKey
+            ? DevQuickTabLoginType.apiKey
+            : DevQuickTabLoginType.bearerToken;
+      }
       if (!type.usesJsAutofill) return;
       if (!_hasAutofillData(type, creds)) return;
 
@@ -227,7 +236,7 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
       // after onPageFinished — one shot misses it on slow devices. So we
       // retry; scripts skip fields that are already filled or user-typed.
       await _runAutofillScript(controller, type, creds);
-      for (final ms in [600, 1500, 3000]) {
+      for (final ms in [600, 1500, 3000, 5000]) {
         await Future<void>.delayed(Duration(milliseconds: ms));
         if (!mounted) return;
         await _runAutofillScript(controller, type, creds);
@@ -241,6 +250,7 @@ class _EmbeddedWebViewWidgetState extends State<EmbeddedWebViewWidget> {
   ) {
     switch (type) {
       case DevQuickTabLoginType.apiKey:
+      case DevQuickTabLoginType.bearerToken:
         return creds.passkey.isNotEmpty;
       case DevQuickTabLoginType.htmlForm:
       case DevQuickTabLoginType.emailPassword:

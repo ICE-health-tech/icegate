@@ -7,7 +7,9 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/DevQuickTabStore.dart';
+import 'package:ice_gate/orchestration_layer/Services/WebViewCredentialStore.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DevQuickTabCredentialsSheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/HubEntryCard.dart';
 import 'package:provider/provider.dart';
@@ -46,12 +48,41 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     });
   }
 
-  void _openTab(DevQuickTabProtocol tab) {
+  Future<void> _openTab(DevQuickTabProtocol tab) async {
+    final type = DevQuickTabLoginType.fromStorage(tab.loginType);
+    if (type.opensExternally) {
+      final uri = Uri.tryParse(tab.fullUrl);
+      if (uri != null && await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      return;
+    }
     final uri = Uri(
       path: '/webview',
       queryParameters: {'url': tab.fullUrl, 'title': tab.title},
     );
     context.push(uri.toString());
+  }
+
+  Future<void> _persistHostCredentials({
+    required String fullUrl,
+    required DevQuickTabLoginType loginType,
+    required String username,
+    required String password,
+    required String passkey,
+  }) async {
+    final host = Uri.tryParse(fullUrl)?.host ?? '';
+    if (host.isEmpty) return;
+    final store = WebViewCredentialStore();
+    final existing = await store.readHostCredentials(host);
+    await store.saveHostCredentials(
+      host: host,
+      username: username,
+      password: password,
+      passkey: loginType.usesTokenField ? passkey : existing.passkey,
+      sslTrusted: existing.sslTrusted,
+      loginType: loginType,
+    );
   }
 
   Future<void> _showEditor({DevQuickTabProtocol? existing}) async {
@@ -61,17 +92,31 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     final urlCtrl = TextEditingController(text: existing?.fullUrl ?? '');
     final userCtrl = TextEditingController(text: existing?.username ?? '');
     final passCtrl = TextEditingController(text: existing?.password ?? '');
+    var initialPasskey = existing?.passkey ?? '';
     var loginType = existing != null
         ? DevQuickTabLoginType.fromStorage(existing.loginType)
         : DevQuickTabLoginType.htmlForm;
+
+    if (isEdit && initialPasskey.isEmpty) {
+      final host = Uri.tryParse(existing.fullUrl)?.host ?? '';
+      if (host.isNotEmpty) {
+        initialPasskey =
+            (await WebViewCredentialStore().readHostCredentials(host)).passkey;
+      }
+    }
+    final passkeyCtrl = TextEditingController(text: initialPasskey);
 
     final saved = await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
-          final showUserPass = loginType != DevQuickTabLoginType.apiKey &&
+          final showUserPass = !loginType.usesTokenField &&
               loginType != DevQuickTabLoginType.oauth &&
-              loginType != DevQuickTabLoginType.none;
+              loginType != DevQuickTabLoginType.none &&
+              !loginType.opensExternally;
+          final showPasskey = loginType.usesTokenField;
+          final showExternalHint = loginType.opensExternally;
+          final showOAuthHint = loginType == DevQuickTabLoginType.oauth;
 
           return AlertDialog(
             title: Text(
@@ -112,6 +157,41 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
                       setDialogState(() => loginType = v);
                     },
                   ),
+                  if (showExternalHint) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      l10n.dev_quick_tabs_login_type_external_browser_hint,
+                      style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (showOAuthHint) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      l10n.dev_quick_tabs_login_type_oauth_hint,
+                      style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (showPasskey) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: passkeyCtrl,
+                      obscureText: loginType != DevQuickTabLoginType.bearerToken,
+                      maxLines: loginType == DevQuickTabLoginType.bearerToken
+                          ? 4
+                          : 1,
+                      decoration: InputDecoration(
+                        labelText: loginType == DevQuickTabLoginType.bearerToken
+                            ? l10n.dev_quick_tabs_credentials_bearer_token
+                            : l10n.dev_quick_tabs_credentials_passkey,
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
                   if (showUserPass) ...[
                     const SizedBox(height: 12),
                     TextField(
@@ -167,6 +247,14 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     final url = urlCtrl.text.trim();
     if (title.isEmpty || url.isEmpty) return;
 
+    await _persistHostCredentials(
+      fullUrl: url,
+      loginType: loginType,
+      username: userCtrl.text.trim(),
+      password: passCtrl.text,
+      passkey: passkeyCtrl.text.trim(),
+    );
+
     final db = context.read<AppDatabase>();
     if (isEdit) {
       await DevQuickTabStore.update(
@@ -177,6 +265,7 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
           fullUrl: url,
           username: userCtrl.text.trim(),
           password: passCtrl.text,
+          passkey: passkeyCtrl.text.trim(),
           loginType: loginType.storageKey,
         ),
       );
@@ -191,6 +280,7 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
           sortOrder: _tabs.length,
           username: userCtrl.text.trim(),
           password: passCtrl.text,
+          passkey: passkeyCtrl.text.trim(),
           loginType: loginType.storageKey,
         ),
       );
@@ -208,6 +298,10 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
         return l10n.dev_quick_tabs_login_type_http_basic;
       case DevQuickTabLoginType.apiKey:
         return l10n.dev_quick_tabs_login_type_api_key;
+      case DevQuickTabLoginType.bearerToken:
+        return l10n.dev_quick_tabs_login_type_bearer_token;
+      case DevQuickTabLoginType.externalBrowser:
+        return l10n.dev_quick_tabs_login_type_external_browser;
       case DevQuickTabLoginType.oauth:
         return l10n.dev_quick_tabs_login_type_oauth;
       case DevQuickTabLoginType.none:

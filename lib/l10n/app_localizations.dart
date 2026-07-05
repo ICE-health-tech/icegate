@@ -5894,10 +5894,22 @@ abstract class AppLocalizations {
   /// **'API key / token'**
   String get dev_quick_tabs_login_type_api_key;
 
+  /// No description provided for @dev_quick_tabs_login_type_bearer_token.
+  ///
+  /// In en, this message translates to:
+  /// **'Bearer token (K8s Dashboard)'**
+  String get dev_quick_tabs_login_type_bearer_token;
+
+  /// No description provided for @dev_quick_tabs_login_type_external_browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Safari / Chrome'**
+  String get dev_quick_tabs_login_type_external_browser;
+
   /// No description provided for @dev_quick_tabs_login_type_oauth.
   ///
   /// In en, this message translates to:
-  /// **'OAuth / SSO (manual)'**
+  /// **'OAuth / SSO (manual in WebView)'**
   String get dev_quick_tabs_login_type_oauth;
 
   /// No description provided for @dev_quick_tabs_login_type_none.
@@ -5911,6 +5923,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email'**
   String get dev_quick_tabs_credentials_email;
+
+  /// No description provided for @dev_quick_tabs_credentials_bearer_token.
+  ///
+  /// In en, this message translates to:
+  /// **'Bearer token'**
+  String get dev_quick_tabs_credentials_bearer_token;
+
+  /// No description provided for @dev_quick_tabs_login_type_external_browser_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens this site in your system browser — best for GitHub, Google SSO, and passkeys.'**
+  String get dev_quick_tabs_login_type_external_browser_hint;
 
   /// No description provided for @dev_quick_tabs_login_type_oauth_hint.
   ///
