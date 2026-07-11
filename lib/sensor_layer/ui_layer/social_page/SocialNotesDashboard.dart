@@ -557,9 +557,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
             MindLogInsights.moodChartDays,
           ),
           builder: (context, logsSnap) {
-            final journalMindLogs = (logsSnap.data ?? const [])
-                .where((log) => !MindLogInsights.isSkillSessionLog(log))
-                .toList();
+            final journalMindLogs = MindLogInsights.moodChartLogs(
+              logsSnap.data ?? const [],
+            );
             final merged = MindLogInsights.mergeNotesWithMindLogs(
               mindLogs: journalMindLogs,
               journalNotes: notesSnap.data ?? const [],

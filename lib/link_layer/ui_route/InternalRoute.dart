@@ -59,6 +59,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/TalkSSH/SS
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceDailyReportPage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindAnalysisPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillsPage.dart';
@@ -569,6 +570,17 @@ final GoRouter router = GoRouter(
               builder: (context, state) => const SocialNotesDashboard(),
             ),
             GoRoute(
+              path: 'mindset',
+              builder: (context, state) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (context.mounted) {
+                    context.read<SocialBlock>().activeTab.value = 4;
+                  }
+                });
+                return const SocialPage();
+              },
+            ),
+            GoRoute(
               path: 'contacts',
               builder: (context, state) => const SocialPage(),
             ),
@@ -737,9 +749,14 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/webview',
           builder: (context, state) {
-            final url = state.uri.queryParameters['url'] ?? 'about:blank';
-            final title =
+            final extra = state.extra;
+            var url = state.uri.queryParameters['url'] ?? 'about:blank';
+            var title =
                 state.uri.queryParameters['title'] ?? 'External Widget';
+            if (extra is Map) {
+              url = extra['url']?.toString() ?? url;
+              title = extra['title']?.toString() ?? title;
+            }
             return WebViewPage(url: url, title: title);
           },
         ),

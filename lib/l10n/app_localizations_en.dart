@@ -216,6 +216,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap hour to add · tap event to edit · drag to move (↑↓ + Enter on desktop, hold on mobile)';
 
   @override
+  String get projects_calendar_scroll_for_more => 'Scroll for tasks';
+
+  @override
   String get projects_calendar_drag_hint_desktop =>
       'Drag to reschedule. Arrow keys adjust time, Enter confirms, Escape cancels.';
 
@@ -2085,6 +2088,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievement_filter_all_projects => 'All projects';
 
   @override
+  String get plan_action_tab => 'PLAN';
+
+  @override
+  String get plan_action_empty =>
+      'Plan an action with expected points, then log real points after you do it.';
+
+  @override
+  String get plan_action_timeline => 'Timeline';
+
+  @override
+  String get plan_action_scoreboard => 'Scoreboard';
+
+  @override
+  String get plan_action_pending => 'Pending';
+
+  @override
+  String get plan_action_no_pending => 'All actions logged for this view.';
+
+  @override
+  String get plan_action_add => 'Plan action';
+
+  @override
+  String get plan_action_edit => 'Edit action';
+
+  @override
+  String get plan_action_log_real => 'Log real';
+
+  @override
+  String get plan_action_title_label => 'What will you do?';
+
+  @override
+  String get plan_action_title_required => 'Add a title for this action.';
+
+  @override
+  String get plan_action_expected_label => 'Expected points (0–100)';
+
+  @override
+  String get plan_action_real_label => 'Real points (0–100)';
+
+  @override
+  String get plan_action_real_hint => 'Leave empty until done';
+
+  @override
+  String get plan_action_points_invalid => 'Points must be 0–100.';
+
+  @override
+  String get plan_action_expected_short => 'Exp';
+
+  @override
+  String get plan_action_real_short => 'Real';
+
+  @override
+  String plan_action_expected_value(int points) {
+    return 'Expected: $points pts';
+  }
+
+  @override
+  String plan_action_delta_value(int delta) {
+    String _temp0 = intl.Intl.pluralLogic(
+      delta,
+      locale: localeName,
+      other: '$delta',
+      zero: 'even',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plan_action_month_summary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count actions in this view',
+      one: '1 action in this view',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get plan_action_total_expected => 'Total expected';
+
+  @override
+  String get plan_action_total_real => 'Total real';
+
+  @override
+  String get plan_action_delta => 'Net delta';
+
+  @override
   String get achievement_on_this_day_title => 'On this day';
 
   @override
@@ -2202,6 +2293,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mind_quick_entry_hint => 'What\'s on your mind?';
+
+  @override
+  String get mindset_learn_title => 'Mindset log';
+
+  @override
+  String get mindset_learn_subtitle =>
+      'Capture principles and lessons you\'re internalizing.';
+
+  @override
+  String get mindset_learn_topic => 'Topic / principle';
+
+  @override
+  String get mindset_learn_topic_hint =>
+      'e.g. Patience, ship small, growth mindset';
+
+  @override
+  String get mindset_learn_lesson => 'What I learned';
+
+  @override
+  String get mindset_learn_feeling => 'Score (0–5)';
+
+  @override
+  String get mindset_learn_save => 'Save insight';
+
+  @override
+  String get mindset_learn_saved => 'Mindset insight saved';
+
+  @override
+  String get mindset_learn_validation => 'Add a topic and what you learned.';
+
+  @override
+  String get mindset_learn_history => 'Past insights';
+
+  @override
+  String get mindset_learn_empty =>
+      'No mindset notes yet. Log your first lesson above.';
+
+  @override
+  String get mindset_learn_open => 'Mindset';
 
   @override
   String get mind_focus_title => 'Focus areas';
@@ -3146,9 +3276,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dev_quick_tabs_add => 'Add tab';
 
   @override
-  String get dev_quick_tabs_validation_error => 'Title and URL are required';
-
-  @override
   String get dev_quick_tabs_open => 'Open';
 
   @override
@@ -3158,7 +3285,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dev_quick_tabs_label => 'Title';
 
   @override
-  String get dev_quick_tabs_url => 'URL';
+  String get dev_quick_tabs_url => 'Local URL (LAN)';
+
+  @override
+  String get dev_quick_tabs_remote_url => 'Remote URL';
+
+  @override
+  String get dev_quick_tabs_remote_url_hint =>
+      'Used when the LAN address is unreachable (VPN, Tailscale, public host).';
+
+  @override
+  String get dev_quick_tabs_validation_error =>
+      'Title and at least one URL are required';
 
   @override
   String get dev_quick_tabs_delete_title => 'Delete tab?';
@@ -3282,6 +3420,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webview_ssl_trust_continue => 'Trust and continue';
+
+  @override
+  String get webview_choose_url => 'Choose URL';
+
+  @override
+  String get webview_ssl_protocol_hint =>
+      'This often means the server uses plain HTTP, not HTTPS. Edit the tab URL to http:// or tap Try HTTP below.';
+
+  @override
+  String get webview_ssl_protocol_tailscale_hint =>
+      'Tailscale HTTPS is usually on your machine name (https://name.tailnet.ts.net on port 443 via Serve), not https://100.x.x.x:9001. Port 9001 is often HTTP-only behind the proxy — put the Serve URL in Remote URL.';
+
+  @override
+  String get webview_try_http => 'Try HTTP';
 
   @override
   String get canvas_goal_desc => 'Adjust tactical goal parameters';
@@ -5884,6 +6036,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_job_end_confirm => 'Mark this position as ended today?';
+
+  @override
+  String get finance_job_work_days => 'Work days';
+
+  @override
+  String get finance_job_log_today => 'Log today';
+
+  @override
+  String finance_job_work_streak(int count) {
+    return '$count day streak';
+  }
 
   @override
   String get finance_achievements_subtitle =>

@@ -213,6 +213,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chạm khung giờ để thêm · chạm sự kiện để sửa · kéo đổi giờ (↑↓ + Enter trên desktop, giữ trên mobile)';
 
   @override
+  String get projects_calendar_scroll_for_more => 'Cuộn xem nhiệm vụ';
+
+  @override
   String get projects_calendar_drag_hint_desktop =>
       'Kéo để đổi giờ. Phím mũi tên chỉnh giờ, Enter xác nhận, Escape hủy.';
 
@@ -2083,6 +2086,89 @@ class AppLocalizationsVi extends AppLocalizations {
   String get achievement_filter_all_projects => 'Mọi dự án';
 
   @override
+  String get plan_action_tab => 'KẾ HOẠCH';
+
+  @override
+  String get plan_action_empty =>
+      'Lên kế hoạch hành động với điểm kỳ vọng, sau đó ghi điểm thực tế khi hoàn thành.';
+
+  @override
+  String get plan_action_timeline => 'Dòng thời gian';
+
+  @override
+  String get plan_action_scoreboard => 'Bảng điểm';
+
+  @override
+  String get plan_action_pending => 'Chờ ghi';
+
+  @override
+  String get plan_action_no_pending =>
+      'Đã ghi hết hành động trong khung nhìn này.';
+
+  @override
+  String get plan_action_add => 'Lên kế hoạch';
+
+  @override
+  String get plan_action_edit => 'Sửa hành động';
+
+  @override
+  String get plan_action_log_real => 'Ghi thực tế';
+
+  @override
+  String get plan_action_title_label => 'Bạn sẽ làm gì?';
+
+  @override
+  String get plan_action_title_required => 'Nhập tên hành động.';
+
+  @override
+  String get plan_action_expected_label => 'Điểm kỳ vọng (0–100)';
+
+  @override
+  String get plan_action_real_label => 'Điểm thực tế (0–100)';
+
+  @override
+  String get plan_action_real_hint => 'Để trống cho đến khi xong';
+
+  @override
+  String get plan_action_points_invalid => 'Điểm phải từ 0–100.';
+
+  @override
+  String get plan_action_expected_short => 'Kỳ vọng';
+
+  @override
+  String get plan_action_real_short => 'Thực tế';
+
+  @override
+  String plan_action_expected_value(int points) {
+    return 'Kỳ vọng: $points điểm';
+  }
+
+  @override
+  String plan_action_delta_value(int delta) {
+    String _temp0 = intl.Intl.pluralLogic(
+      delta,
+      locale: localeName,
+      other: '$delta',
+      zero: 'bằng',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plan_action_month_summary(int count) {
+    return '$count hành động trong khung nhìn này';
+  }
+
+  @override
+  String get plan_action_total_expected => 'Tổng kỳ vọng';
+
+  @override
+  String get plan_action_total_real => 'Tổng thực tế';
+
+  @override
+  String get plan_action_delta => 'Chênh lệch';
+
+  @override
   String get achievement_on_this_day_title => 'Ngày này năm ấy';
 
   @override
@@ -2187,6 +2273,45 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mind_quick_entry_hint => 'Bạn đang nghĩ gì thế?';
+
+  @override
+  String get mindset_learn_title => 'Nhật ký tư duy';
+
+  @override
+  String get mindset_learn_subtitle =>
+      'Ghi lại nguyên tắc và bài học bạn đang nội hóa.';
+
+  @override
+  String get mindset_learn_topic => 'Chủ đề / nguyên tắc';
+
+  @override
+  String get mindset_learn_topic_hint =>
+      'vd. Kiên nhẫn, ship nhỏ, tư duy phát triển';
+
+  @override
+  String get mindset_learn_lesson => 'Tôi học được gì';
+
+  @override
+  String get mindset_learn_feeling => 'Chấm (0–5)';
+
+  @override
+  String get mindset_learn_save => 'Lưu bài học';
+
+  @override
+  String get mindset_learn_saved => 'Đã lưu bài học tư duy';
+
+  @override
+  String get mindset_learn_validation => 'Hãy nhập chủ đề và bài học.';
+
+  @override
+  String get mindset_learn_history => 'Bài học trước';
+
+  @override
+  String get mindset_learn_empty =>
+      'Chưa có ghi chú tư duy. Hãy ghi bài học đầu tiên ở trên.';
+
+  @override
+  String get mindset_learn_open => 'Tư duy';
 
   @override
   String get mind_focus_title => 'KHU VỰC TẬP TRUNG';
@@ -3131,10 +3256,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dev_quick_tabs_add => 'Thêm tab';
 
   @override
-  String get dev_quick_tabs_validation_error =>
-      'Tên và URL không được để trống';
-
-  @override
   String get dev_quick_tabs_open => 'Mở';
 
   @override
@@ -3144,7 +3265,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dev_quick_tabs_label => 'Tên';
 
   @override
-  String get dev_quick_tabs_url => 'URL';
+  String get dev_quick_tabs_url => 'URL cục bộ (LAN)';
+
+  @override
+  String get dev_quick_tabs_remote_url => 'URL từ xa';
+
+  @override
+  String get dev_quick_tabs_remote_url_hint =>
+      'Dùng khi không vào được LAN (VPN, Tailscale, host công khai).';
+
+  @override
+  String get dev_quick_tabs_validation_error =>
+      'Tên và ít nhất một URL không được để trống';
 
   @override
   String get dev_quick_tabs_delete_title => 'Xóa tab?';
@@ -3267,6 +3399,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get webview_ssl_trust_continue => 'Tin và tiếp tục';
+
+  @override
+  String get webview_choose_url => 'Chọn URL';
+
+  @override
+  String get webview_ssl_protocol_hint =>
+      'Thường do máy chủ chỉ dùng HTTP, không phải HTTPS. Sửa URL tab sang http:// hoặc bấm Thử HTTP bên dưới.';
+
+  @override
+  String get webview_ssl_protocol_tailscale_hint =>
+      'HTTPS trên Tailscale thường qua tên máy (https://ten.tailnet.ts.net cổng 443, Tailscale Serve), không phải https://100.x.x.x:9001. Cổng 9001 thường chỉ HTTP phía sau proxy — hãy dùng URL Serve trong URL từ xa.';
+
+  @override
+  String get webview_try_http => 'Thử HTTP';
 
   @override
   String get canvas_goal_desc => 'Điều chỉnh mục tiêu';
@@ -5855,6 +6001,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_job_end_confirm => 'Đánh dấu vị trí này kết thúc hôm nay?';
+
+  @override
+  String get finance_job_work_days => 'Ngày làm việc';
+
+  @override
+  String get finance_job_log_today => 'Ghi hôm nay';
+
+  @override
+  String finance_job_work_streak(int count) {
+    return '$count ngày liên tiếp';
+  }
 
   @override
   String get finance_achievements_subtitle =>

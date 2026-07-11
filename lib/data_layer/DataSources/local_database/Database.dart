@@ -7788,6 +7788,8 @@ class DevQuickTabsTable extends Table {
   TextColumn get personId => text().named('person_id')();
   TextColumn get title => text().withLength(min: 1, max: 500)();
   TextColumn get fullUrl => text().named('full_url')();
+  TextColumn get remoteUrl =>
+      text().withDefault(const Constant('')).named('remote_url')();
   IntColumn get sortOrder =>
       integer().withDefault(const Constant(0)).named('sort_order')();
   BoolColumn get isPinned =>
@@ -8317,7 +8319,8 @@ class AppDatabase extends _$AppDatabase {
   // v93 → bonuses table
   // v94 → recurring_incomes.job_position_id (job = master; incomes = salary timeline)
   // v95 → dev_quick_tabs.passkey (bearer token / API key sync)
-  int get schemaVersion => 95;
+  // v96 → dev_quick_tabs.remote_url (off-LAN fallback)
+  int get schemaVersion => 96;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -8516,6 +8519,11 @@ CREATE TABLE IF NOT EXISTS "dev_quick_tabs" (
       if (!names.contains('passkey')) {
         await customStatement(
           "ALTER TABLE dev_quick_tabs ADD COLUMN passkey TEXT NOT NULL DEFAULT '';",
+        );
+      }
+      if (!names.contains('remote_url')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN remote_url TEXT NOT NULL DEFAULT '';",
         );
       }
     } catch (_) {}
@@ -9264,6 +9272,11 @@ CREATE TABLE IF NOT EXISTS "dev_quick_tabs" (
         if (from < 95) {
           try {
             await m.addColumn(devQuickTabsTable, devQuickTabsTable.passkey);
+          } catch (_) {}
+        }
+        if (from < 96) {
+          try {
+            await m.addColumn(devQuickTabsTable, devQuickTabsTable.remoteUrl);
           } catch (_) {}
         }
       },

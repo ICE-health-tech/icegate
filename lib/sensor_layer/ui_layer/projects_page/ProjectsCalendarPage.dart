@@ -64,6 +64,7 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
   bool _deviceConnected = false;
   bool _syncingTasks = false;
   bool _timelineDragging = false;
+  bool _showScrollHint = false;
 
   final _pageScrollController = ScrollController();
 
@@ -709,12 +710,28 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
       _selectedDay = _dateOnly(today);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrapCalendar());
+    _pageScrollController.addListener(_updateScrollHint);
+  }
+
+  void _updateScrollHint() {
+    if (!_pageScrollController.hasClients) return;
+    final pos = _pageScrollController.position;
+    final show =
+        pos.maxScrollExtent > 12 && pos.pixels < pos.maxScrollExtent - 12;
+    if (show != _showScrollHint && mounted) {
+      setState(() => _showScrollHint = show);
+    }
+  }
+
+  void _scheduleScrollHintCheck() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollHint());
   }
 
   @override
   void dispose() {
     _sessionFocusedMonth = _focusedMonth;
     _sessionSelectedDay = _selectedDay;
+    _pageScrollController.removeListener(_updateScrollHint);
     _pageScrollController.dispose();
     super.dispose();
   }
@@ -1500,87 +1517,82 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                 ],
               ];
 
+              _scheduleScrollHintCheck();
+
               return LayoutBuilder(
                 builder: (context, constraints) {
                   final wide = constraints.maxWidth >= _desktopBreakpoint;
                   final pad = wide ? 32.0 : 20.0;
                   final bottom = wide ? 24.0 : 88.0;
+                  final agendaHeight = constraints.maxHeight - 8 - bottom;
+
+                  final calendarColumn = Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      calendar,
+                      if (canAddEvent) ...[
+                        SizedBox(height: wide ? 12 : 8),
+                        Text(
+                          l10n.projects_calendar_hold_day_add_hint,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.onSurface
+                                .withValues(alpha: 0.45),
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ],
+                  );
 
                   final body = wide
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: 380,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      calendar,
-                                      if (canAddEvent) ...[
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          l10n.projects_calendar_hold_day_add_hint,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: colorScheme.onSurface
-                                                .withValues(alpha: 0.45),
-                                            height: 1.35,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
+                            SizedBox(width: 380, child: calendarColumn),
+                            const SizedBox(width: 28),
+                            Expanded(
+                              child: SizedBox(
+                                height: agendaHeight.clamp(200, double.infinity),
+                                child: _buildAgendaScrollArea(
+                                  l10n,
+                                  colorScheme,
+                                  agendaChildren,
+                                  padding: EdgeInsets.zero,
                                 ),
-                                const SizedBox(width: 28),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: agendaChildren,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ],
                         )
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            calendar,
-                            if (canAddEvent) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                l10n.projects_calendar_hold_day_add_hint,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: colorScheme.onSurface
-                                      .withValues(alpha: 0.45),
-                                ),
-                              ),
-                            ],
+                            calendarColumn,
                             const SizedBox(height: 24),
                             ...agendaChildren,
                           ],
                         );
 
-                  return SingleChildScrollView(
-                    controller: _pageScrollController,
-                    physics: _timelineDragging
-                        ? const NeverScrollableScrollPhysics()
-                        : const BouncingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(pad, 8, pad, bottom),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: _contentMaxWidth,
+                  if (wide) {
+                    return Padding(
+                      padding: EdgeInsets.fromLTRB(pad, 8, pad, bottom),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: _contentMaxWidth,
+                          ),
+                          child: body,
                         ),
-                        child: body,
                       ),
-                    ),
+                    );
+                  }
+
+                  return _buildAgendaScrollArea(
+                    l10n,
+                    colorScheme,
+                    [body],
+                    padding: EdgeInsets.fromLTRB(pad, 8, pad, bottom),
+                    maxWidth: _contentMaxWidth,
                   );
                 },
               );
@@ -1589,6 +1601,64 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildAgendaScrollArea(
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    List<Widget> children, {
+    required EdgeInsets padding,
+    double? maxWidth,
+  }) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is ScrollUpdateNotification ||
+            notification is ScrollMetricsNotification) {
+          _updateScrollHint();
+        }
+        return false;
+      },
+      child: Stack(
+        children: [
+          SingleChildScrollView(
+            controller: _pageScrollController,
+            physics: _timelineDragging
+                ? const NeverScrollableScrollPhysics()
+                : const BouncingScrollPhysics(),
+            padding: padding,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: maxWidth ?? double.infinity,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: children,
+                ),
+              ),
+            ),
+          ),
+          if (_showScrollHint)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _CalendarScrollHint(
+                label: l10n.projects_calendar_scroll_for_more,
+                colorScheme: colorScheme,
+                onTap: () {
+                  if (!_pageScrollController.hasClients) return;
+                  _pageScrollController.animateTo(
+                    _pageScrollController.position.maxScrollExtent,
+                    duration: const Duration(milliseconds: 450),
+                    curve: Curves.easeOutCubic,
+                  );
+                },
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -1707,6 +1777,64 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
     final name = event.calendarName?.trim();
     if (name == null || name.isEmpty) return time;
     return '$name · $time';
+  }
+}
+
+class _CalendarScrollHint extends StatelessWidget {
+  const _CalendarScrollHint({
+    required this.label,
+    required this.colorScheme,
+    required this.onTap,
+  });
+
+  final String label;
+  final ColorScheme colorScheme;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface.withValues(alpha: 0),
+                colorScheme.surface.withValues(alpha: 0.9),
+                colorScheme.surface,
+              ],
+              stops: const [0, 0.4, 1],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 72),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 22,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface.withValues(alpha: 0.72),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

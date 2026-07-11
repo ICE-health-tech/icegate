@@ -464,6 +464,12 @@ abstract class AppLocalizations {
   /// **'Tap hour to add · tap event to edit · drag to move (↑↓ + Enter on desktop, hold on mobile)'**
   String get projects_calendar_timeline_tap_slot;
 
+  /// No description provided for @projects_calendar_scroll_for_more.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll for tasks'**
+  String get projects_calendar_scroll_for_more;
+
   /// No description provided for @projects_calendar_drag_hint_desktop.
   ///
   /// In en, this message translates to:
@@ -3860,6 +3866,144 @@ abstract class AppLocalizations {
   /// **'All projects'**
   String get achievement_filter_all_projects;
 
+  /// No description provided for @plan_action_tab.
+  ///
+  /// In en, this message translates to:
+  /// **'PLAN'**
+  String get plan_action_tab;
+
+  /// No description provided for @plan_action_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan an action with expected points, then log real points after you do it.'**
+  String get plan_action_empty;
+
+  /// No description provided for @plan_action_timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get plan_action_timeline;
+
+  /// No description provided for @plan_action_scoreboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Scoreboard'**
+  String get plan_action_scoreboard;
+
+  /// No description provided for @plan_action_pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get plan_action_pending;
+
+  /// No description provided for @plan_action_no_pending.
+  ///
+  /// In en, this message translates to:
+  /// **'All actions logged for this view.'**
+  String get plan_action_no_pending;
+
+  /// No description provided for @plan_action_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan action'**
+  String get plan_action_add;
+
+  /// No description provided for @plan_action_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit action'**
+  String get plan_action_edit;
+
+  /// No description provided for @plan_action_log_real.
+  ///
+  /// In en, this message translates to:
+  /// **'Log real'**
+  String get plan_action_log_real;
+
+  /// No description provided for @plan_action_title_label.
+  ///
+  /// In en, this message translates to:
+  /// **'What will you do?'**
+  String get plan_action_title_label;
+
+  /// No description provided for @plan_action_title_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a title for this action.'**
+  String get plan_action_title_required;
+
+  /// No description provided for @plan_action_expected_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected points (0–100)'**
+  String get plan_action_expected_label;
+
+  /// No description provided for @plan_action_real_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Real points (0–100)'**
+  String get plan_action_real_label;
+
+  /// No description provided for @plan_action_real_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty until done'**
+  String get plan_action_real_hint;
+
+  /// No description provided for @plan_action_points_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Points must be 0–100.'**
+  String get plan_action_points_invalid;
+
+  /// No description provided for @plan_action_expected_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Exp'**
+  String get plan_action_expected_short;
+
+  /// No description provided for @plan_action_real_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Real'**
+  String get plan_action_real_short;
+
+  /// No description provided for @plan_action_expected_value.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected: {points} pts'**
+  String plan_action_expected_value(int points);
+
+  /// No description provided for @plan_action_delta_value.
+  ///
+  /// In en, this message translates to:
+  /// **'{delta, plural, =0{even} other{{delta}}}'**
+  String plan_action_delta_value(int delta);
+
+  /// No description provided for @plan_action_month_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 action in this view} other{{count} actions in this view}}'**
+  String plan_action_month_summary(int count);
+
+  /// No description provided for @plan_action_total_expected.
+  ///
+  /// In en, this message translates to:
+  /// **'Total expected'**
+  String get plan_action_total_expected;
+
+  /// No description provided for @plan_action_total_real.
+  ///
+  /// In en, this message translates to:
+  /// **'Total real'**
+  String get plan_action_total_real;
+
+  /// No description provided for @plan_action_delta.
+  ///
+  /// In en, this message translates to:
+  /// **'Net delta'**
+  String get plan_action_delta;
+
   /// No description provided for @achievement_on_this_day_title.
   ///
   /// In en, this message translates to:
@@ -4051,6 +4195,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What\'s on your mind?'**
   String get mind_quick_entry_hint;
+
+  /// No description provided for @mindset_learn_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Mindset log'**
+  String get mindset_learn_title;
+
+  /// No description provided for @mindset_learn_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture principles and lessons you\'re internalizing.'**
+  String get mindset_learn_subtitle;
+
+  /// No description provided for @mindset_learn_topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic / principle'**
+  String get mindset_learn_topic;
+
+  /// No description provided for @mindset_learn_topic_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Patience, ship small, growth mindset'**
+  String get mindset_learn_topic_hint;
+
+  /// No description provided for @mindset_learn_lesson.
+  ///
+  /// In en, this message translates to:
+  /// **'What I learned'**
+  String get mindset_learn_lesson;
+
+  /// No description provided for @mindset_learn_feeling.
+  ///
+  /// In en, this message translates to:
+  /// **'Score (0–5)'**
+  String get mindset_learn_feeling;
+
+  /// No description provided for @mindset_learn_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save insight'**
+  String get mindset_learn_save;
+
+  /// No description provided for @mindset_learn_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mindset insight saved'**
+  String get mindset_learn_saved;
+
+  /// No description provided for @mindset_learn_validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a topic and what you learned.'**
+  String get mindset_learn_validation;
+
+  /// No description provided for @mindset_learn_history.
+  ///
+  /// In en, this message translates to:
+  /// **'Past insights'**
+  String get mindset_learn_history;
+
+  /// No description provided for @mindset_learn_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No mindset notes yet. Log your first lesson above.'**
+  String get mindset_learn_empty;
+
+  /// No description provided for @mindset_learn_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Mindset'**
+  String get mindset_learn_open;
 
   /// No description provided for @mind_focus_title.
   ///
@@ -5726,12 +5942,6 @@ abstract class AppLocalizations {
   /// **'Add tab'**
   String get dev_quick_tabs_add;
 
-  /// No description provided for @dev_quick_tabs_validation_error.
-  ///
-  /// In en, this message translates to:
-  /// **'Title and URL are required'**
-  String get dev_quick_tabs_validation_error;
-
   /// No description provided for @dev_quick_tabs_open.
   ///
   /// In en, this message translates to:
@@ -5753,8 +5963,26 @@ abstract class AppLocalizations {
   /// No description provided for @dev_quick_tabs_url.
   ///
   /// In en, this message translates to:
-  /// **'URL'**
+  /// **'Local URL (LAN)'**
   String get dev_quick_tabs_url;
+
+  /// No description provided for @dev_quick_tabs_remote_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote URL'**
+  String get dev_quick_tabs_remote_url;
+
+  /// No description provided for @dev_quick_tabs_remote_url_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Used when the LAN address is unreachable (VPN, Tailscale, public host).'**
+  String get dev_quick_tabs_remote_url_hint;
+
+  /// No description provided for @dev_quick_tabs_validation_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Title and at least one URL are required'**
+  String get dev_quick_tabs_validation_error;
 
   /// No description provided for @dev_quick_tabs_delete_title.
   ///
@@ -5971,6 +6199,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trust and continue'**
   String get webview_ssl_trust_continue;
+
+  /// No description provided for @webview_choose_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose URL'**
+  String get webview_choose_url;
+
+  /// No description provided for @webview_ssl_protocol_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'This often means the server uses plain HTTP, not HTTPS. Edit the tab URL to http:// or tap Try HTTP below.'**
+  String get webview_ssl_protocol_hint;
+
+  /// No description provided for @webview_ssl_protocol_tailscale_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale HTTPS is usually on your machine name (https://name.tailnet.ts.net on port 443 via Serve), not https://100.x.x.x:9001. Port 9001 is often HTTP-only behind the proxy — put the Serve URL in Remote URL.'**
+  String get webview_ssl_protocol_tailscale_hint;
+
+  /// No description provided for @webview_try_http.
+  ///
+  /// In en, this message translates to:
+  /// **'Try HTTP'**
+  String get webview_try_http;
 
   /// No description provided for @canvas_goal_desc.
   ///
@@ -10735,6 +10987,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark this position as ended today?'**
   String get finance_job_end_confirm;
+
+  /// No description provided for @finance_job_work_days.
+  ///
+  /// In en, this message translates to:
+  /// **'Work days'**
+  String get finance_job_work_days;
+
+  /// No description provided for @finance_job_log_today.
+  ///
+  /// In en, this message translates to:
+  /// **'Log today'**
+  String get finance_job_log_today;
+
+  /// No description provided for @finance_job_work_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day streak'**
+  String finance_job_work_streak(int count);
 
   /// No description provided for @finance_achievements_subtitle.
   ///

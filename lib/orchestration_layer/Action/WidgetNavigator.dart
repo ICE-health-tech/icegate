@@ -7,12 +7,14 @@ class WidgetNavigatorAction {
     BuildContext context,
     String fullUrl, {
     String? title,
+    List<WebViewUrlOption> urlOptions = const [],
   }) {
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(
         builder: (context) => WebViewPage(
           url: fullUrl,
           title: title ?? _titleFromUrl(fullUrl),
+          urlOptions: urlOptions,
         ),
       ),
     );

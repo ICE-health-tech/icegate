@@ -14,7 +14,9 @@ abstract final class MindActivityTokens {
   static bool isInternalSessionToken(String token) {
     return token.startsWith('skill:') ||
         token.startsWith('learn:') ||
-        token.startsWith('project:');
+        token.startsWith('project:') ||
+        token.startsWith('mindset_topic:') ||
+        token == 'mindset_learn';
   }
 
   /// Returns option UUID when [token] is a synced custom ref; otherwise null.

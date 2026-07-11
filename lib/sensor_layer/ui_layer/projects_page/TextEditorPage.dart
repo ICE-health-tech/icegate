@@ -22,6 +22,7 @@ import 'package:ice_gate/link_layer/note_export/DocxUtils.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
@@ -460,8 +461,19 @@ class _TextEditorPageState extends State<TextEditorPage>
   void _dismissKeyboard() {
     _editorFocusNode.unfocus();
     _titleFocusNode.unfocus();
+   
     FocusManager.instance.primaryFocus?.unfocus();
     SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  }
+
+  Future<void> _goToMindDashboard() async {
+    _dismissKeyboard();
+    if (_hasUnsavedChanges) {
+      await _saveNote(showConfirmation: false);
+    }
+    if (!mounted) return;
+    context.read<SocialBlock>().activeTab.value = 0;
+    context.go('/social');
   }
 
   void _toggleFocusMode() {
@@ -1876,8 +1888,9 @@ class _TextEditorPageState extends State<TextEditorPage>
               ),
             ),
             const Spacer(),
+          
             TextButton.icon(
-              onPressed: _dismissKeyboard,
+              onPressed: _goToMindDashboard,
               icon: Icon(
                 Icons.check_rounded,
                 size: 18,

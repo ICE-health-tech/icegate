@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
+import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/ProjectJournalArchive.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
@@ -42,8 +44,8 @@ class MindLogEntryDialog extends StatefulWidget {
     String? focusAreaName,
     String? projectId,
     String? projectName,
-  }) {
-    return showModalBottomSheet(
+  }) async {
+    final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,
@@ -57,6 +59,13 @@ class MindLogEntryDialog extends StatefulWidget {
         projectId: projectId,
         projectName: projectName,
       ),
+    );
+    if (saved != true || !context.mounted) return;
+
+    context.read<SocialBlock>().activeTab.value = 0;
+    router.go('/social');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.mind_save_success)),
     );
   }
 
@@ -230,6 +239,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
   }
 
   Future<void> _saveLog() async {
+ 
     if (_isSaving) return;
 
     final personBlock = context.read<PersonBlock>();
@@ -248,6 +258,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
     }
 
     setState(() => _isSaving = true);
+    var didClose = false;
 
     try {
       final db = context.read<AppDatabase>();
@@ -258,6 +269,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
         personId: personId,
         tenantId: tenantId,
       );
+     
       if (!mounted) return;
 
       // Mirror to project_notes for Journal cards (best-effort; mood log is source of truth).
@@ -318,11 +330,10 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
         appLog('MindLogEntryDialog: journal mirror failed: $e');
       }
 
+
       if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.mind_save_success)),
-        );
+        didClose = true;
+        Navigator.of(context, rootNavigator: true).pop(true);
       }
     } catch (e) {
       if (mounted) {
@@ -331,8 +342,9 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
         ).showSnackBar(SnackBar(content: Text("Failed to save log: $e")));
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      if (mounted && !didClose) setState(() => _isSaving = false);
     }
+
   }
 
   String _getMoodEmoji(int score) {

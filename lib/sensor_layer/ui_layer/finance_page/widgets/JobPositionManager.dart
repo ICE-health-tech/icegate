@@ -4,6 +4,7 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/JobWorkDayStrip.dart';
 import 'package:intl/intl.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -552,15 +553,22 @@ class _JobCard extends StatelessWidget {
     final accent =
         _isCurrent ? EntryColors.financeSilverAccent : Colors.white38;
 
-    return GestureDetector(
-      onTap: () => showJobPositionEditor(context, financeBlock, position: job),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () =>
+                  showJobPositionEditor(context, financeBlock, position: job),
+              borderRadius: BorderRadius.circular(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
               children: [
                 Container(
                   width: 8,
@@ -653,8 +661,17 @@ class _JobCard extends StatelessWidget {
                   ),
                 ),
               ),
-          ],
-        ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          JobWorkDayStrip(
+            personId: financeBlock.personId,
+            jobId: job.id,
+            accent: accent,
+          ),
+        ],
       ),
     );
   }

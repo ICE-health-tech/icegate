@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindFocusTrendsTab.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindsetLearnPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTrendEditor.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/PlanActionDialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/PlanActionTabPanel.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
-
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementsTabPanel.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/project_note_archive_utils.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
@@ -39,7 +37,7 @@ class SocialPage extends StatefulWidget {
       IconData iconData;
       VoidCallback action;
       appLog("social index: $index");
-      // 4 tabs: 0=Journal, 1=Focus, 2=Achievements, 3=Analysis
+      // 5 tabs: 0=Journal, 1=Focus, 2=Achievements, 3=Analysis, 4=Mindset
       switch (index) {
         case 0: // Journal
           iconData = Icons.sentiment_satisfied_rounded;
@@ -62,15 +60,19 @@ class SocialPage extends StatefulWidget {
             );
           };
           break;
-        case 2: // Achievements
-          iconData = Icons.emoji_events_outlined;
-          action = () => AchievementBuilderDialog.show(context);
+        case 2: // Plan actions
+          iconData = Icons.flag_outlined;
+          action = () => PlanActionDialog.show(context);
           break;
         case 3: // Analysis
           iconData = Icons.bar_chart_rounded;
           action = () {
             // Placeholder for analysis action or navigation
           };
+          break;
+        case 4: // Mindset log
+          iconData = Icons.psychology_alt_outlined;
+          action = () {};
           break;
         default:
           iconData = Icons.psychology_outlined;
@@ -143,9 +145,9 @@ class _SocialPageState extends State<SocialPage>
     super.initState();
     _socialBlock = context.read<SocialBlock>();
     _tabController = TabController(
-      length: 4, // Journal, Focus, Achievements, Analysis
+      length: 5, // Journal, Focus, Achievements, Analysis, Mindset
       vsync: this,
-      initialIndex: _socialBlock.activeTab.peek().clamp(0, 3),
+      initialIndex: _socialBlock.activeTab.peek().clamp(0, 4),
     );
 
     // Sync signal -> tab
@@ -167,7 +169,7 @@ class _SocialPageState extends State<SocialPage>
     _disposeEffect = effect(() {
       final rawIndex = _socialBlock.activeTab.value;
       // Clamp to valid range to prevent out-of-bounds animation
-      final index = rawIndex.clamp(0, 3);
+      final index = rawIndex.clamp(0, 4);
 
       // Update Live Activity / Dynamic Island
       if (mounted) {
@@ -252,9 +254,11 @@ class _SocialPageState extends State<SocialPage>
       case 1:
         return l10n.mind_focus_title.toUpperCase();
       case 2:
-        return l10n.achievements;
+        return l10n.plan_action_tab;
       case 3:
         return AppLocalizations.of(context)!.analysis.toUpperCase();
+      case 4:
+        return l10n.mindset_learn_open.toUpperCase();
       default:
         return l10n.social;
     }
@@ -307,6 +311,7 @@ class _SocialPageState extends State<SocialPage>
                             const MindFocusTrendsTab(),
                             _buildAchievementsDashboard(context),
                             const SocialAnalysisPage(),
+                            const MindsetLearnView(embedded: true),
                           ],
                         ),
                       ],
@@ -359,34 +364,9 @@ class _SocialPageState extends State<SocialPage>
 
   Widget _buildAchievementsDashboard(BuildContext context) {
     return Watch((context) {
-      final notesDao = context.read<ProjectNoteDAO>();
       final personBlock = context.read<PersonBlock>();
-      final currentPersonId = personBlock.currentPersonID.value ?? "";
-
-      return StreamBuilder<List<ProjectNoteData>>(
-        stream: notesDao.watchNotesByCategory(
-          currentPersonId,
-          ProjectNoteArchiveUtils.archiveCategory,
-        ),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final notes = List<ProjectNoteData>.from(snapshot.data!)
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          final l10n = AppLocalizations.of(context)!;
-
-          return AchievementsTabPanel(
-            notes: notes,
-            emptyState: _buildEmptyState(
-              context,
-              l10n.achievement_archive_empty,
-              Icons.auto_stories_outlined,
-            ),
-          );
-        },
-      );
+      final currentPersonId = personBlock.currentPersonID.value ?? '';
+      return PlanActionTabPanel(personId: currentPersonId);
     });
   }
 }

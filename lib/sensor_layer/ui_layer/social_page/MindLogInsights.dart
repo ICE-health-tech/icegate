@@ -55,6 +55,22 @@ abstract final class MindLogInsights {
     }
   }
 
+  /// Mindset lesson logs — text-only; exclude from mood charts.
+  static bool isMindsetLog(MindLogData log) {
+    try {
+      final raw = jsonDecode(log.activities) as List<dynamic>;
+      return raw.any((e) => e.toString() == 'mindset_learn');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Mind logs that represent mood / journal (not skill sessions or mindset notes).
+  static List<MindLogData> moodChartLogs(Iterable<MindLogData> logs) => [
+    for (final log in logs)
+      if (!isSkillSessionLog(log) && !isMindsetLog(log)) log,
+  ];
+
   /// Synthetic mood point from a social [ProjectNoteData] (NHẬT KÝ entry).
   static MindLogData? moodPointFromNote(ProjectNoteData note) {
     final score = moodLabelToScore(note.mood);

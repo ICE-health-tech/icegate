@@ -45,7 +45,9 @@ class SocialAnalysisPage extends StatelessWidget {
                 MindLogInsights.insightsSummaryDays,
               ),
               builder: (context, logSnapshot) {
-                final mindLogs = logSnapshot.data ?? [];
+                final mindLogs = MindLogInsights.moodChartLogs(
+                  logSnapshot.data ?? const [],
+                );
                 final journalNotes = notesSnap.data ?? const [];
                 final mergedSummary = MindLogInsights.mergeNotesWithMindLogs(
                   mindLogs: mindLogs,
@@ -399,7 +401,7 @@ class SocialAnalysisPage extends StatelessWidget {
         return StreamBuilder<List<MindLogData>>(
           stream: mindBlock.watchMindLogsRange(personId, 30),
           builder: (context, logSnap) {
-            final logs = logSnap.data ?? [];
+            final logs = MindLogInsights.moodChartLogs(logSnap.data ?? const []);
             final counts = MindLogInsights.activityLabelCounts(
               logs,
               l10n,
@@ -565,7 +567,9 @@ class SocialAnalysisPage extends StatelessWidget {
         return StreamBuilder<List<MindLogData>>(
           stream: mindBlock.watchMindLogsRange(personId, 3),
           builder: (context, snapshot) {
-            final logs = snapshot.data ?? [];
+            final logs = MindLogInsights.moodChartLogs(
+              snapshot.data ?? const [],
+            );
             if (logs.isEmpty) return const SizedBox.shrink();
 
             return Column(

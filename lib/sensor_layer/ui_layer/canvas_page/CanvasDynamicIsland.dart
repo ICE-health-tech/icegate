@@ -75,6 +75,8 @@ class CanvasDynamicIsland extends StatelessWidget {
           return l10n.achievements;
         case 3:
           return l10n.analysis.toUpperCase();
+        case 4:
+          return l10n.mindset_learn_open.toUpperCase();
         default:
           return l10n.island_mind;
       }
@@ -827,7 +829,7 @@ class CanvasDynamicIsland extends StatelessWidget {
         if (currentRoute.startsWith('/social')) {
           HapticFeedback.mediumImpact();
           final currentIdx = socialBlock.activeTab.value;
-          socialBlock.activeTab.value = (currentIdx + 1) % 4;
+          socialBlock.activeTab.value = (currentIdx + 1) % 5;
         } else if (currentRoute == '/') {
           HapticFeedback.mediumImpact();
           context.go("/personal-info");
@@ -1311,6 +1313,18 @@ class CanvasDynamicIsland extends StatelessWidget {
               index: 3,
               icon: Icons.bar_chart_rounded,
               label: l10n.analysis.toUpperCase(),
+              activeIndex: activeIndex,
+              onTap: (idx) => socialBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+              accentColor: accent,
+            ),
+            SizedBox(width: 32 * scalingFactor),
+            _buildAdaptiveTabIcon(
+              context,
+              index: 4,
+              icon: Icons.psychology_alt_outlined,
+              label: l10n.mindset_learn_open.toUpperCase(),
               activeIndex: activeIndex,
               onTap: (idx) => socialBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,

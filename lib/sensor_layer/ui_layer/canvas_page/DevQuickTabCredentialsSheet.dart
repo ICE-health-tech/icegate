@@ -19,10 +19,16 @@ class DevQuickTabCredentialsSheet extends StatelessWidget {
     final seen = <String>{};
     final entries = <({String host, String label})>[];
     for (final tab in tabs) {
-      final host = Uri.tryParse(tab.fullUrl)?.host ?? '';
-      if (host.isEmpty || seen.contains(host)) continue;
-      seen.add(host);
-      entries.add((host: host, label: tab.title));
+      final localHost = Uri.tryParse(tab.fullUrl)?.host ?? '';
+      if (localHost.isNotEmpty && seen.add(localHost)) {
+        entries.add((host: localHost, label: tab.title));
+      }
+      final remoteHost = Uri.tryParse(tab.remoteUrl)?.host ?? '';
+      if (remoteHost.isNotEmpty &&
+          remoteHost != localHost &&
+          seen.add(remoteHost)) {
+        entries.add((host: remoteHost, label: '${tab.title} (remote)'));
+      }
     }
     return entries;
   }
@@ -192,6 +198,17 @@ class _HostCredentialCardState extends State<_HostCredentialCard> {
         password: _passCtrl.text,
         passkey: _passkeyCtrl.text.trim(),
         loginType: _loginType.storageKey,
+      );
+      await DevQuickTabStore.propagateSslTrustForTabHosts(
+        db,
+        personId,
+        host: widget.host,
+        trusted: _sslTrusted,
+      );
+      await DevQuickTabStore.propagateCredentialsToTabSiblingHosts(
+        db,
+        personId,
+        host: widget.host,
       );
     }
     if (!mounted) return;

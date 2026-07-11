@@ -18,6 +18,7 @@ abstract final class DevQuickTabStore {
     id: row.id,
     title: row.title,
     fullUrl: row.fullUrl,
+    remoteUrl: row.remoteUrl,
     sortOrder: row.sortOrder,
     isPinned: row.isPinned,
     username: row.username,
@@ -56,17 +57,140 @@ abstract final class DevQuickTabStore {
           tab.passkey.isEmpty) {
         continue;
       }
-      final host = Uri.tryParse(tab.fullUrl)?.host ?? '';
-      if (host.isEmpty || !seen.add(host)) continue;
-      final existing = await store.readHostCredentials(host);
-      await store.saveHostCredentials(
-        host: host,
-        username: tab.username.isNotEmpty ? tab.username : existing.username,
-        password: tab.password.isNotEmpty ? tab.password : existing.password,
-        passkey: tab.passkey.isNotEmpty ? tab.passkey : existing.passkey,
-        sslTrusted: existing.sslTrusted,
-        loginType: DevQuickTabLoginType.fromStorage(tab.loginType),
-      );
+      for (final host in tab.allHosts) {
+        if (!seen.add(host)) continue;
+        final existing = await store.readHostCredentials(host);
+        await store.saveHostCredentials(
+          host: host,
+          username: tab.username.isNotEmpty ? tab.username : existing.username,
+          password: tab.password.isNotEmpty ? tab.password : existing.password,
+          passkey: tab.passkey.isNotEmpty ? tab.passkey : existing.passkey,
+          sslTrusted: existing.sslTrusted,
+          loginType: DevQuickTabLoginType.fromStorage(tab.loginType),
+        );
+      }
+    }
+
+    // SSL trust on one host (LAN or Tailscale) applies to every host on the tab.
+    for (final tab in tabs) {
+      final hosts = tab.allHosts.toList();
+      if (hosts.length < 2) continue;
+      var anyTrusted = false;
+      for (final h in hosts) {
+        if (await store.isHomelabSslTrusted(h)) {
+          anyTrusted = true;
+          break;
+        }
+      }
+      if (!anyTrusted) continue;
+      for (final h in hosts) {
+        await store.setHomelabSslTrusted(h, true);
+      }
+    }
+
+    // Bearer token / SSL saved for Tailscale must work when LAN URL opens.
+    for (final tab in tabs) {
+      final hosts = tab.allHosts.toList();
+      if (hosts.length < 2) continue;
+      WebViewHostCredentials? source;
+      for (final h in hosts) {
+        final c = await store.readHostCredentials(h);
+        if (c.passkey.isNotEmpty || c.password.isNotEmpty) {
+          source = c;
+          break;
+        }
+        source ??= c;
+      }
+      if (source == null) continue;
+      for (final h in hosts) {
+        final existing = await store.readHostCredentials(h);
+        await store.saveHostCredentials(
+          host: h,
+          username: source.username.isNotEmpty
+              ? source.username
+              : existing.username,
+          password: source.password.isNotEmpty
+              ? source.password
+              : existing.password,
+          passkey:
+              source.passkey.isNotEmpty ? source.passkey : existing.passkey,
+          sslTrusted: source.sslTrusted || existing.sslTrusted,
+          loginType: source.loginType,
+        );
+      }
+    }
+  }
+
+  /// Before opening [openUrl], copy SSL trust from a sibling host on the same tab.
+  static Future<void> syncSslTrustForOpenUrl(
+    AppDatabase db,
+    String personId,
+    String openUrl,
+  ) async {
+    final openHost = Uri.tryParse(openUrl)?.host ?? '';
+    if (personId.isEmpty || openHost.isEmpty) return;
+    final store = WebViewCredentialStore();
+    if (await store.isHomelabSslTrusted(openHost)) return;
+
+    final rows = await db.devQuickTabsDAO.listForPerson(personId);
+    for (final row in rows) {
+      final tab = _fromRow(row);
+      if (!tab.allHosts.contains(openHost)) continue;
+      for (final h in tab.allHosts) {
+        if (h != openHost && await store.isHomelabSslTrusted(h)) {
+          await store.setHomelabSslTrusted(openHost, true);
+          return;
+        }
+      }
+    }
+  }
+
+  /// After saving credentials for [host], mirror SSL trust to sibling tab hosts.
+  static Future<void> propagateSslTrustForTabHosts(
+    AppDatabase db,
+    String personId, {
+    required String host,
+    required bool trusted,
+  }) async {
+    if (personId.isEmpty || host.isEmpty || !trusted) return;
+    final store = WebViewCredentialStore();
+    final rows = await db.devQuickTabsDAO.listForPerson(personId);
+    for (final row in rows) {
+      final tab = _fromRow(row);
+      if (!tab.allHosts.contains(host)) continue;
+      for (final h in tab.allHosts) {
+        await store.setHomelabSslTrusted(h, true);
+      }
+    }
+  }
+
+  /// Copy saved creds + SSL trust from [host] to every other host on the tab.
+  static Future<void> propagateCredentialsToTabSiblingHosts(
+    AppDatabase db,
+    String personId, {
+    required String host,
+  }) async {
+    if (personId.isEmpty || host.isEmpty) return;
+    final store = WebViewCredentialStore();
+    final source = await store.readHostCredentials(host);
+    final rows = await db.devQuickTabsDAO.listForPerson(personId);
+    for (final row in rows) {
+      final tab = _fromRow(row);
+      if (!tab.allHosts.contains(host)) continue;
+      for (final h in tab.allHosts) {
+        if (h == host) continue;
+        final existing = await store.readHostCredentials(h);
+        await store.saveHostCredentials(
+          host: h,
+          username:
+              source.username.isNotEmpty ? source.username : existing.username,
+          password:
+              source.password.isNotEmpty ? source.password : existing.password,
+          passkey: source.passkey.isNotEmpty ? source.passkey : existing.passkey,
+          sslTrusted: source.sslTrusted || existing.sslTrusted,
+          loginType: source.loginType,
+        );
+      }
     }
   }
 
@@ -85,8 +209,8 @@ abstract final class DevQuickTabStore {
     // Read rows directly (list() would mirror stale row creds to secure store).
     final rows = await db.devQuickTabsDAO.listForPerson(personId);
     for (final row in rows) {
-      final tabHost = Uri.tryParse(row.fullUrl)?.host ?? '';
-      if (tabHost != host) continue;
+      final tab = _fromRow(row);
+      if (!tab.allHosts.contains(host)) continue;
       await update(
         db,
         personId,
@@ -123,6 +247,7 @@ abstract final class DevQuickTabStore {
         personId: personId,
         title: tab.title,
         fullUrl: tab.fullUrl,
+        remoteUrl: Value(tab.remoteUrl),
         sortOrder: Value(tab.sortOrder),
         isPinned: Value(tab.isPinned),
         username: Value(tab.username),
@@ -147,6 +272,7 @@ abstract final class DevQuickTabStore {
     final next = existing.copyWith(
       title: tab.title,
       fullUrl: tab.fullUrl,
+      remoteUrl: tab.remoteUrl,
       sortOrder: tab.sortOrder,
       isPinned: tab.isPinned,
       username: tab.username,
@@ -189,7 +315,7 @@ abstract final class DevQuickTabStore {
           final tab = DevQuickTabProtocol.fromJson(
             Map<String, dynamic>.from(item),
           );
-          if (tab.id.isEmpty || tab.fullUrl.isEmpty) continue;
+          if (tab.id.isEmpty || !tab.hasAnyUrl) continue;
           await create(db, personId, tab);
         }
       }

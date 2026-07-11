@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:intl/intl.dart';
@@ -43,6 +44,7 @@ class FinanceDailyCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
@@ -60,7 +62,8 @@ class FinanceDailyCalendar extends StatelessWidget {
       weekdayLabels.first,
     ];
     final wide = MediaQuery.sizeOf(context).width >= 900;
-    final cellHeight = wide ? 96.0 : 84.0;
+    final cellHeight = wide ? 88.0 : 72.0;
+    final showTodayChip = selected != today;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -78,13 +81,35 @@ class FinanceDailyCalendar extends StatelessWidget {
                 icon: Icon(Icons.chevron_left_rounded, color: accent),
               ),
               Expanded(
-                child: Text(
-                  DateFormat.yMMMM().format(monthStart),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: accent,
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      DateFormat.yMMMM().format(monthStart),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: accent,
+                      ),
+                    ),
+                    if (showTodayChip)
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () => onDaySelected(DateTime.now()),
+                        child: Text(
+                          l10n.date_today,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: FinanceSurface.silverAccent(),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               IconButton(
@@ -184,6 +209,16 @@ class _DayCell extends StatelessWidget {
     final job = data.jobs.isNotEmpty ? data.jobs.first : null;
     final txns = data.transactions;
 
+    var income = 0.0;
+    var out = 0.0;
+    for (final t in txns) {
+      if (t.type == 'income' || t.type == 'savings') {
+        income += t.amount;
+      } else if (t.type == 'expense' || t.type == 'investment') {
+        out += t.amount;
+      }
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -223,101 +258,97 @@ class _DayCell extends StatelessWidget {
                 : null,
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(6, 5, 6, 4),
+            padding: const EdgeInsets.fromLTRB(7, 6, 7, 5),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '$day',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: isSelected ? accent : accent.withValues(alpha: 0.9),
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '$day',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: isSelected
+                            ? accent
+                            : accent.withValues(alpha: 0.92),
+                      ),
+                    ),
+                    if (job != null) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.work_outline_rounded,
+                        size: 11,
+                        color: FinanceSurface.silverAccent()
+                            .withValues(alpha: 0.85),
+                      ),
+                    ],
+                    const Spacer(),
+                    if (txns.length > 1)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${txns.length}',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: muted,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                if (job != null) ...[
-                  const SizedBox(height: 2),
+                const Spacer(),
+                if (income > 0)
+                  Text(
+                    '+${financeBlock.formatCurrency(income, compact: true)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: FinanceSurface.silverAccent(),
+                      height: 1.2,
+                    ),
+                  ),
+                if (out > 0)
+                  Text(
+                    '−${financeBlock.formatCurrency(out, compact: true)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: muted,
+                      height: 1.2,
+                    ),
+                  ),
+                if (income == 0 &&
+                    out == 0 &&
+                    job != null &&
+                    job.employer.trim().isNotEmpty)
                   Text(
                     job.employer,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w800,
-                      color: FinanceSurface.silverAccent(),
-                      letterSpacing: 0.2,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: FinanceSurface.silverAccent()
+                          .withValues(alpha: 0.9),
                     ),
                   ),
-                  Text(
-                    job.jobTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w600,
-                      color: muted,
-                    ),
-                  ),
-                ],
-                if (txns.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Expanded(
-                    child: ListView(
-                      padding: EdgeInsets.zero,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        for (final t in txns.take(2))
-                          _TxnLine(txn: t, block: financeBlock, muted: muted),
-                        if (txns.length > 2)
-                          Text(
-                            '+${txns.length - 2}',
-                            style: TextStyle(
-                              fontSize: 6,
-                              color: muted,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ] else
-                  const Spacer(),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _TxnLine extends StatelessWidget {
-  const _TxnLine({
-    required this.txn,
-    required this.block,
-    required this.muted,
-  });
-
-  final TransactionData txn;
-  final FinanceBlock block;
-  final Color muted;
-
-  @override
-  Widget build(BuildContext context) {
-    final isOut =
-        txn.type == 'expense' || txn.type == 'investment';
-    final label = (txn.description?.trim().isNotEmpty ?? false)
-        ? txn.description!.trim()
-        : txn.category;
-    return Text(
-      '${isOut ? '−' : '+'}${block.formatCurrency(txn.amount, compact: true)} · $label',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(
-        fontSize: 6.5,
-        fontWeight: FontWeight.w700,
-        color: isOut ? muted : FinanceSurface.silverAccent(),
-        height: 1.25,
       ),
     );
   }

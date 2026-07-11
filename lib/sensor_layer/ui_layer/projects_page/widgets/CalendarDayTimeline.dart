@@ -602,7 +602,7 @@ class CalendarDayTimeline extends StatefulWidget {
     this.onHourTap,
     this.onDragActiveChanged,
     this.scrollController,
-    this.startHour = 6,
+    this.startHour = 0,
     this.endHour = 23,
     this.hourHeight = 44,
   });
@@ -658,37 +658,48 @@ class _CalendarDayTimelineState extends State<CalendarDayTimeline> {
     super.dispose();
   }
 
-  bool _isToday(DateTime day) {
-    final now = DateTime.now();
-    return day.year == now.year &&
-        day.month == now.month &&
-        day.day == now.day;
-  }
-
+  // STORY: Showing all 24 hours wastes space on phone — crop to events ±1h
+  // (or a sensible default window when the day is empty).
   ({int start, int end}) _visibleHourRange() {
     final timed = widget.entries.where((e) => !e.allDay).toList();
-    final hours = <int>[];
-
-    for (final entry in timed) {
-      hours.add(entry.start.hour);
-      final end = _eventEnd(entry);
-      hours.add(end.hour);
-    }
-
-    if (_isToday(widget.selectedDay)) {
-      hours.add(DateTime.now().hour);
-    }
-
-    if (hours.isEmpty) {
-      return (start: 8, end: 20);
-    }
-
-    final minHour = hours.reduce((a, b) => a < b ? a : b);
-    final maxHour = hours.reduce((a, b) => a > b ? a : b);
-    return (
-      start: (minHour - 1).clamp(widget.startHour, 22),
-      end: (maxHour + 1).clamp(9, widget.endHour),
+    final selected = DateTime(
+      widget.selectedDay.year,
+      widget.selectedDay.month,
+      widget.selectedDay.day,
     );
+    final today = DateTime.now();
+    final isToday = selected.year == today.year &&
+        selected.month == today.month &&
+        selected.day == today.day;
+
+    if (timed.isEmpty) {
+      if (isToday) {
+        final h = today.hour;
+        return (
+          start: (h - 2).clamp(widget.startHour, 22),
+          end: (h + 5).clamp(8, widget.endHour),
+        );
+      }
+      return (start: 8.clamp(widget.startHour, 20), end: 20.clamp(8, widget.endHour));
+    }
+
+    var minMin = 24 * 60;
+    var maxMin = 0;
+    for (final e in timed) {
+      final dayStart = DateTime(e.start.year, e.start.month, e.start.day);
+      final startMin = e.start.difference(dayStart).inMinutes;
+      final endMin = _eventEnd(e).difference(dayStart).inMinutes;
+      minMin = math.min(minMin, startMin);
+      maxMin = math.max(maxMin, endMin);
+    }
+
+    final startHour = ((minMin ~/ 60) - 1).clamp(widget.startHour, 23);
+    var endHour = ((maxMin + 59) ~/ 60) + 1;
+    if (isToday) {
+      endHour = math.max(endHour, today.hour + 1);
+    }
+    endHour = endHour.clamp(startHour + 1, widget.endHour);
+    return (start: startHour, end: endHour);
   }
 
   static DateTime _eventEnd(CalendarTimelineEntry e) =>
@@ -1217,25 +1228,27 @@ class _CalendarDayTimelineState extends State<CalendarDayTimeline> {
                           right: 0,
                           height: widget.hourHeight,
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               SizedBox(
                                 width: _labelWidth,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 4,
-                                    right: 6,
-                                  ),
-                                  child: Text(
-                                    timeFmt.format(
-                                      DateTime(2000, 1, 1, hour),
-                                    ),
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: cs.onSurface.withValues(
-                                        alpha: 0.4,
+                                height: widget.hourHeight,
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: Text(
+                                      timeFmt.format(
+                                        DateTime(2000, 1, 1, hour),
+                                      ),
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: cs.onSurface.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        height: 1,
                                       ),
                                     ),
                                   ),
@@ -1265,6 +1278,12 @@ class _CalendarDayTimelineState extends State<CalendarDayTimeline> {
                           ),
                         );
                       }),
+                      if (_isSelectedToday())
+                        _buildNowLine(
+                          cs,
+                          visibleStartHour: visibleStartHour,
+                          visibleEndHour: visibleEndHour,
+                        ),
                       ...timedLayouts.map(
                         (layout) => _positionedBlock(
                           context,
@@ -1526,6 +1545,59 @@ class _CalendarDayTimelineState extends State<CalendarDayTimeline> {
     return layouts;
   }
 
+  bool _isSelectedToday() {
+    final now = DateTime.now();
+    final d = widget.selectedDay;
+    return d.year == now.year && d.month == now.month && d.day == now.day;
+  }
+
+  Widget _buildNowLine(
+    ColorScheme cs, {
+    required int visibleStartHour,
+    required int visibleEndHour,
+  }) {
+    final now = DateTime.now();
+    final gridStartMin = visibleStartHour * 60.0;
+    final gridEndMin = (visibleEndHour + 1) * 60.0;
+    final nowMin = now.hour * 60.0 + now.minute + now.second / 60.0;
+    if (nowMin < gridStartMin || nowMin > gridEndMin) {
+      return const SizedBox.shrink();
+    }
+    final top = ((nowMin - gridStartMin) / 60.0) * widget.hourHeight;
+
+    return Positioned(
+      top: top,
+      left: _labelWidth + 2,
+      right: _laneRightPadding,
+      child: IgnorePointer(
+        child: Row(
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: cs.error,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.error.withValues(alpha: 0.45),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Container(
+                height: 2,
+                color: cs.error.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _positionedBlock(
     BuildContext context,
     _TimedEventLayout layout,
@@ -1582,39 +1654,54 @@ class _CalendarDayTimelineState extends State<CalendarDayTimeline> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: e.color.withValues(alpha: 0.45)),
+          border: Border.all(color: e.color.withValues(alpha: 0.5)),
         ),
-        padding: EdgeInsets.symmetric(horizontal: horizontalPad, vertical: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: EdgeInsets.fromLTRB(horizontalPad + 2, 4, horizontalPad, 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Text(
-                  e.title,
-                  maxLines: titleMaxLines,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: narrow ? 10 : 11,
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
-                    height: 1.1,
-                  ),
-                ),
+            Container(
+              width: 3,
+              margin: const EdgeInsets.only(right: 6, top: 1, bottom: 1),
+              decoration: BoxDecoration(
+                color: e.color.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            if (showTime)
-              Text(
-                '${timeFmt.format(e.start)}${e.end != null ? ' – ${timeFmt.format(e.end!)}' : ''}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurface.withValues(alpha: 0.55),
-                ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        e.title,
+                        maxLines: titleMaxLines,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: narrow ? 10 : 12,
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
+                          height: 1.15,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (showTime)
+                    Text(
+                      '${timeFmt.format(e.start)}${e.end != null ? ' – ${timeFmt.format(e.end!)}' : ''}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: e.color.withValues(alpha: 0.92),
+                      ),
+                    ),
+                ],
               ),
+            ),
           ],
         ),
       ),

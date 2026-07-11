@@ -39684,6 +39684,18 @@ class $DevQuickTabsTableTable extends DevQuickTabsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _remoteUrlMeta = const VerificationMeta(
+    'remoteUrl',
+  );
+  @override
+  late final GeneratedColumn<String> remoteUrl = GeneratedColumn<String>(
+    'remote_url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _sortOrderMeta = const VerificationMeta(
     'sortOrder',
   );
@@ -39785,6 +39797,7 @@ class $DevQuickTabsTableTable extends DevQuickTabsTable
     personId,
     title,
     fullUrl,
+    remoteUrl,
     sortOrder,
     isPinned,
     username,
@@ -39834,6 +39847,12 @@ class $DevQuickTabsTableTable extends DevQuickTabsTable
       );
     } else if (isInserting) {
       context.missing(_fullUrlMeta);
+    }
+    if (data.containsKey('remote_url')) {
+      context.handle(
+        _remoteUrlMeta,
+        remoteUrl.isAcceptableOrUnknown(data['remote_url']!, _remoteUrlMeta),
+      );
     }
     if (data.containsKey('sort_order')) {
       context.handle(
@@ -39896,6 +39915,10 @@ class $DevQuickTabsTableTable extends DevQuickTabsTable
         DriftSqlType.string,
         data['${effectivePrefix}full_url'],
       )!,
+      remoteUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_url'],
+      )!,
       sortOrder: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
@@ -39951,6 +39974,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
   final String personId;
   final String title;
   final String fullUrl;
+  final String remoteUrl;
   final int sortOrder;
   final bool isPinned;
   final String username;
@@ -39964,6 +39988,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     required this.personId,
     required this.title,
     required this.fullUrl,
+    required this.remoteUrl,
     required this.sortOrder,
     required this.isPinned,
     required this.username,
@@ -39980,6 +40005,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     map['person_id'] = Variable<String>(personId);
     map['title'] = Variable<String>(title);
     map['full_url'] = Variable<String>(fullUrl);
+    map['remote_url'] = Variable<String>(remoteUrl);
     map['sort_order'] = Variable<int>(sortOrder);
     map['is_pinned'] = Variable<bool>(isPinned);
     map['username'] = Variable<String>(username);
@@ -40005,6 +40031,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
       personId: Value(personId),
       title: Value(title),
       fullUrl: Value(fullUrl),
+      remoteUrl: Value(remoteUrl),
       sortOrder: Value(sortOrder),
       isPinned: Value(isPinned),
       username: Value(username),
@@ -40026,6 +40053,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
       personId: serializer.fromJson<String>(json['personId']),
       title: serializer.fromJson<String>(json['title']),
       fullUrl: serializer.fromJson<String>(json['fullUrl']),
+      remoteUrl: serializer.fromJson<String>(json['remoteUrl']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       isPinned: serializer.fromJson<bool>(json['isPinned']),
       username: serializer.fromJson<String>(json['username']),
@@ -40044,6 +40072,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
       'personId': serializer.toJson<String>(personId),
       'title': serializer.toJson<String>(title),
       'fullUrl': serializer.toJson<String>(fullUrl),
+      'remoteUrl': serializer.toJson<String>(remoteUrl),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'isPinned': serializer.toJson<bool>(isPinned),
       'username': serializer.toJson<String>(username),
@@ -40060,6 +40089,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     String? personId,
     String? title,
     String? fullUrl,
+    String? remoteUrl,
     int? sortOrder,
     bool? isPinned,
     String? username,
@@ -40073,6 +40103,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     personId: personId ?? this.personId,
     title: title ?? this.title,
     fullUrl: fullUrl ?? this.fullUrl,
+    remoteUrl: remoteUrl ?? this.remoteUrl,
     sortOrder: sortOrder ?? this.sortOrder,
     isPinned: isPinned ?? this.isPinned,
     username: username ?? this.username,
@@ -40088,6 +40119,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
       personId: data.personId.present ? data.personId.value : this.personId,
       title: data.title.present ? data.title.value : this.title,
       fullUrl: data.fullUrl.present ? data.fullUrl.value : this.fullUrl,
+      remoteUrl: data.remoteUrl.present ? data.remoteUrl.value : this.remoteUrl,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       isPinned: data.isPinned.present ? data.isPinned.value : this.isPinned,
       username: data.username.present ? data.username.value : this.username,
@@ -40106,6 +40138,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
           ..write('personId: $personId, ')
           ..write('title: $title, ')
           ..write('fullUrl: $fullUrl, ')
+          ..write('remoteUrl: $remoteUrl, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('isPinned: $isPinned, ')
           ..write('username: $username, ')
@@ -40124,6 +40157,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
     personId,
     title,
     fullUrl,
+    remoteUrl,
     sortOrder,
     isPinned,
     username,
@@ -40141,6 +40175,7 @@ class DevQuickTabData extends DataClass implements Insertable<DevQuickTabData> {
           other.personId == this.personId &&
           other.title == this.title &&
           other.fullUrl == this.fullUrl &&
+          other.remoteUrl == this.remoteUrl &&
           other.sortOrder == this.sortOrder &&
           other.isPinned == this.isPinned &&
           other.username == this.username &&
@@ -40156,6 +40191,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
   final Value<String> personId;
   final Value<String> title;
   final Value<String> fullUrl;
+  final Value<String> remoteUrl;
   final Value<int> sortOrder;
   final Value<bool> isPinned;
   final Value<String> username;
@@ -40170,6 +40206,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     this.personId = const Value.absent(),
     this.title = const Value.absent(),
     this.fullUrl = const Value.absent(),
+    this.remoteUrl = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isPinned = const Value.absent(),
     this.username = const Value.absent(),
@@ -40185,6 +40222,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     required String personId,
     required String title,
     required String fullUrl,
+    this.remoteUrl = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isPinned = const Value.absent(),
     this.username = const Value.absent(),
@@ -40203,6 +40241,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     Expression<String>? personId,
     Expression<String>? title,
     Expression<String>? fullUrl,
+    Expression<String>? remoteUrl,
     Expression<int>? sortOrder,
     Expression<bool>? isPinned,
     Expression<String>? username,
@@ -40218,6 +40257,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
       if (personId != null) 'person_id': personId,
       if (title != null) 'title': title,
       if (fullUrl != null) 'full_url': fullUrl,
+      if (remoteUrl != null) 'remote_url': remoteUrl,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (isPinned != null) 'is_pinned': isPinned,
       if (username != null) 'username': username,
@@ -40235,6 +40275,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     Value<String>? personId,
     Value<String>? title,
     Value<String>? fullUrl,
+    Value<String>? remoteUrl,
     Value<int>? sortOrder,
     Value<bool>? isPinned,
     Value<String>? username,
@@ -40250,6 +40291,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
       personId: personId ?? this.personId,
       title: title ?? this.title,
       fullUrl: fullUrl ?? this.fullUrl,
+      remoteUrl: remoteUrl ?? this.remoteUrl,
       sortOrder: sortOrder ?? this.sortOrder,
       isPinned: isPinned ?? this.isPinned,
       username: username ?? this.username,
@@ -40276,6 +40318,9 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
     }
     if (fullUrl.present) {
       map['full_url'] = Variable<String>(fullUrl.value);
+    }
+    if (remoteUrl.present) {
+      map['remote_url'] = Variable<String>(remoteUrl.value);
     }
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
@@ -40318,6 +40363,7 @@ class DevQuickTabsTableCompanion extends UpdateCompanion<DevQuickTabData> {
           ..write('personId: $personId, ')
           ..write('title: $title, ')
           ..write('fullUrl: $fullUrl, ')
+          ..write('remoteUrl: $remoteUrl, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('isPinned: $isPinned, ')
           ..write('username: $username, ')
@@ -59696,6 +59742,7 @@ typedef $$DevQuickTabsTableTableCreateCompanionBuilder =
       required String personId,
       required String title,
       required String fullUrl,
+      Value<String> remoteUrl,
       Value<int> sortOrder,
       Value<bool> isPinned,
       Value<String> username,
@@ -59712,6 +59759,7 @@ typedef $$DevQuickTabsTableTableUpdateCompanionBuilder =
       Value<String> personId,
       Value<String> title,
       Value<String> fullUrl,
+      Value<String> remoteUrl,
       Value<int> sortOrder,
       Value<bool> isPinned,
       Value<String> username,
@@ -59749,6 +59797,11 @@ class $$DevQuickTabsTableTableFilterComposer
 
   ColumnFilters<String> get fullUrl => $composableBuilder(
     column: $table.fullUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteUrl => $composableBuilder(
+    column: $table.remoteUrl,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -59824,6 +59877,11 @@ class $$DevQuickTabsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get remoteUrl => $composableBuilder(
+    column: $table.remoteUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
@@ -59885,6 +59943,9 @@ class $$DevQuickTabsTableTableAnnotationComposer
 
   GeneratedColumn<String> get fullUrl =>
       $composableBuilder(column: $table.fullUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteUrl =>
+      $composableBuilder(column: $table.remoteUrl, builder: (column) => column);
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
@@ -59955,6 +60016,7 @@ class $$DevQuickTabsTableTableTableManager
                 Value<String> personId = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String> fullUrl = const Value.absent(),
+                Value<String> remoteUrl = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> isPinned = const Value.absent(),
                 Value<String> username = const Value.absent(),
@@ -59969,6 +60031,7 @@ class $$DevQuickTabsTableTableTableManager
                 personId: personId,
                 title: title,
                 fullUrl: fullUrl,
+                remoteUrl: remoteUrl,
                 sortOrder: sortOrder,
                 isPinned: isPinned,
                 username: username,
@@ -59985,6 +60048,7 @@ class $$DevQuickTabsTableTableTableManager
                 required String personId,
                 required String title,
                 required String fullUrl,
+                Value<String> remoteUrl = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> isPinned = const Value.absent(),
                 Value<String> username = const Value.absent(),
@@ -59999,6 +60063,7 @@ class $$DevQuickTabsTableTableTableManager
                 personId: personId,
                 title: title,
                 fullUrl: fullUrl,
+                remoteUrl: remoteUrl,
                 sortOrder: sortOrder,
                 isPinned: isPinned,
                 username: username,

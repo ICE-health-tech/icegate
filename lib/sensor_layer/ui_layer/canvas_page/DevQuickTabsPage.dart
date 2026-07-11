@@ -1,12 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/DevTools/DevQuickTabLoginType.dart';
 import 'package:ice_gate/data_layer/Protocol/DevTools/DevQuickTabProtocol.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
 import 'package:ice_gate/orchestration_layer/Services/DevQuickTabStore.dart';
+import 'package:ice_gate/orchestration_layer/Services/DevQuickTabUrlResolver.dart';
 import 'package:ice_gate/orchestration_layer/Services/WebViewCredentialStore.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DevQuickTabCredentialsSheet.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,11 +39,15 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
   }
 
   Future<void> _reload() async {
+    if (!mounted) return;
     final db = context.read<AppDatabase>();
-    if (_personId.isNotEmpty && db.supabaseSync != null) {
-      await db.supabaseSync!.syncTableDown('dev_quick_tabs', _personId);
+    final personId =
+        context.read<PersonBlock>().currentPersonID.value ?? '';
+    if (personId.isNotEmpty && db.supabaseSync != null) {
+      await db.supabaseSync!.syncTableDown('dev_quick_tabs', personId);
     }
-    final rows = await DevQuickTabStore.list(db, _personId);
+    if (!mounted) return;
+    final rows = await DevQuickTabStore.list(db, personId);
     if (!mounted) return;
     setState(() {
       _tabs = rows;
@@ -49,19 +56,51 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
   }
 
   Future<void> _openTab(DevQuickTabProtocol tab) async {
+    final openUrl = await DevQuickTabUrlResolver.resolveOpenUrl(tab);
+    if (openUrl == null || !mounted) return;
+
+    if (kDebugMode) {
+      debugPrint('DevQuickTab open: $openUrl');
+    }
+
     final type = DevQuickTabLoginType.fromStorage(tab.loginType);
     if (type.opensExternally) {
-      final uri = Uri.tryParse(tab.fullUrl);
+      final uri = Uri.tryParse(openUrl);
       if (uri != null && await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
       return;
     }
-    final uri = Uri(
-      path: '/webview',
-      queryParameters: {'url': tab.fullUrl, 'title': tab.title},
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final urlOptions = <WebViewUrlOption>[
+      if (tab.fullUrl.trim().isNotEmpty)
+        WebViewUrlOption(
+          label: l10n.dev_quick_tabs_url,
+          url: tab.fullUrl.trim(),
+        ),
+      if (tab.remoteUrl.trim().isNotEmpty)
+        WebViewUrlOption(
+          label: l10n.dev_quick_tabs_remote_url,
+          url: tab.remoteUrl.trim(),
+        ),
+    ];
+
+    final db = context.read<AppDatabase>();
+    final personId = _personId;
+    if (personId.isNotEmpty) {
+      await DevQuickTabStore.syncSslTrustForOpenUrl(db, personId, openUrl);
+    }
+    if (!mounted) return;
+
+    // Direct route — avoids go_router dropping URL from extra (Map<String,String>).
+    WidgetNavigatorAction.navigateExternalUrl(
+      context,
+      openUrl,
+      title: tab.title,
+      urlOptions: urlOptions,
     );
-    context.push(uri.toString());
   }
 
   Future<void> _persistHostCredentials({
@@ -90,6 +129,7 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     final isEdit = existing != null;
     final titleCtrl = TextEditingController(text: existing?.title ?? '');
     final urlCtrl = TextEditingController(text: existing?.fullUrl ?? '');
+    final remoteUrlCtrl = TextEditingController(text: existing?.remoteUrl ?? '');
     final userCtrl = TextEditingController(text: existing?.username ?? '');
     final passCtrl = TextEditingController(text: existing?.password ?? '');
     var initialPasskey = existing?.passkey ?? '';
@@ -136,6 +176,15 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
                   TextField(
                     controller: urlCtrl,
                     decoration: InputDecoration(labelText: l10n.dev_quick_tabs_url),
+                    keyboardType: TextInputType.url,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: remoteUrlCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.dev_quick_tabs_remote_url,
+                      hintText: l10n.dev_quick_tabs_remote_url_hint,
+                    ),
                     keyboardType: TextInputType.url,
                   ),
                   const SizedBox(height: 12),
@@ -224,7 +273,8 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
               FilledButton(
                 onPressed: () {
                   if (titleCtrl.text.trim().isEmpty ||
-                      urlCtrl.text.trim().isEmpty) {
+                      (urlCtrl.text.trim().isEmpty &&
+                          remoteUrlCtrl.text.trim().isEmpty)) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(l10n.dev_quick_tabs_validation_error),
@@ -245,24 +295,31 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     if (saved != true || !mounted) return;
     final title = titleCtrl.text.trim();
     final url = urlCtrl.text.trim();
-    if (title.isEmpty || url.isEmpty) return;
+    final remoteUrl = remoteUrlCtrl.text.trim();
+    if (title.isEmpty || (url.isEmpty && remoteUrl.isEmpty)) return;
 
-    await _persistHostCredentials(
-      fullUrl: url,
-      loginType: loginType,
-      username: userCtrl.text.trim(),
-      password: passCtrl.text,
-      passkey: passkeyCtrl.text.trim(),
-    );
+    for (final openUrl in [url, remoteUrl]) {
+      if (openUrl.isEmpty) continue;
+      await _persistHostCredentials(
+        fullUrl: openUrl,
+        loginType: loginType,
+        username: userCtrl.text.trim(),
+        password: passCtrl.text,
+        passkey: passkeyCtrl.text.trim(),
+      );
+    }
 
+    if (!mounted) return;
     final db = context.read<AppDatabase>();
+    final personId = _personId;
     if (isEdit) {
       await DevQuickTabStore.update(
         db,
-        _personId,
+        personId,
         existing.copyWith(
           title: title,
           fullUrl: url,
+          remoteUrl: remoteUrl,
           username: userCtrl.text.trim(),
           password: passCtrl.text,
           passkey: passkeyCtrl.text.trim(),
@@ -272,11 +329,12 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     } else {
       await DevQuickTabStore.create(
         db,
-        _personId,
+        personId,
         DevQuickTabProtocol(
           id: IDGen.generateUuid(),
           title: title,
           fullUrl: url,
+          remoteUrl: remoteUrl,
           sortOrder: _tabs.length,
           username: userCtrl.text.trim(),
           password: passCtrl.text,
@@ -330,7 +388,8 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
     );
     if (ok != true || !mounted) return;
     final db = context.read<AppDatabase>();
-    await DevQuickTabStore.delete(db, _personId, tab.id);
+    final personId = _personId;
+    await DevQuickTabStore.delete(db, personId, tab.id);
     await _reload();
   }
 
@@ -455,7 +514,7 @@ class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
                 final tab = _tabs[index];
                 return HubEntryCard(
                   title: tab.title,
-                  subtitle: tab.fullUrl,
+                  subtitle: tab.listSubtitle,
                   icon: Icons.language_rounded,
                   accent: _accents[index % _accents.length],
                   onTap: () => _openTab(tab),

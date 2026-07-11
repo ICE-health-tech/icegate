@@ -7,6 +7,7 @@ class DevQuickTabProtocol {
     required this.id,
     required this.title,
     required this.fullUrl,
+    this.remoteUrl = '',
     this.sortOrder = 0,
     this.isPinned = false,
     this.username = '',
@@ -17,7 +18,10 @@ class DevQuickTabProtocol {
 
   final String id;
   final String title;
+  /// Homelab / LAN URL.
   final String fullUrl;
+  /// Public or VPN URL when off-LAN.
+  final String remoteUrl;
   final int sortOrder;
   final bool isPinned;
   final String username;
@@ -29,6 +33,7 @@ class DevQuickTabProtocol {
     'id': id,
     'title': title,
     'fullUrl': fullUrl,
+    'remoteUrl': remoteUrl,
     'sortOrder': sortOrder,
     'isPinned': isPinned,
     'username': username,
@@ -42,6 +47,7 @@ class DevQuickTabProtocol {
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       fullUrl: json['fullUrl'] as String? ?? '',
+      remoteUrl: json['remoteUrl'] as String? ?? '',
       sortOrder: json['sortOrder'] is int ? json['sortOrder'] as int : 0,
       isPinned: json['isPinned'] as bool? ?? false,
       username: json['username'] as String? ?? '',
@@ -63,6 +69,7 @@ class DevQuickTabProtocol {
     String? id,
     String? title,
     String? fullUrl,
+    String? remoteUrl,
     int? sortOrder,
     bool? isPinned,
     String? username,
@@ -74,6 +81,7 @@ class DevQuickTabProtocol {
       id: id ?? this.id,
       title: title ?? this.title,
       fullUrl: fullUrl ?? this.fullUrl,
+      remoteUrl: remoteUrl ?? this.remoteUrl,
       sortOrder: sortOrder ?? this.sortOrder,
       isPinned: isPinned ?? this.isPinned,
       username: username ?? this.username,
@@ -81,5 +89,29 @@ class DevQuickTabProtocol {
       passkey: passkey ?? this.passkey,
       loginType: loginType ?? this.loginType,
     );
+  }
+
+  bool get hasAnyUrl =>
+      fullUrl.trim().isNotEmpty || remoteUrl.trim().isNotEmpty;
+
+  Iterable<String> get allUrls sync* {
+    if (fullUrl.trim().isNotEmpty) yield fullUrl.trim();
+    if (remoteUrl.trim().isNotEmpty) yield remoteUrl.trim();
+  }
+
+  Iterable<String> get allHosts sync* {
+    for (final url in allUrls) {
+      final host = Uri.tryParse(url)?.host ?? '';
+      if (host.isNotEmpty) yield host;
+    }
+  }
+
+  String get listSubtitle {
+    final local = fullUrl.trim();
+    final remote = remoteUrl.trim();
+    if (local.isNotEmpty && remote.isNotEmpty) {
+      return '$local\n↳ $remote';
+    }
+    return local.isNotEmpty ? local : remote;
   }
 }
