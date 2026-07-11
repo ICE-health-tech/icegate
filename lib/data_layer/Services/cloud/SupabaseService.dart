@@ -147,6 +147,7 @@ class SupabaseService {
     debugPrint("🔄 [SupabaseService] Starting full sync down for $personId...");
 
     final tablesToSync = [
+      'achievements',
       'journal_activity_options',
       'mind_logs',
       'projects',
@@ -181,6 +182,7 @@ class SupabaseService {
       'job_positions',
       'bonuses',
       'events',
+      'project_notes'
     ];
 
     for (final table in tablesToSync) {

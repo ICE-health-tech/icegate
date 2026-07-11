@@ -39,7 +39,6 @@ abstract final class ProjectJournalArchive {
 
     final id = IDGen.UUIDV7();
     final hasImage = imagePath != null && imagePath.trim().isNotEmpty;
-
     try {
       await context.read<AchievementsDAO>().insertAchievement(
         AchievementsTableCompanion(

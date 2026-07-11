@@ -197,7 +197,6 @@ class _ProjectJournalInlineFormState extends State<ProjectJournalInlineForm> {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final personId = context.read<PersonBlock>().currentPersonID.value ?? '';
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -247,7 +246,11 @@ class _ProjectJournalInlineFormState extends State<ProjectJournalInlineForm> {
                 borderRadius: BorderRadius.circular(12),
                 child: LocalFirstImage(
                   localPath: _imagePath!,
-                  remoteUrl: _imagePath!,
+                  remoteUrl: JournalMedia.canonicalRemotePath(
+                        _imagePath,
+                        personId: personId,
+                      ) ??
+                      _imagePath!,
                   subFolder: 'user_markdown_documentation',
                   ownerId: personId,
                   height: 100,
