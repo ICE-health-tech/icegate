@@ -7,6 +7,9 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 /// Uses an in-memory drift database, so no platform channels or network are
 /// involved.
 void main() {
+  // Fixed base for deterministic recency assertions.
+  final _baseTime = DateTime(2026, 1, 1);
+
   late AppDatabase db;
 
   setUp(() {
@@ -47,12 +50,12 @@ void main() {
       expect(rows.map((r) => r.id), ['m1']);
     });
 
-    test('orders by weight then recency', () async {
+    test('orders by weight first, recency only breaking ties', () async {
       for (final entry in [
-        ['low', 0.1, 1],
-        ['high', 0.9, 1],
-        ['mid-new', 0.5, 2],
-        ['mid-old', 0.5, 1],
+        ['low', 0.1],
+        ['high', 0.9],
+        ['tie-b', 0.5],
+        ['tie-a', 0.5],
       ]) {
         await db.aiMemoryDAO.insertMemory(
           AiMemoriesTableCompanion.insert(
@@ -61,18 +64,47 @@ void main() {
             title: 'T',
             content: 'c',
             memoryWeight: Value(entry[1] as double),
-            createdAt: Value(DateTime(2026, 1, 1).add(Duration(days: entry[2] as int))),
-            updatedAt: Value(DateTime(2026, 1, 1).add(Duration(days: entry[2] as int))),
           ),
         );
-        await db.aiMemoryDAO.setStatus(entry[0] as String, 'confirmed');
       }
 
+      // Give the two 0.5-weight rows distinct updatedAt values. setStatus
+      // stamps updatedAt with now(), so the tiebreak has to be set before
+      // confirming rather than through it.
+      await (db.update(db.aiMemoriesTable)
+            ..where((t) => t.id.equals('tie-a')))
+          .write(const AiMemoriesTableCompanion(
+            updatedAt: Value(_baseTime),
+          ));
+      await (db.update(db.aiMemoriesTable)
+            ..where((t) => t.id.equals('tie-b')))
+          .write(const AiMemoriesTableCompanion(
+            updatedAt: Value(_baseTime.add(const Duration(days: 1))),
+          ));
+
+      for (final id in ['low', 'high', 'tie-a', 'tie-b']) {
+        await db.aiMemoryDAO.setStatus(id, 'confirmed');
+      }
+
+      // Re-assert the tiebreak timestamps, since setStatus overwrote them.
+      await (db.update(db.aiMemoriesTable)
+            ..where((t) => t.id.equals('tie-a')))
+          .write(const AiMemoriesTableCompanion(
+            updatedAt: Value(_baseTime),
+          ));
+      await (db.update(db.aiMemoriesTable)
+            ..where((t) => t.id.equals('tie-b')))
+          .write(const AiMemoriesTableCompanion(
+            updatedAt: Value(_baseTime.add(const Duration(days: 1))),
+          ));
+
       final rows = await db.aiMemoryDAO.getConfirmed(personId: 'person-1');
-      expect(
-        rows.map((r) => r.id).toList(),
-        ['high', 'mid-new', 'mid-old', 'low'],
-      );
+      expect(rows.map((r) => r.id).toList(), [
+        'high',
+        'tie-b',
+        'tie-a',
+        'low',
+      ]);
     });
 
     test('tag filter matches by overlap, not substring', () async {
@@ -179,7 +211,7 @@ void main() {
           sourceKind: 'in_app',
           appLabel: 'ice_gate',
           route: const Value('/health'),
-          createdAt: createdAt == null ? null : Value(createdAt),
+          createdAt: Value(createdAt),
         ),
       );
     }

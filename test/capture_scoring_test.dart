@@ -4,42 +4,76 @@ import 'package:ice_gate/data_layer/Protocol/Screenshot/ScreenshotMemoryProtocol
 import 'package:ice_gate/orchestration_layer/Services/AutoCaptureJob.dart';
 
 /// Scoring and extraction-parsing tests. Pure logic, no platform channels.
+///
+/// Session state matters here: `score()` awards a first-visit bonus only for
+/// routes absent from the job's session-seen set, and that set is populated by
+/// `onRouteChanged()` — not by `score()` itself. A test that neither declares a
+/// route as visited nor accounts for the bonus is off by firstVisitWeight
+/// (0.1 by default). Both cases are covered explicitly below.
 void main() {
   group('Capture scoring', () {
-    AutoCaptureJob job = AutoCaptureJob.instance;
+    final job = AutoCaptureJob.instance;
 
-    setUp(() {
-      // Fresh session state per test.
-      job.stop();
-    });
+    /// stop() is async and clears the session-seen sets, so it must be awaited
+    /// before scoring or a prior test's routes leak into the next one.
+    Future<void> freshSession() => job.stop();
 
-    test('low signal activity does not reach the threshold', () {
+    setUp(freshSession);
+
+    test('low signal activity does not reach the threshold', () async {
+      await freshSession();
+      // Unseen, low-value, no dwell: only the first-visit bonus applies.
       final score = job.score(const BehaviourSignal(route: '/settings'));
       expect(score.score, lessThan(0.6));
     });
 
-    test('high-value route with dwell clears the threshold', () {
+    test('high-value route with dwell clears the threshold', () async {
+      await freshSession();
       final score = job.score(
         const BehaviourSignal(route: '/health', dwellSeconds: 60),
       );
-      // 0.4 dwell + 0.3 high-value
-      expect(score.score, closeTo(0.7, 0.001));
+      // 0.4 dwell (60s saturates) + 0.3 high-value + 0.1 first visit.
+      expect(score.score, closeTo(0.8, 0.001));
       expect(score.reasons, contains('high_value_route'));
       expect(score.reasons, contains('dwell:60s'));
+      expect(score.reasons, contains('first_visit'));
     });
 
-    test('dwell weight saturates rather than growing without bound', () {
+    test('first-visit bonus is not awarded to a route already seen', () async {
+      await freshSession();
+      // Declare the route visited, as MainShell would on a real navigation.
+      job.onRouteChanged('/health');
+      job.onRouteChanged('/health');
+
+      final score = job.score(
+        const BehaviourSignal(route: '/health', dwellSeconds: 60),
+      );
+      // 0.4 dwell + 0.3 high-value, no first-visit bonus.
+      expect(score.score, closeTo(0.7, 0.001));
+      expect(score.reasons, isNot(contains('first_visit')));
+    });
+
+    test('dwell weight saturates rather than growing without bound', () async {
+      await freshSession();
+      // Mark seen so the first-visit bonus does not vary between the two
+      // scores below.
+      job.onRouteChanged('/unknown');
+
       final short = job.score(
         const BehaviourSignal(route: '/unknown', dwellSeconds: 10),
       );
       final long = job.score(
         const BehaviourSignal(route: '/unknown', dwellSeconds: 600),
       );
-      expect(long.score, lessThanOrEqualTo(0.4));
+
+      // 10s is 1/6 of the saturation window; 600s clamps to full weight.
+      expect(short.score, closeTo(0.4 * (10 / 60), 0.001));
+      expect(long.score, closeTo(0.4, 0.001));
       expect(long.score, greaterThan(short.score));
     });
 
-    test('data entry contributes even on a low-value route', () {
+    test('data entry contributes even on a low-value route', () async {
+      await freshSession();
       final score = job.score(
         const BehaviourSignal(
           route: '/health/food-input',
@@ -49,7 +83,31 @@ void main() {
       expect(score.reasons, contains('data_entry'));
     });
 
-    test('records why a capture happened', () {
+    test('repeat visits only count past the third visit', () async {
+      await freshSession();
+      for (var i = 0; i < 3; i++) {
+        job.onRouteChanged('/finance');
+      }
+      final underThreshold = job.score(
+        const BehaviourSignal(route: '/finance'),
+      );
+      expect(underThreshold.reasons, isNot(contains('repeat_visit:3')));
+
+      job.onRouteChanged('/finance');
+      final overThreshold = job.score(
+        const BehaviourSignal(route: '/finance'),
+      );
+      expect(overThreshold.reasons, contains('repeat_visit:4'));
+    });
+
+    test('zero dwell records no dwell reason', () async {
+      await freshSession();
+      final score = job.score(const BehaviourSignal(route: '/health'));
+      expect(score.reasons, isNot(contains('dwell:0s')));
+    });
+
+    test('records why a capture happened', () async {
+      await freshSession();
       final score = job.score(
         const BehaviourSignal(
           route: '/finance',
