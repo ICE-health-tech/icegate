@@ -233,8 +233,6 @@
   "health_spo2_motivation_empty": "Wear your device and check back—your next reading can guide your calm and clarity.",
   "health_metrics_air_quality": "Air Quality",
   "health_metrics_weather": "Weather",
-  "health_metrics_air_quality": "Air Quality",
-  "health_metrics_weather": "Weather",
   "health_air_quality": "Air Quality",
   "health_weather": "Weather",
   "health_temperature_subtitle": "Current Temperature",
@@ -1392,5 +1390,26 @@
   "custom_url": "Custom URL",
   "settings_title": "Settings",
   "mind_latest_note": "Latest Note",
-  "common_done": "Done"
+  "common_done": "Done",
+  "aiMemoryTitle": "Screen Memory",
+  "aiMemoryDraftsTitle": "Waiting for review",
+  "aiMemoryConfirmedTitle": "Confirmed memories",
+  "aiMemoryNoDrafts": "No memories waiting for review.",
+  "aiMemoryNoConfirmed": "No confirmed memories yet.",
+  "aiMemoryAutoCaptureTitle": "Automatic capture",
+  "aiMemoryAutoCaptureSubtitle": "Capture important screens automatically. Up to {cap} per day.",
+  "@aiMemoryAutoCaptureSubtitle": {
+    "placeholders": {
+      "cap": {
+        "type": "int"
+      }
+    }
+  },
+  "aiMemoryDisclosure": "Automatic capture is off by default. When on, the app records screens you use and extracts text from them on this device or by upload. Nothing is added to AI prompts until you confirm it. You can delete all captures at any time.",
+  "aiMemoryDailyCap": "Daily capture limit",
+  "aiMemorySyncNow": "Sync now",
+  "aiMemoryDeleteAll": "Delete all",
+  "aiMemoryDeleteAllConfirm": "Delete all captured screens and their memories? This cannot be undone.",
+  "aiMemoryConfirm": "Confirm",
+  "aiMemoryDiscard": "Discard"
 }

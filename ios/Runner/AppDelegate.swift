@@ -19,6 +19,11 @@ import UIKit
       IceGateScreenTimePlugin.register(with: registrar)
     }
 
+    // On-device image captioning (FoundationModels, iOS 26 + A17 Pro/M-series).
+    if let registrar = self.registrar(forPlugin: "OnDeviceCaptionPlugin") {
+      OnDeviceCaptionPlugin.register(with: registrar)
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

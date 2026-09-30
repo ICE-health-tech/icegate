@@ -172,6 +172,8 @@ class SupabaseService {
       'achievements',
       'heart_rate_logs',
       'oxygen_saturation_logs',
+      'ai_memories',
+      'capture_queue',
     ];
 
     for (final table in tablesToSync) {
@@ -289,6 +291,16 @@ class SupabaseService {
       case 'ai_prompts':
         for (final r in records) {
           await database.aiPromptsDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'ai_memories':
+        for (final r in records) {
+          await database.aiMemoryDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'capture_queue':
+        for (final r in records) {
+          await database.captureQueueDAO.upsertFromSupabase(r);
         }
         break;
       case 'project_notes':

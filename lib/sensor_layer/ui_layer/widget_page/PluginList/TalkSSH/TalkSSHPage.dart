@@ -388,13 +388,21 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       final personBlock = context.read<PersonBlock>();
       final personID = personBlock.information.value.profiles.id;
       if (personID != null) {
-        final dao = context.read<AppDatabase>().aiPromptsDAO;
+        final database = context.read<AppDatabase>();
+        final dao = database.aiPromptsDAO;
         final data = await dao.getPrompt(personID, mode);
-        if (data != null) {
-          _sshService.aiPromptPrefix.value = data.prompt;
-        } else {
-          _sshService.aiPromptPrefix.value = '';
-        }
+
+        // Confirmed screen memory is injected ABOVE the user-authored prompt,
+        // never merged into it, so the stored prompt stays exactly what the
+        // user wrote. Only 'confirmed' rows are returned.
+        final memoryBlock = await database.aiMemoryDAO.buildContext(
+          personId: personID,
+        );
+
+        final prompt = data?.prompt ?? '';
+        _sshService.aiPromptPrefix.value = memoryBlock.isEmpty
+            ? prompt
+            : '$memoryBlock\n\n$prompt';
       }
     } else {
       _sshService.aiPromptPrefix.value = '';

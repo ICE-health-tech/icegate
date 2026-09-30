@@ -7,6 +7,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/ActivityTrackerService.dart';
+import 'package:ice_gate/orchestration_layer/Services/AutoCaptureJob.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodConsumePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodInputPage.dart';
@@ -34,6 +35,11 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
+  /// Boundary the auto-capture job reads when capturing the in-app screen.
+  /// A dedicated boundary is required: capturing the root boundary usually
+  /// fails or produces a blank/oversized image.
+  final GlobalKey _captureBoundaryKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +47,7 @@ class _MainShellState extends State<MainShell> {
       final scoreBlock = context.read<ScoreBlock>();
       final authBlock = context.read<AuthBlock>();
       ActivityTrackerService().init(scoreBlock, authBlock);
+      AutoCaptureJob.instance.attachCaptureBoundary(_captureBoundaryKey);
     });
   }
 
@@ -124,6 +131,7 @@ class _MainShellState extends State<MainShell> {
     // Update the tracker with the current path after the build is complete
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ActivityTrackerService().updatePath(currentRoute);
+      AutoCaptureJob.instance.onRouteChanged(currentRoute);
     });
 
     final bool shouldHideAppBar =
@@ -170,9 +178,11 @@ class _MainShellState extends State<MainShell> {
                 child: Center(child: mainButton),
               ),
       ),
-      body: Stack(
-        children: [
-          widget.child,
+      body: RepaintBoundary(
+        key: _captureBoundaryKey,
+        child: Stack(
+          children: [
+            widget.child,
           if (!shouldHideAppBar)
             Positioned(
               top: 0,
@@ -199,7 +209,8 @@ class _MainShellState extends State<MainShell> {
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

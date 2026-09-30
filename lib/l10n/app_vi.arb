@@ -1390,5 +1390,19 @@
   "home_tasks_active": "Nhiệm vụ chạy",
   "settings_title": "Cài đặt",
   "mind_latest_note": "Ghi chú gần nhất",
-  "common_done": "Xong"
+  "common_done": "Xong",
+  "aiMemoryTitle": "Ký ức màn hình",
+  "aiMemoryDraftsTitle": "Đang chờ xem xét",
+  "aiMemoryConfirmedTitle": "Ký ức đã xác nhận",
+  "aiMemoryNoDrafts": "Không có ký ức nào chờ xem xét.",
+  "aiMemoryNoConfirmed": "Chưa có ký ức nào được xác nhận.",
+  "aiMemoryAutoCaptureTitle": "Tự động chụp",
+  "aiMemoryAutoCaptureSubtitle": "Tự động chụp các màn hình quan trọng. Tối đa {cap} mỗi ngày.",
+  "aiMemoryDailyCap": "Giới hạn chụp mỗi ngày",
+  "aiMemorySyncNow": "Đồng bộ ngay",
+  "aiMemoryDeleteAll": "Xóa tất cả",
+  "aiMemoryDeleteAllConfirm": "Xóa toàn bộ ảnh chụp và ký ức? Hành động này không thể hoàn tác.",
+  "aiMemoryConfirm": "Xác nhận",
+  "aiMemoryDiscard": "Bỏ qua",
+  "aiMemoryDisclosure": "Tự động chụp mặc định tắt. Khi bật, ứng dụng ghi lại các màn hình bạn sử dụng và trích xuất văn bản từ đó trên thiết bị này hoặc qua tải lên. Không nội dung nào được thêm vào câu lệnh AI cho đến khi bạn xác nhận. Bạn có thể xóa toàn bộ ảnh chụp bất cứ lúc nào."
 }

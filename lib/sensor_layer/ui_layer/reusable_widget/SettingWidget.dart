@@ -11,6 +11,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Memory/AiMemoryBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -278,6 +279,24 @@ class SettingsWidget extends StatelessWidget {
               ],
             ),
 
+            // 1.5 Data & sync
+            _buildSettingSection(
+              context: context,
+              title: 'Data & sync',
+              children: [
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Shared vault',
+                  subtitle: 'Files shared with ICE Desk (across devices)',
+                  icon: Icons.folder_shared_rounded,
+                  color: Colors.teal,
+                  onTap: () {
+                    context.push('/settings/vault');
+                  },
+                ),
+              ],
+            ),
+
             // 2. Preferences
             _buildSettingSection(
               context: context,
@@ -316,6 +335,35 @@ class SettingsWidget extends StatelessWidget {
                         notificationService.setNotificationsEnabled(value);
                       },
                     ),
+                  );
+                }),
+                // Screen memory / automatic capture. Off by default; this
+                // records what the user is doing, so it requires an explicit
+                // opt-in rather than defaulting on.
+                Watch((context) {
+                  final aiMemoryBlock = context.read<AiMemoryBlock>();
+                  final l10n = AppLocalizations.of(context)!;
+                  final isEnabled = aiMemoryBlock.isAutoCaptureEnabled.value;
+
+                  return _buildPremiumSettingTile(
+                    context: context,
+                    title: l10n.aiMemoryAutoCaptureTitle,
+                    subtitle: isEnabled
+                        ? l10n.aiMemoryAutoCaptureSubtitle(
+                            aiMemoryBlock.dailyCap.value,
+                          )
+                        : l10n.aiMemoryNoDrafts,
+                    icon: Icons.screenshot_monitor_rounded,
+                    color: isEnabled ? Colors.green : Colors.grey,
+                    trailingWidget: Switch.adaptive(
+                      value: isEnabled,
+                      activeTrackColor: Colors.green.withValues(alpha: 0.5),
+                      activeColor: Colors.green,
+                      onChanged: (bool value) {
+                        aiMemoryBlock.setAutoCaptureEnabled(value);
+                      },
+                    ),
+                    onTap: () => context.push('/ai-memory'),
                   );
                 }),
                 // Tile cho đổi ngôn ngữ — hiển thị ngôn ngữ hiện tại

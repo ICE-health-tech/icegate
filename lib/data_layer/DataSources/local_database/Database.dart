@@ -38,6 +38,8 @@ part 'daos/growth_dao.dart';
 part 'daos/progression_dao.dart';
 part 'daos/ssh_sessions_dao.dart';
 part 'daos/ai_prompts_dao.dart';
+part 'daos/ai_memories_dao.dart';
+part 'daos/capture_queue_dao.dart';
 part 'daos/configs_dao.dart';
 part 'daos/portfolio_snapshots_dao.dart';
 
@@ -6754,6 +6756,107 @@ class AiPromptsTable extends Table {
 
 // AiPromptsDAO moved to daos/ai_prompts_dao.dart
 
+/// Extracted AI memory produced from a captured screen.
+/// `content` is the text injected into future AI prompts. Only rows with
+/// status = 'confirmed' are ever injected (see AiMemoryRetriever).
+@DataClassName('AiMemoryData')
+class AiMemoriesTable extends Table {
+  @override
+  String get tableName => 'ai_memories';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get tenantID => text()
+      .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
+      .named('tenant_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
+  TextColumn get title => text().named('title')();
+  TextColumn get content => text().named('content')();
+
+  /// Extracted memory text, delimited on retrieval because it is derived from
+  /// arbitrary on-screen content and must be treated as untrusted context.
+  TextColumn get summary => text().nullable().named('summary')();
+
+  /// JSON array string, e.g. ["health","heart-rate"].
+  TextColumn get tags => text().nullable().named('tags')();
+  TextColumn get sourceImageUrl => text()
+      .nullable()
+      .named('source_image_url')(); // public Minio URL of the PNG
+  TextColumn get sourceRoute => text().nullable().named('source_route')();
+  TextColumn get sourceKind => text()
+      .nullable()
+      .withDefault(const Constant('in_app'))
+      .named('source_kind')(); // in_app / android_projection / linux_portal
+  TextColumn get aiModel => text().nullable().named('ai_model')();
+
+  /// draft / confirmed / discarded
+  TextColumn get status =>
+      text().withDefault(const Constant('draft')).named('status')();
+  RealColumn get memoryWeight => real()
+      .nullable()
+      .withDefault(const Constant(1.0))
+      .named('memory_weight')(); // 0..1 relevance from the agent
+  DateTimeColumn get createdAt => dateTime()
+      .nullable()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .nullable()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Local queue of pending/attempted screen captures awaiting upload and
+/// extraction. Rows are counted (not kept in memory) to enforce the daily
+/// capture budget, so a restart cannot silently exceed the cap.
+@DataClassName('CaptureQueueData')
+class CaptureQueueTable extends Table {
+  @override
+  String get tableName => 'capture_queue';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get personID => text().named('person_id')(); // sync filters on it
+  TextColumn get sourceKind => text().named('source_kind')();
+
+  /// Foreground app name; equals the route for in_app captures.
+  TextColumn get appLabel => text().named('app_label')();
+  TextColumn get route => text().nullable().named('route')();
+  TextColumn get imageUrl => text().nullable().named('image_url')(); // Minio URL
+  TextColumn get localPath => text()
+      .nullable()
+      .named('local_path')(); // fallback if upload failed
+  RealColumn get score => real().withDefault(const Constant(0.0)).named('score')();
+
+  /// JSON array of contributing scoring signals, for "why was this captured?".
+  TextColumn get scoreReasons => text().nullable().named('score_reasons')();
+
+  /// pending / uploading / analyzed / failed
+  TextColumn get status =>
+      text().withDefault(const Constant('pending')).named('status')();
+  IntColumn get attempts =>
+      int().withDefault(const Constant(0)).named('attempts')(); // retry counter
+  TextColumn get error => text().nullable().named('error')();
+  DateTimeColumn get createdAt => dateTime()
+      .nullable()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .nullable()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// AiMemoryDAO moved to daos/ai_memories_dao.dart
+// CaptureQueueDAO moved to daos/capture_queue_dao.dart
+
 @DataClassName('ConfigData')
 class ConfigsTable extends Table {
   @override
@@ -6838,6 +6941,8 @@ class ConfigsTable extends Table {
     OxygenSaturationLogsTable,
     AppUsageHistoryTable,
     AppTimeSpendingTable,
+    AiMemoriesTable,
+    CaptureQueueTable,
   ],
   daos: [
     ThemeDAO,
@@ -6872,6 +6977,8 @@ class ConfigsTable extends Table {
     AchievementsDAO,
     MindLogsDAO,
     JournalActivityOptionsDAO,
+    AiMemoryDAO,
+    CaptureQueueDAO,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -7118,6 +7225,10 @@ class AppDatabase extends _$AppDatabase {
   @override
   AiPromptsDAO get aiPromptsDAO => AiPromptsDAO(this);
   @override
+  AiMemoryDAO get aiMemoryDAO => AiMemoryDAO(this);
+  @override
+  CaptureQueueDAO get captureQueueDAO => CaptureQueueDAO(this);
+  @override
   ConfigsDAO get configsDAO => ConfigsDAO(this);
   @override
   MindLogsDAO get mindLogsDAO => MindLogsDAO(this);
@@ -7149,7 +7260,9 @@ class AppDatabase extends _$AppDatabase {
   // v72 → adds needs_ai_retry to meals for offline / failed AI analysis retry
   // v74 → adds mood_score to exercise_logs (manual log / sync)
   // v75 → adds journal_activity_options (synced custom journal activities)
-  int get schemaVersion => 75;
+  // v76 → adds ai_memories (extracted screen memory, user-confirmed before prompt injection)
+  // v77 → adds capture_queue (local pending screen captures for the auto-capture job)
+  int get schemaVersion => 77;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7707,6 +7820,17 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 71) {
           await m.createTable(appTimeSpendingTable);
+        }
+        if (from < 77) {
+          // Screen-capture AI memory. Both tables are new, so createTable is
+          // correct; each is wrapped so a partially-applied upgrade does not
+          // abort the rest of the migration.
+          try {
+            await m.createTable(aiMemoriesTable);
+          } catch (_) {}
+          try {
+            await m.createTable(captureQueueTable);
+          } catch (_) {}
         }
       },
       beforeOpen: (details) async {

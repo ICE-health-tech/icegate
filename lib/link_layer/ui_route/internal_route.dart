@@ -28,6 +28,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/user_page/RegisterPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/ChangePasswordPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/ChangeUsernamePage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/user_page/VaultPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/DocumentationPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/ExercisePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodDashboardPage.dart';
@@ -65,6 +66,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/projects_page/NoteManagerPage.dar
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/FolderDetailsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/SyncEnginePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/stock_page/StockPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/memory_page/AiMemoryPage.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -211,6 +213,12 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const NotificationInboxPage(),
     ),
     GoRoute(
+      path: '/ai-memory',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) =>
+          AiMemoryPage(block: context.read<AiMemoryBlock>()),
+    ),
+    GoRoute(
       path: '/documentation',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const DocumentationPage(),
@@ -284,6 +292,10 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: 'change-username',
               builder: (context, state) => const ChangeUsernamePage(),
+            ),
+            GoRoute(
+              path: 'vault',
+              builder: (context, state) => const VaultPage(),
             ),
           ],
         ),

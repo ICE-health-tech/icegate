@@ -15,6 +15,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Memory/AiMemoryBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/WidgetSettingsBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlockerBlock.dart';
@@ -31,6 +32,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FoodAnalysisBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/VaultBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 
 import 'package:ice_gate/link_layer/cloud_database/powersync_connector.dart';
@@ -83,6 +85,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late ProjectBlock projectBlock;
   late FinanceBlock financeBlock;
   late ContentBlock contentBlock;
+  late AiMemoryBlock aiMemoryBlock;
   late WidgetSettingsBlock widgetSettingsBlock;
   late InternalWidgetBlock internalWidgetBlock;
   late ExternalWidgetBlock externalWidgetBlock;
@@ -99,6 +102,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late FoodAnalysisBlock foodAnalysisBlock;
   late EnvironmentalBlock environmentalBlock;
   late StorageBlock storageBlock;
+  late VaultBlock vaultBlock;
 
   DateTime? _lastPausedTime;
   String? _lastInitializedPersonId; // Guard for redundant re-inits
@@ -374,6 +378,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       socialBlock = SocialBlock();
       mindBlock = MindBlock(database.mindLogsDAO);
       contentBlock = ContentBlock();
+      aiMemoryBlock = AiMemoryBlock();
       widgetSettingsBlock = WidgetSettingsBlock();
       objectDatabaseBlock = ObjectDatabaseBlock();
       configBlock = ConfigBlock();
@@ -401,6 +406,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       environmentalBlock = EnvironmentalBlock();
       storageBlock = StorageBlock();
+      vaultBlock = VaultBlock();
       Future.microtask(() => storageBlock.init());
 
 
@@ -436,6 +442,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 configBlock.init(database.configsDAO, personId);
                 widgetSettingsBlock.init(database.widgetDAO, personId);
                 questBlock.init(database, personId);
+                aiMemoryBlock.init(database, personId);
                 notificationService.startWatchingEnabledNotifications(personId);
 
                 scoreBlock.init(
@@ -695,6 +702,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<LocalNotificationService>.value(value: notificationService),
         Provider<FocusAudioHandler>.value(value: audioHandler),
         Provider<AppDatabase>.value(value: database),
+        Provider<AiMemoryBlock>.value(value: aiMemoryBlock),
         Provider<ExternalWidgetsDAO>.value(value: database.externalWidgetsDAO),
         Provider<ProjectNoteDAO>.value(value: database.projectNoteDAO),
         Provider<InternalWidgetsDAO>.value(value: database.internalWidgetsDAO),
@@ -767,6 +775,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<FoodAnalysisBlock>.value(value: foodAnalysisBlock),
         Provider<EnvironmentalBlock>.value(value: environmentalBlock),
         Provider<StorageBlock>.value(value: storageBlock),
+        Provider<VaultBlock>.value(value: vaultBlock),
 
       ],
       child: widget.childWidget,
