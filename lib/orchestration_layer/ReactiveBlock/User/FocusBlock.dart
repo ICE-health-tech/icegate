@@ -7,6 +7,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/JobWorkLogBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/FocusAudioHandler.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
@@ -46,6 +47,9 @@ class FocusBlock {
   set personId(String id) => _currentPersonId = id;
   final LocalNotificationService? _notificationService;
 
+  /// When set, completing/stopping a [startJobWorkFocus] session logs job minutes.
+  JobWorkLogBlock? jobWorkLogBlock;
+
   // Configuration (Defaults)
   static const int _initialFocusMin = 25;
   static const int _initialShortBreakMin = 5;
@@ -78,6 +82,8 @@ class FocusBlock {
 
   // Exercise Mode Signals
   final isExerciseMode = signal<bool>(false);
+  final isJobWorkMode = signal<bool>(false);
+  bool _deferJobWorkFinalize = false;
   final isStopwatchMode = signal<bool>(false);
   final exerciseType = signal<String>('');
   final stopwatchElapsedSeconds = signal<int>(0);
@@ -439,6 +445,12 @@ class FocusBlock {
   /// Persists session (including exercise_logs when [isExerciseMode]) then clears timer state.
   Future<void> stopTimer() async {
     appLog("FocusBlock: stopTimer called. Saving session...");
+    pauseTimer();
+    if (isJobWorkMode.value) {
+      await _finalizeJobWorkSession(sessionNotes.value);
+    } else {
+      await _finalizeLinkedJobWork();
+    }
     await _saveSession(status: 'interrupted');
     resetTimer();
   }
@@ -481,6 +493,11 @@ class FocusBlock {
 
     // Trigger Summary UI - actual saving happens when user confirms in dialog
     _activeSessionId = await _saveSession(status: 'completed');
+    if (isJobWorkMode.value) {
+      _deferJobWorkFinalize = true;
+    } else {
+      await _finalizeLinkedJobWork();
+    }
     showSummary.value = true;
   }
 
@@ -510,6 +527,11 @@ class FocusBlock {
     bool markTaskDone = false,
   }) async {
     sessionNotes.value = finalNotes;
+
+    if (_deferJobWorkFinalize) {
+      _deferJobWorkFinalize = false;
+      await _finalizeJobWorkSession(finalNotes);
+    }
 
     if (_activeSessionId != null) {
       await _focusSessionDao.patchSession(
@@ -561,6 +583,7 @@ class FocusBlock {
   void setSessionType(String type) {
     currentSessionType.value = type;
     isExerciseMode.value = false;
+    isJobWorkMode.value = false;
     isMuskMode.value = false; // Reset musk mode when manually shifting types
     resetTimer();
   }
@@ -572,6 +595,7 @@ class FocusBlock {
     currentSessionType.value = 'Focus';
     isMuskMode.value = true;
     isExerciseMode.value = false;
+    isJobWorkMode.value = false;
     focusDuration.value = muskFocusDuration.value;
 
     // ALIGNMENT LOGIC: Always find the next 5-minute mark (divisible by 5)
@@ -611,9 +635,59 @@ class FocusBlock {
     startTimer();
   }
 
+  void startJobWorkFocus({
+    required int minutes,
+    String? projectId,
+    String? notes,
+  }) {
+    if (isRunning.value) {
+      appLog('FocusBlock: startJobWorkFocus ignored — timer already running');
+      return;
+    }
+    appLog('🚀 [FocusBlock] Starting job-work focus for $minutes min');
+    isJobWorkMode.value = true;
+    isExerciseMode.value = false;
+    isMuskMode.value = false;
+    isStopwatchMode.value = false;
+    stopwatchElapsedSeconds.value = 0;
+    currentSessionType.value = 'Focus';
+    if (projectId != null && projectId.isNotEmpty) {
+      selectedProjectId.value = projectId;
+    }
+    sessionNotes.value = notes ?? '';
+    remainingTime.value = minutes * 60;
+    startTimer();
+  }
+
+  Future<void> _finalizeLinkedJobWork() async {
+    if (!isJobWorkMode.value) return;
+    await _finalizeJobWorkSession(sessionNotes.value);
+  }
+
+  Future<void> _finalizeJobWorkSession(String notes) async {
+    if (!isJobWorkMode.value && !_deferJobWorkFinalize) return;
+    isJobWorkMode.value = false;
+    final block = jobWorkLogBlock;
+    if (block == null) return;
+
+    final minutes = _accumulatedSeconds <= 0
+        ? 0
+        : ((_accumulatedSeconds + 59) ~/ 60);
+    if (minutes > 0) {
+      final trimmed = notes.trim();
+      await block.stopWork(
+        notes: trimmed.isEmpty ? null : trimmed,
+        minutesOverride: minutes,
+      );
+    } else {
+      block.cancelWork();
+    }
+  }
+
   void startExercise(String type, int minutes) {
     appLog("🚀 [FocusBlock] Starting Exercise: $type for $minutes min");
     currentSessionType.value = 'Focus';
+    isJobWorkMode.value = false;
     isExerciseMode.value = true;
     isStopwatchMode.value = false;
     stopwatchElapsedSeconds.value = 0;
@@ -625,6 +699,7 @@ class FocusBlock {
   void startStopwatchExercise(String type) {
     appLog("🚀 [FocusBlock] Starting Stopwatch Exercise: $type");
     currentSessionType.value = 'Focus';
+    isJobWorkMode.value = false;
     isExerciseMode.value = true;
     isStopwatchMode.value = true;
     stopwatchElapsedSeconds.value = 0;
@@ -675,7 +750,9 @@ class FocusBlock {
         sessionNotes.value.isNotEmpty ? sessionNotes.value : null,
       ),
       categories: drift.Value(
-        isExerciseMode.value ? 'health-exercise' : null,
+        isExerciseMode.value
+            ? 'health-exercise'
+            : (isJobWorkMode.value ? 'job-work' : null),
       ),
     );
 

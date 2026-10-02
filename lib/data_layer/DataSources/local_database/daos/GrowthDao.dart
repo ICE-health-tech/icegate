@@ -40,6 +40,23 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
+  /// Mind logs tagged with `act_gratitude` (journal → Biết ơn tab).
+  Stream<List<MindLogData>> watchGratitudeLogs(String personId) {
+    return watchLogsByPerson(personId).map((logs) {
+      return logs.where(_logHasGratitudeActivity).toList();
+    });
+  }
+
+  static bool _logHasGratitudeActivity(MindLogData log) {
+    try {
+      final raw = jsonDecode(log.activities);
+      if (raw is List) {
+        return raw.whereType<String>().contains('act_gratitude');
+      }
+    } catch (_) {}
+    return log.activities.contains('act_gratitude');
+  }
+
   Future<void> insertLog(MindLogsTableCompanion entry) async {
     await into(mindLogsTable).insert(entry);
 
@@ -67,6 +84,16 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
     }
     if (payload['mood_emoji'] == null && payload['mood_score'] is int) {
       payload['mood_emoji'] = _mindLogEmoji(payload['mood_score'] as int);
+    }
+
+    final tenantStr = payload['tenant_id']?.toString().trim() ?? '';
+    if (tenantStr.isEmpty) {
+      debugPrint(
+        '⚠️ [MindLogsDAO] mind_logs sync missing tenant_id '
+        '(id=${payload['id']}, person_id=${payload['person_id']}); '
+        'using $DEFAULT_TENANT_ID',
+      );
+      payload['tenant_id'] = DEFAULT_TENANT_ID;
     }
 
     // Direct push to Supabase
@@ -156,9 +183,16 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final rawTenant = r['tenant_id']?.toString().trim() ?? '';
+    if (rawTenant.isEmpty) {
+      debugPrint(
+        '⚠️ [MindLogsDAO] mind_logs pull missing tenant_id (id=${r['id']}); '
+        'using $DEFAULT_TENANT_ID locally',
+      );
+    }
     final companion = MindLogsTableCompanion(
       id: Value(r['id'] as String),
-      tenantID: Value(r['tenant_id'] as String?),
+      tenantID: Value(rawTenant.isNotEmpty ? rawTenant : DEFAULT_TENANT_ID),
       personID: Value(r['person_id'] as String?),
       moodScore: Value(r['mood_score'] as int),
       moodEmoji: Value(r['mood_emoji'] as String?),

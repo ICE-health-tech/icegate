@@ -3,12 +3,16 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindGratitudePanel.dart';
+
 class ActivitySelector extends StatelessWidget {
   final List<String> selectedActivities;
   final Function(String) onActivityToggled;
   /// Synced custom options for this user (filtered per category in build).
   final List<JournalActivityOptionData> customOptions;
   final void Function(String categoryKey) onAddCustomOption;
+  /// Shown directly under Xã hội when [act_gratitude] is selected.
+  final Widget? gratitudePicker;
 
   const ActivitySelector({
     super.key,
@@ -16,7 +20,10 @@ class ActivitySelector extends StatelessWidget {
     required this.onActivityToggled,
     required this.customOptions,
     required this.onAddCustomOption,
+    this.gratitudePicker,
   });
+
+  static const _gratitudeAccent = MindGratitudePanel.flagColor;
 
   static const Map<String, List<Map<String, dynamic>>> categories = {
     "cat_productivity": [
@@ -36,6 +43,7 @@ class ActivitySelector extends StatelessWidget {
       {"name": "act_friends", "icon": Icons.group_rounded},
       {"name": "act_dating", "icon": Icons.favorite_rounded},
       {"name": "act_kindness", "icon": Icons.volunteer_activism_rounded},
+      {"name": "act_gratitude", "icon": Icons.flag_rounded},
     ],
     "cat_rest": [
       {"name": "act_gaming", "icon": Icons.sports_esports_rounded},
@@ -82,6 +90,9 @@ class ActivitySelector extends StatelessWidget {
                   final isSelected = selectedActivities.contains(name);
                   final colorScheme = Theme.of(context).colorScheme;
 
+                  final isGratitude = name == MindActivityTokens.gratitudeToken;
+                  final accent = isGratitude ? _gratitudeAccent : colorScheme.primary;
+
                   return GestureDetector(
                     onTap: () => onActivityToggled(name),
                     child: AnimatedContainer(
@@ -92,18 +103,22 @@ class ActivitySelector extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? colorScheme.primary.withValues(alpha: 0.15)
-                            : colorScheme.surfaceContainerHighest.withValues(
-                                alpha: 0.3,
-                              ),
+                            ? accent.withValues(alpha: isGratitude ? 0.22 : 0.15)
+                            : isGratitude
+                                ? accent.withValues(alpha: 0.1)
+                                : colorScheme.surfaceContainerHighest.withValues(
+                                    alpha: 0.3,
+                                  ),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
-                              ? colorScheme.primary
-                              : colorScheme.outlineVariant.withValues(
-                                  alpha: 0.5,
-                                ),
-                          width: 1,
+                              ? accent
+                              : isGratitude
+                                  ? accent.withValues(alpha: 0.55)
+                                  : colorScheme.outlineVariant.withValues(
+                                      alpha: 0.5,
+                                    ),
+                          width: isGratitude ? 1.5 : 1,
                         ),
                       ),
                       child: Row(
@@ -113,8 +128,10 @@ class ActivitySelector extends StatelessWidget {
                             icon,
                             size: 16,
                             color: isSelected
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant,
+                                ? accent
+                                : isGratitude
+                                    ? accent
+                                    : colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 6),
                           Text(
@@ -122,9 +139,11 @@ class ActivitySelector extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: isSelected
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurfaceVariant,
-                              fontWeight: isSelected
+                                  ? accent
+                                  : isGratitude
+                                      ? accent
+                                      : colorScheme.onSurfaceVariant,
+                              fontWeight: isSelected || isGratitude
                                   ? FontWeight.bold
                                   : FontWeight.normal,
                             ),
@@ -238,6 +257,8 @@ class ActivitySelector extends StatelessWidget {
                 ),
               ],
             ),
+            if (category.key == 'cat_social' && gratitudePicker != null)
+              gratitudePicker!,
             const SizedBox(height: 12),
           ],
         );

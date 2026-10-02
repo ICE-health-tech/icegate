@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/JobWorkDayStrip.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/JobWorkTaskPickerSheet.dart';
 import 'package:intl/intl.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -262,7 +264,8 @@ void showJobPositionEditor(
                               jobPositionId: jobId,
                             );
                           }
-                          if (ctx.mounted) Navigator.pop(ctx);
+                          // if (ctx.mounted) Navigator.pop(ctx);
+                          Navigator.maybeOf(context)?.pop();
                         },
                         child: Text(l10n.projects_calendar_save),
                       ),
@@ -549,9 +552,15 @@ class _JobCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final fmt = DateFormat.yMMMd();
     final accent =
         _isCurrent ? EntryColors.financeSilverAccent : Colors.white38;
+
+    final title = job.jobTitle.isNotEmpty ? job.jobTitle : job.employer;
+    final today = DateTime.now();
+    final dateFmt = DateFormat.yMMMd(l10n.localeName);
+    final dateRange = job.endDate != null
+        ? '${dateFmt.format(job.startDate)} – ${dateFmt.format(job.endDate!)}'
+        : '${dateFmt.format(job.startDate)} – ${l10n.finance_job_present}';
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -562,8 +571,14 @@ class _JobCard extends StatelessWidget {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () =>
-                  showJobPositionEditor(context, financeBlock, position: job),
+              onTap: () => showJobWorkTaskPicker(
+                context,
+                personId: financeBlock.personId,
+                jobId: job.id,
+                jobTitle: title,
+                day: DateTime(today.year, today.month, today.day),
+                accent: accent,
+              ),
               borderRadius: BorderRadius.circular(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -581,13 +596,46 @@ class _JobCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    job.jobTitle.isNotEmpty ? job.jobTitle : job.employer,
+                    title,
                     style: TextStyle(
                       color: accent,
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
                     ),
                   ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    context.push(
+                      '/finance/jobs/${job.id}/history'
+                      '?title=${Uri.encodeComponent(title)}',
+                    );
+                  },
+                  icon: Icon(
+                    Icons.history_rounded,
+                    size: 18,
+                    color: accent.withValues(alpha: 0.7),
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  tooltip: l10n.finance_job_history,
+                ),
+                IconButton(
+                  onPressed: () => showJobPositionEditor(
+                    context,
+                    financeBlock,
+                    position: job,
+                  ),
+                  icon: Icon(
+                    Icons.edit_outlined,
+                    size: 16,
+                    color: accent.withValues(alpha: 0.5),
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  tooltip: l10n.finance_job_edit,
                 ),
                 Container(
                   padding:
@@ -639,11 +687,7 @@ class _JobCard extends StatelessWidget {
                   _chip(Icons.schedule_rounded,
                       l10n.finance_job_tenure(_tenureMonths)),
                   _chip(Icons.badge_outlined, _contractLabel(l10n)),
-                  _chip(
-                    Icons.date_range_rounded,
-                    '${fmt.format(job.startDate)}'
-                    '${job.endDate != null ? ' – ${fmt.format(job.endDate!)}' : ''}',
-                  ),
+                  _chip(Icons.date_range_rounded, dateRange),
                 ],
               ),
             ),
@@ -669,6 +713,7 @@ class _JobCard extends StatelessWidget {
           JobWorkDayStrip(
             personId: financeBlock.personId,
             jobId: job.id,
+            jobTitle: title,
             accent: accent,
           ),
         ],

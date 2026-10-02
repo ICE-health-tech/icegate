@@ -2882,6 +2882,111 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mind_insights_open_skills => 'Skill certificates';
 
   @override
+  String get mind_insights_open_gratitude => 'Gratitude';
+
+  @override
+  String get gratitude_page_subtitle =>
+      'Record the people and things you appreciate each day.';
+
+  @override
+  String get gratitude_section_people => 'People';
+
+  @override
+  String get gratitude_section_things => 'Things';
+
+  @override
+  String gratitude_count(int count) {
+    return '$count entries';
+  }
+
+  @override
+  String get gratitude_quick_entry_hint =>
+      'Log who you\'re grateful for today...';
+
+  @override
+  String get gratitude_empty_title => 'Your gratitude flag';
+
+  @override
+  String get gratitude_empty_subtitle =>
+      'Tap below to add someone or something you\'re grateful for.';
+
+  @override
+  String get gratitude_kind_person => 'Person';
+
+  @override
+  String get gratitude_kind_thing => 'Thing';
+
+  @override
+  String get gratitude_add_title => 'Add gratitude';
+
+  @override
+  String get gratitude_name_label => 'Name';
+
+  @override
+  String get gratitude_note_hint => 'A note (optional)';
+
+  @override
+  String get gratitude_facebook_link_label => 'Facebook link';
+
+  @override
+  String get gratitude_facebook_link_hint => 'Paste a Facebook profile URL';
+
+  @override
+  String get gratitude_pick_avatar => 'Choose profile photo';
+
+  @override
+  String get gratitude_change_photo => 'Change photo';
+
+  @override
+  String get gratitude_open_facebook => 'Open Facebook';
+
+  @override
+  String get gratitude_update_flag => 'Update Flag';
+
+  @override
+  String get gratitude_edit_title => 'Edit gratitude';
+
+  @override
+  String get gratitude_tags_label => 'Tags';
+
+  @override
+  String get gratitude_filter_all => 'All';
+
+  @override
+  String get gratitude_filter_things => 'Things';
+
+  @override
+  String get gratitude_tag_play => 'Play';
+
+  @override
+  String get gratitude_tag_learn => 'Learn';
+
+  @override
+  String get gratitude_tag_work => 'Work';
+
+  @override
+  String get gratitude_tag_health => 'Health';
+
+  @override
+  String get gratitude_tag_social => 'Social';
+
+  @override
+  String get gratitude_tag_family => 'Family';
+
+  @override
+  String get gratitude_invalid_facebook_link => 'Invalid Facebook link';
+
+  @override
+  String get gratitude_delete_confirm => 'Remove this gratitude entry?';
+
+  @override
+  String get gratitude_pick_title => 'Who or what are you grateful for?';
+
+  @override
+  String get gratitude_pick_required =>
+      'Pick someone or something you\'re grateful for.';
+
+  @override
   String get weekly_mood_trend => 'Weekly Mood Trend';
 
   @override
@@ -2943,6 +3048,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get act_kindness => 'Kindness';
+
+  @override
+  String get act_gratitude => 'Gratitude';
 
   @override
   String get act_gaming => 'Gaming';
@@ -6047,6 +6155,164 @@ class AppLocalizationsEn extends AppLocalizations {
   String finance_job_work_streak(int count) {
     return '$count day streak';
   }
+
+  @override
+  String get finance_job_time_sheet_subtitle =>
+      'Plan your time and start working';
+
+  @override
+  String get finance_job_time_plan => 'Plan for today';
+
+  @override
+  String get finance_job_time_category => 'Work type';
+
+  @override
+  String get finance_job_time_start => 'Start';
+
+  @override
+  String get finance_job_time_log_now => 'Log now';
+
+  @override
+  String get finance_job_time_start_timer => 'Start timer';
+
+  @override
+  String finance_job_time_logged(int minutes) {
+    return 'Logged $minutes min';
+  }
+
+  @override
+  String get finance_job_time_stop => 'Stop';
+
+  @override
+  String finance_job_time_minutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String finance_job_time_elapsed(int minutes) {
+    return '$minutes min elapsed';
+  }
+
+  @override
+  String finance_job_time_actual_summary(int actual, int planned) {
+    return 'Actual: $actual min / planned: $planned min';
+  }
+
+  @override
+  String get finance_job_time_category_code_vibe => 'Vibe code';
+
+  @override
+  String get finance_job_time_category_code_manual => 'Manual code';
+
+  @override
+  String get finance_job_time_category_sales_desk => 'Desk sales';
+
+  @override
+  String get finance_job_time_category_sales_field => 'Field sales';
+
+  @override
+  String get finance_job_time_category_communication => 'Communication';
+
+  @override
+  String get finance_job_time_category_meditation => 'Meditation';
+
+  @override
+  String get finance_job_task_group_code => 'Code';
+
+  @override
+  String get finance_job_task_group_sales => 'Sales';
+
+  @override
+  String get finance_job_task_group_speech => 'Speaking';
+
+  @override
+  String get finance_job_task_group_health => 'Health';
+
+  @override
+  String get finance_job_task_group_time_log => 'Log time';
+
+  @override
+  String get finance_job_task_add_job => 'Add task';
+
+  @override
+  String get finance_job_sub_task_name => 'Task name';
+
+  @override
+  String get finance_job_time_log => 'Log time';
+
+  @override
+  String get finance_job_time_log_title => 'Log time';
+
+  @override
+  String get finance_job_task_read_docs => 'Read docs';
+
+  @override
+  String get finance_job_task_sales_customer => 'Customer contact';
+
+  @override
+  String get finance_job_task_sales_report => 'Reports';
+
+  @override
+  String get finance_job_task_pick_group => 'Choose work type';
+
+  @override
+  String get finance_job_task_full_time => 'Full-time';
+
+  @override
+  String get finance_job_task_part_time => 'Part-time';
+
+  @override
+  String get finance_job_task_part_time_hours => 'Hours worked';
+
+  @override
+  String get finance_job_task_part_time_save => 'Log hours';
+
+  @override
+  String get finance_job_task_pick_detail => 'Choose detail';
+
+  @override
+  String get finance_job_history => 'History';
+
+  @override
+  String get finance_job_history_title => 'Work history';
+
+  @override
+  String get finance_job_history_subtitle => 'Synced from your job time logs';
+
+  @override
+  String get finance_job_history_empty => 'No time logged yet';
+
+  @override
+  String get finance_job_present => 'present';
+
+  @override
+  String get finance_job_time_notes => 'Notes';
+
+  @override
+  String get finance_job_time_notes_hint => 'What did you work on?';
+
+  @override
+  String get finance_job_customer_title => 'Customer';
+
+  @override
+  String get finance_job_customer_name => 'Customer name';
+
+  @override
+  String get finance_job_customer_company => 'Company';
+
+  @override
+  String get finance_job_customer_phone => 'Phone';
+
+  @override
+  String get finance_job_customer_save => 'Save customer';
+
+  @override
+  String finance_job_customer_existing(int count) {
+    return '$count customers saved';
+  }
+
+  @override
+  String get finance_job_customer_open_form => 'Open customer form';
 
   @override
   String get finance_achievements_subtitle =>

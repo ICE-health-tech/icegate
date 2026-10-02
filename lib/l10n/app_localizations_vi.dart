@@ -2861,6 +2861,110 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mind_insights_open_skills => 'Chứng nhận kỹ năng';
 
   @override
+  String get mind_insights_open_gratitude => 'Biết ơn';
+
+  @override
+  String get gratitude_page_subtitle =>
+      'Ghi lại những người và vật bạn trân trọng mỗi ngày.';
+
+  @override
+  String get gratitude_section_people => 'Người biết ơn';
+
+  @override
+  String get gratitude_section_things => 'Vật biết ơn';
+
+  @override
+  String gratitude_count(int count) {
+    return '$count mục';
+  }
+
+  @override
+  String get gratitude_quick_entry_hint => 'Ghi nhật ký biết ơn hôm nay...';
+
+  @override
+  String get gratitude_empty_title => 'Cờ biết ơn của bạn';
+
+  @override
+  String get gratitude_empty_subtitle =>
+      'Chạm nút bên dưới để ghi tên người hoặc vật bạn biết ơn.';
+
+  @override
+  String get gratitude_kind_person => 'Người';
+
+  @override
+  String get gratitude_kind_thing => 'Vật';
+
+  @override
+  String get gratitude_add_title => 'Thêm biết ơn';
+
+  @override
+  String get gratitude_name_label => 'Tên';
+
+  @override
+  String get gratitude_note_hint => 'Lời biết ơn (tuỳ chọn)';
+
+  @override
+  String get gratitude_facebook_link_label => 'Link Facebook';
+
+  @override
+  String get gratitude_facebook_link_hint => 'Dán link profile Facebook';
+
+  @override
+  String get gratitude_pick_avatar => 'Chọn ảnh đại diện';
+
+  @override
+  String get gratitude_change_photo => 'Đổi ảnh';
+
+  @override
+  String get gratitude_open_facebook => 'Mở Facebook';
+
+  @override
+  String get gratitude_update_flag => 'Cập nhật cờ';
+
+  @override
+  String get gratitude_edit_title => 'Sửa biết ơn';
+
+  @override
+  String get gratitude_tags_label => 'Nhãn';
+
+  @override
+  String get gratitude_filter_all => 'Tất cả';
+
+  @override
+  String get gratitude_filter_things => 'Vật';
+
+  @override
+  String get gratitude_tag_play => 'Chơi';
+
+  @override
+  String get gratitude_tag_learn => 'Học';
+
+  @override
+  String get gratitude_tag_work => 'Làm việc';
+
+  @override
+  String get gratitude_tag_health => 'Sức khỏe';
+
+  @override
+  String get gratitude_tag_social => 'Xã hội';
+
+  @override
+  String get gratitude_tag_family => 'Gia đình';
+
+  @override
+  String get gratitude_invalid_facebook_link => 'Link Facebook không hợp lệ';
+
+  @override
+  String get gratitude_delete_confirm => 'Xoá mục biết ơn này?';
+
+  @override
+  String get gratitude_pick_title => 'Bạn biết ơn ai / vật gì?';
+
+  @override
+  String get gratitude_pick_required =>
+      'Chọn người hoặc vật biết ơn trước khi lưu.';
+
+  @override
   String get weekly_mood_trend => 'XU HƯỚNG TÂM TRẠNG TUẦN';
 
   @override
@@ -2922,6 +3026,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get act_kindness => 'Tử tế';
+
+  @override
+  String get act_gratitude => 'Biết ơn';
 
   @override
   String get act_gaming => 'Chơi game';
@@ -6012,6 +6119,165 @@ class AppLocalizationsVi extends AppLocalizations {
   String finance_job_work_streak(int count) {
     return '$count ngày liên tiếp';
   }
+
+  @override
+  String get finance_job_time_sheet_subtitle =>
+      'Kế hoạch thời gian và bắt đầu làm việc';
+
+  @override
+  String get finance_job_time_plan => 'Kế hoạch hôm nay';
+
+  @override
+  String get finance_job_time_category => 'Loại công việc';
+
+  @override
+  String get finance_job_time_start => 'Bắt đầu';
+
+  @override
+  String get finance_job_time_log_now => 'Log ngay';
+
+  @override
+  String get finance_job_time_start_timer => 'Bấm giờ';
+
+  @override
+  String finance_job_time_logged(int minutes) {
+    return 'Đã log $minutes phút';
+  }
+
+  @override
+  String get finance_job_time_stop => 'Dừng';
+
+  @override
+  String finance_job_time_minutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String finance_job_time_elapsed(int minutes) {
+    return 'Đã làm $minutes phút';
+  }
+
+  @override
+  String finance_job_time_actual_summary(int actual, int planned) {
+    return 'Thực tế: $actual phút / kế hoạch: $planned phút';
+  }
+
+  @override
+  String get finance_job_time_category_code_vibe => 'Vibe code';
+
+  @override
+  String get finance_job_time_category_code_manual => 'Code tay';
+
+  @override
+  String get finance_job_time_category_sales_desk => 'Sales bàn';
+
+  @override
+  String get finance_job_time_category_sales_field => 'Sales ngoài đường';
+
+  @override
+  String get finance_job_time_category_communication => 'Giao tiếp';
+
+  @override
+  String get finance_job_time_category_meditation => 'Thiền';
+
+  @override
+  String get finance_job_task_group_code => 'Code';
+
+  @override
+  String get finance_job_task_group_sales => 'Sales';
+
+  @override
+  String get finance_job_task_group_speech => 'Nói';
+
+  @override
+  String get finance_job_task_group_health => 'Sức khỏe';
+
+  @override
+  String get finance_job_task_group_time_log => 'Log thời gian';
+
+  @override
+  String get finance_job_task_add_job => 'Thêm task';
+
+  @override
+  String get finance_job_sub_task_name => 'Tên task';
+
+  @override
+  String get finance_job_time_log => 'Log thời gian';
+
+  @override
+  String get finance_job_time_log_title => 'Log thời gian';
+
+  @override
+  String get finance_job_task_read_docs => 'Đọc tài liệu';
+
+  @override
+  String get finance_job_task_sales_customer => 'Tiếp xúc khách hàng';
+
+  @override
+  String get finance_job_task_sales_report => 'Làm báo cáo';
+
+  @override
+  String get finance_job_task_pick_group => 'Chọn loại công việc';
+
+  @override
+  String get finance_job_task_full_time => 'Full-time';
+
+  @override
+  String get finance_job_task_part_time => 'Part-time';
+
+  @override
+  String get finance_job_task_part_time_hours => 'Số giờ làm';
+
+  @override
+  String get finance_job_task_part_time_save => 'Ghi giờ';
+
+  @override
+  String get finance_job_task_pick_detail => 'Chọn chi tiết';
+
+  @override
+  String get finance_job_history => 'Lịch sử';
+
+  @override
+  String get finance_job_history_title => 'Lịch sử làm việc';
+
+  @override
+  String get finance_job_history_subtitle =>
+      'Đồng bộ từ log thời gian công việc';
+
+  @override
+  String get finance_job_history_empty => 'Chưa có thời gian được ghi';
+
+  @override
+  String get finance_job_present => 'đến nay';
+
+  @override
+  String get finance_job_time_notes => 'Ghi chú';
+
+  @override
+  String get finance_job_time_notes_hint => 'Bạn đã làm gì?';
+
+  @override
+  String get finance_job_customer_title => 'Khách hàng';
+
+  @override
+  String get finance_job_customer_name => 'Tên khách hàng';
+
+  @override
+  String get finance_job_customer_company => 'Công ty';
+
+  @override
+  String get finance_job_customer_phone => 'Số điện thoại';
+
+  @override
+  String get finance_job_customer_save => 'Lưu khách hàng';
+
+  @override
+  String finance_job_customer_existing(int count) {
+    return 'Đã có $count khách hàng';
+  }
+
+  @override
+  String get finance_job_customer_open_form => 'Mở form thêm khách';
 
   @override
   String get finance_achievements_subtitle =>

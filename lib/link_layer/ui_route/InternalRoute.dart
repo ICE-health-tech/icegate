@@ -59,9 +59,11 @@ import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/TalkSSH/SS
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceDailyReportPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/JobWorkHistoryPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindAnalysisPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindGratitudePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SkillCertificatePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.dart';
@@ -510,6 +512,14 @@ final GoRouter router = GoRouter(
               builder: (context, state) => const FinanceDailyReportPage(),
             ),
             GoRoute(
+              path: 'jobs/:jobId/history',
+              builder: (context, state) {
+                final jobId = state.pathParameters['jobId']!;
+                final title = state.uri.queryParameters['title'] ?? '';
+                return JobWorkHistoryPage(jobId: jobId, jobTitle: title);
+              },
+            ),
+            GoRoute(
               path: 'stock/:symbol',
               builder: (context, state) {
                 final symbol = state.pathParameters['symbol']!;
@@ -564,6 +574,10 @@ final GoRouter router = GoRouter(
                   },
                 ),
               ],
+            ),
+            GoRoute(
+              path: 'gratitude',
+              builder: (context, state) => const MindGratitudePage(),
             ),
             GoRoute(
               path: 'journal',

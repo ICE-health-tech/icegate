@@ -23,7 +23,9 @@ class _FinanceJobPositionsPageState extends State<FinanceJobPositionsPage> {
   @override
   void initState() {
     super.initState();
-    widget.financeBlock.sync();
+    widget.financeBlock.sync().then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override

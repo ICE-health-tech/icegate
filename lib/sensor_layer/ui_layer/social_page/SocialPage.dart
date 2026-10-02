@@ -7,6 +7,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTrendEditor.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/PlanActionDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/PlanActionTabPanel.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
@@ -64,11 +65,12 @@ class SocialPage extends StatefulWidget {
           iconData = Icons.flag_outlined;
           action = () => PlanActionDialog.show(context);
           break;
-        case 3: // Analysis
-          iconData = Icons.bar_chart_rounded;
-          action = () {
-            // Placeholder for analysis action or navigation
-          };
+        case 3: // Gratitude / analysis
+          iconData = Icons.flag_rounded;
+          action = () => MindLogEntryDialog.show(
+                context,
+                initialActivities: [MindActivityTokens.gratitudeToken],
+              );
           break;
         case 4: // Mindset log
           iconData = Icons.psychology_alt_outlined;

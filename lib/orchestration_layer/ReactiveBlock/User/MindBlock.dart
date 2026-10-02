@@ -109,11 +109,21 @@ class MindBlock {
     // Normalize logDate to local midnight to ensure grouping by day works reliably across timezones
     final localMidnight = DateTime(now.year, now.month, now.day);
 
+    final resolvedTenant = tenantId?.trim();
+    if (resolvedTenant == null || resolvedTenant.isEmpty) {
+      debugPrint(
+        '⚠️ [MindBlock] addMindLog missing tenant_id for person $personId; '
+        'using $DEFAULT_TENANT_ID',
+      );
+    }
+
     final entry = MindLogsTableCompanion.insert(
       id: IDGen.UUIDV7(),
-      tenantID: tenantId != null
-          ? drift.Value(tenantId)
-          : const drift.Value.absent(),
+      tenantID: drift.Value(
+        (resolvedTenant != null && resolvedTenant.isNotEmpty)
+            ? resolvedTenant
+            : DEFAULT_TENANT_ID,
+      ),
       personID: drift.Value(personId),
       moodScore: moodScore,
       activities: jsonEncode(activities),
@@ -126,5 +136,21 @@ class MindBlock {
 
     await dao.insertLog(entry);
     debugPrint("✅ [MindBlock] Mind log added successfully");
+  }
+
+  /// Push local gratitude rows up, then pull from Supabase.
+  Future<void> syncGratitude(String personId) async {
+    if (personId.isEmpty) return;
+    final db = dao.attachedDatabase;
+    try {
+      await db.gratitudeDAO.pushAllToCloud(personId);
+      await db.syncTableDown('gratitude_entries', personId);
+      final count = await db.gratitudeDAO.watchForPerson(personId).first;
+      debugPrint(
+        '📡 [MindBlock] gratitude sync done — ${count.length} local entries',
+      );
+    } catch (e) {
+      debugPrint('MindBlock: gratitude sync failed: $e');
+    }
   }
 }

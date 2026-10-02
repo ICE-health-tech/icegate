@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/JobWorkLogBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/data_layer/Services/cloud/DeviceCalendarService.dart';
 import 'package:ice_gate/data_layer/Services/cloud/GoogleCalendarService.dart';
@@ -93,7 +94,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   IntegrationHubBlock? integrationHubBlock;
   bool _pendingGoogleEcosystemConnect = false;
   late FocusAudioHandler audioHandler;
-
+  late JobWorkLogBlock jobWorkLogBlock;
   late PersonBlock personBlock;
   late AuthBlock authBlock;
   late ObjectDatabaseBlock objectDatabaseBlock;
@@ -400,6 +401,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         authService: authService,
         personDao: database.personManagementDAO,
       );
+    
       integrationHubBlock = IntegrationHubBlock(
         personId: personBlock.information.value.profiles.id ?? '',
         dao: database.integrationAccountDAO,
@@ -449,7 +451,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       documentationBlock = DocumentationBlock();
       challengeBlock = ChallengeBlock();
       pulseFeedBlock = PulseFeedBlock();
-
+  jobWorkLogBlock = JobWorkLogBlock(dao: database.jobWorkTrackingDAO);
       musicBlock = MusicBlock(audioHandler: audioHandler);
       socialBlockerBlock = SocialBlockerBlock();
       focusBlock = FocusBlock(
@@ -460,6 +462,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         musicBlock: musicBlock,
         notificationService: notificationService,
       );
+      focusBlock.jobWorkLogBlock = jobWorkLogBlock;
 
       remoteControllerBlock = RemoteControllerBlock(
         supabase: Supabase.instance.client,
@@ -574,6 +577,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                     await financeBlock.sync();
                   } catch (e) {
                     debugPrint('📡 [CloudSync] Finance sync failed: $e');
+                  }
+                  try {
+                    await mindBlock.syncGratitude(personId);
+                  } catch (e) {
+                    debugPrint('📡 [CloudSync] Gratitude sync failed: $e');
                   }
                 });
 
@@ -1032,6 +1040,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<EnvironmentalBlock>.value(value: environmentalBlock),
         Provider<StorageBlock>.value(value: storageBlock),
         Provider<PulseFeedBlock>.value(value: pulseFeedBlock),
+        Provider<JobWorkLogBlock>.value(value: jobWorkLogBlock),
+        Provider<JobWorkTrackingDAO>.value(value: database.jobWorkTrackingDAO),
         if (integrationHubBlock != null)
           Provider<IntegrationHubBlock>.value(value: integrationHubBlock!),
 

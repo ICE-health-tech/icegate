@@ -11,6 +11,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart
 import 'package:ice_gate/orchestration_layer/Services/ProjectJournalArchive.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/GratitudeLogPicker.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodSelector.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ActivitySelector.dart';
 import 'package:image_picker/image_picker.dart';
@@ -79,6 +80,9 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
   final _noteController = TextEditingController();
   String? _attachedImagePath;
   bool _isPickingImage = false;
+  String? _selectedGratitudeEntryId;
+  final _scrollController = ScrollController();
+  final _gratitudePickerKey = GlobalKey();
 
   @override
   void initState() {
@@ -95,17 +99,43 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
         _selectedActivities.add('act_deep_work');
       }
     }
+    if (_gratitudeSelected) {
+      _scrollToGratitudePicker();
+    }
+  }
+
+  void _scrollToGratitudePicker() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = _gratitudePickerKey.currentContext;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+        alignment: 0.2,
+      );
+    });
   }
 
   void _onActivityToggled(String name) {
     setState(() {
       if (_selectedActivities.contains(name)) {
         _selectedActivities.remove(name);
+        if (name == MindActivityTokens.gratitudeToken) {
+          _selectedGratitudeEntryId = null;
+        }
       } else {
         _selectedActivities.add(name);
+        if (name == MindActivityTokens.gratitudeToken) {
+          _scrollToGratitudePicker();
+        }
       }
     });
   }
+
+  bool get _gratitudeSelected =>
+      _selectedActivities.contains(MindActivityTokens.gratitudeToken);
 
   Future<void> _onAddCustomOption(
     String categoryKey,
@@ -199,10 +229,14 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
     final body = note.isEmpty
         ? AppLocalizations.of(context)!.mind_feeling_format(emoji)
         : note;
-    if (_attachedImagePath == null || _attachedImagePath!.isEmpty) {
-      return body;
+    var out = (_attachedImagePath == null || _attachedImagePath!.isEmpty)
+        ? body
+        : '![Image]($_attachedImagePath)\n\n$body';
+    if (_gratitudeSelected &&
+        !out.contains(MindActivityTokens.journalGratitudeMark)) {
+      out = '$out\n\n${MindActivityTokens.journalGratitudeMark}';
     }
-    return '![Image]($_attachedImagePath)\n\n$body';
+    return out;
   }
 
   Future<void> _pickAndAttachImage(String personId) async {
@@ -262,10 +296,45 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
 
     try {
       final db = context.read<AppDatabase>();
+      final l10n = AppLocalizations.of(context)!;
+
+      if (_gratitudeSelected) {
+        final entryId = _selectedGratitudeEntryId;
+        if (entryId == null || entryId.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.gratitude_pick_required)),
+          );
+          return;
+        }
+        final entry = await db.gratitudeDAO.entryById(entryId);
+        if (entry == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.gratitude_pick_required)),
+          );
+          return;
+        }
+      }
+
+      String? mindNote;
+
+      if (_gratitudeSelected) {
+        final entry = await db.gratitudeDAO.entryById(_selectedGratitudeEntryId!);
+        final extra = _noteController.text.trim();
+        mindNote = MindActivityTokens.encodeGratitudeNote(
+          entryId: entry!.id,
+          name: entry.name,
+          kind: entry.kind,
+          text: extra.isEmpty ? null : extra,
+        );
+      } else {
+        final trimmed = _noteController.text.trim();
+        mindNote = trimmed.isEmpty ? null : trimmed;
+      }
+
       await context.read<MindBlock>().addMindLog(
         moodScore: _selectedMood,
         activities: _selectedActivities,
-        note: _noteController.text.trim(),
+        note: mindNote,
         personId: personId,
         tenantId: tenantId,
       );
@@ -274,7 +343,6 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
 
       // Mirror to project_notes for Journal cards (best-effort; mood log is source of truth).
       try {
-        final l10n = AppLocalizations.of(context)!;
         final optionLabels = await db.journalActivityOptionsDAO.labelMapForPerson(
           personId,
         );
@@ -361,7 +429,40 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
   @override
   void dispose() {
     _noteController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  Widget? _buildGratitudePicker(String? personId) {
+    if (personId == null ||
+        personId.isEmpty ||
+        !_gratitudeSelected) {
+      return null;
+    }
+    return KeyedSubtree(
+      key: _gratitudePickerKey,
+      child: GratitudeLogPicker(
+        personId: personId,
+        selectedEntryId: _selectedGratitudeEntryId,
+        onSelected: (id) => setState(() => _selectedGratitudeEntryId = id),
+      ),
+    );
+  }
+
+  Widget _buildActivitySelector({
+    required String? personId,
+    required String? tenantId,
+    required List<JournalActivityOptionData> customOptions,
+  }) {
+    return ActivitySelector(
+      selectedActivities: _selectedActivities,
+      onActivityToggled: _onActivityToggled,
+      customOptions: customOptions,
+      onAddCustomOption: personId == null || personId.isEmpty
+          ? (_) {}
+          : (cat) => _onAddCustomOption(cat, personId, tenantId),
+      gratitudePicker: _buildGratitudePicker(personId),
+    );
   }
 
   @override
@@ -386,6 +487,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
       ),
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
       child: SingleChildScrollView(
+        controller: _scrollController,
         physics: const BouncingScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -460,24 +562,18 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                         .journalActivityOptionsDAO
                         .watchForPerson(personId),
                     builder: (context, snap) {
-                      return ActivitySelector(
-                        selectedActivities: _selectedActivities,
-                        onActivityToggled: _onActivityToggled,
+                      return _buildActivitySelector(
+                        personId: personId,
+                        tenantId: tenantId,
                         customOptions: snap.data ?? const [],
-                        onAddCustomOption: (cat) => _onAddCustomOption(
-                          cat,
-                          personId,
-                          tenantId,
-                        ),
                       );
                     },
                   )
                 else
-                  ActivitySelector(
-                    selectedActivities: _selectedActivities,
-                    onActivityToggled: _onActivityToggled,
+                  _buildActivitySelector(
+                    personId: personId,
+                    tenantId: tenantId,
                     customOptions: const [],
-                    onAddCustomOption: (_) {},
                   ),
                 const SizedBox(height: 24),
                 TextField(

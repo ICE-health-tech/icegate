@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/orchestration_layer/Services/JobWorkLogStore.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/JobWorkLogBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/JobWorkTaskPickerSheet.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 /// Tap days on a job card to mark when you worked.
 class JobWorkDayStrip extends StatefulWidget {
@@ -10,11 +12,13 @@ class JobWorkDayStrip extends StatefulWidget {
     super.key,
     required this.personId,
     required this.jobId,
+    required this.jobTitle,
     required this.accent,
   });
 
   final String personId;
   final String jobId;
+  final String jobTitle;
   final Color accent;
 
   @override
@@ -25,6 +29,8 @@ class _JobWorkDayStripState extends State<JobWorkDayStrip> {
   Set<DateTime> _workDays = {};
   bool _loading = true;
 
+  JobWorkLogBlock get _block => context.read<JobWorkLogBlock>();
+  
   @override
   void initState() {
     super.initState();
@@ -40,8 +46,14 @@ class _JobWorkDayStripState extends State<JobWorkDayStrip> {
     }
   }
 
+  @override
+  void activate() {
+    super.activate();
+    _reload();
+  }
+
   Future<void> _reload() async {
-    final days = await JobWorkLogStore.daysForJob(widget.personId, widget.jobId);
+    final days = await _block.loggedDaysForJob(widget.personId, widget.jobId);
     if (!mounted) return;
     setState(() {
       _workDays = days;
@@ -49,9 +61,26 @@ class _JobWorkDayStripState extends State<JobWorkDayStrip> {
     });
   }
 
+  Future<void> _openTimeSheet(DateTime day) async {
+    await showJobWorkTaskPicker(
+      context,
+      personId: widget.personId,
+      jobId: widget.jobId,
+      jobTitle: widget.jobTitle,
+      day: day,
+      accent: widget.accent,
+    );
+    await _reload();
+  }
+
   Future<void> _toggle(DateTime day) async {
     HapticFeedback.selectionClick();
-    await JobWorkLogStore.toggleDay(widget.personId, widget.jobId, day);
+    final today = _dateOnly(DateTime.now());
+    if (day == today || !_workDays.contains(day)) {
+      await _openTimeSheet(day);
+      return;
+    }
+    await _block.toggleWorkDay(widget.personId, widget.jobId, day);
     await _reload();
   }
 
@@ -61,7 +90,7 @@ class _JobWorkDayStripState extends State<JobWorkDayStrip> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final today = _dateOnly(DateTime.now());
-    final streak = JobWorkLogStore.streakFor(_workDays);
+    final streak = JobWorkLogBlock.streakFor(_workDays);
     final loggedToday = _workDays.contains(today);
 
     if (_loading) {
@@ -111,10 +140,11 @@ class _JobWorkDayStripState extends State<JobWorkDayStrip> {
             final day = today.subtract(Duration(days: 6 - i));
             final logged = _workDays.contains(day);
             final isToday = day == today;
-            final label = DateFormat.E(l10n.localeName)
+            final weekday = DateFormat.E(l10n.localeName)
                 .format(day)
                 .substring(0, 1)
                 .toUpperCase();
+            final dayNum = DateFormat.d(l10n.localeName).format(day);
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(left: i == 0 ? 0 : 3),
@@ -123,14 +153,29 @@ class _JobWorkDayStripState extends State<JobWorkDayStrip> {
                   child: Column(
                     children: [
                       Text(
-                        label,
+                        isToday ? l10n.finance_job_log_today : weekday,
                         style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w700,
-                          color: widget.accent.withValues(alpha: 0.35),
+                          fontSize: isToday ? 7 : 8,
+                          fontWeight: FontWeight.w800,
+                          color: isToday
+                              ? widget.accent
+                              : widget.accent.withValues(alpha: 0.35),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        dayNum,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: isToday
+                              ? widget.accent
+                              : widget.accent.withValues(alpha: 0.55),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
                         height: 28,
@@ -172,7 +217,7 @@ class _JobWorkDayStripState extends State<JobWorkDayStrip> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
-              onPressed: () => _toggle(today),
+              onPressed: () => _openTimeSheet(today),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 minimumSize: Size.zero,

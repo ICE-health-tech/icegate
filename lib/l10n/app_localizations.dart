@@ -5222,6 +5222,204 @@ abstract class AppLocalizations {
   /// **'Skill certificates'**
   String get mind_insights_open_skills;
 
+  /// No description provided for @mind_insights_open_gratitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Gratitude'**
+  String get mind_insights_open_gratitude;
+
+  /// No description provided for @gratitude_page_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record the people and things you appreciate each day.'**
+  String get gratitude_page_subtitle;
+
+  /// No description provided for @gratitude_section_people.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get gratitude_section_people;
+
+  /// No description provided for @gratitude_section_things.
+  ///
+  /// In en, this message translates to:
+  /// **'Things'**
+  String get gratitude_section_things;
+
+  /// No description provided for @gratitude_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} entries'**
+  String gratitude_count(int count);
+
+  /// No description provided for @gratitude_quick_entry_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Log who you\'re grateful for today...'**
+  String get gratitude_quick_entry_hint;
+
+  /// No description provided for @gratitude_empty_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your gratitude flag'**
+  String get gratitude_empty_title;
+
+  /// No description provided for @gratitude_empty_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap below to add someone or something you\'re grateful for.'**
+  String get gratitude_empty_subtitle;
+
+  /// No description provided for @gratitude_kind_person.
+  ///
+  /// In en, this message translates to:
+  /// **'Person'**
+  String get gratitude_kind_person;
+
+  /// No description provided for @gratitude_kind_thing.
+  ///
+  /// In en, this message translates to:
+  /// **'Thing'**
+  String get gratitude_kind_thing;
+
+  /// No description provided for @gratitude_add_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add gratitude'**
+  String get gratitude_add_title;
+
+  /// No description provided for @gratitude_name_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get gratitude_name_label;
+
+  /// No description provided for @gratitude_note_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'A note (optional)'**
+  String get gratitude_note_hint;
+
+  /// No description provided for @gratitude_facebook_link_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Facebook link'**
+  String get gratitude_facebook_link_label;
+
+  /// No description provided for @gratitude_facebook_link_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a Facebook profile URL'**
+  String get gratitude_facebook_link_hint;
+
+  /// No description provided for @gratitude_pick_avatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose profile photo'**
+  String get gratitude_pick_avatar;
+
+  /// No description provided for @gratitude_change_photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get gratitude_change_photo;
+
+  /// No description provided for @gratitude_open_facebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Facebook'**
+  String get gratitude_open_facebook;
+
+  /// No description provided for @gratitude_update_flag.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Flag'**
+  String get gratitude_update_flag;
+
+  /// No description provided for @gratitude_edit_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit gratitude'**
+  String get gratitude_edit_title;
+
+  /// No description provided for @gratitude_tags_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get gratitude_tags_label;
+
+  /// No description provided for @gratitude_filter_all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get gratitude_filter_all;
+
+  /// No description provided for @gratitude_filter_things.
+  ///
+  /// In en, this message translates to:
+  /// **'Things'**
+  String get gratitude_filter_things;
+
+  /// No description provided for @gratitude_tag_play.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get gratitude_tag_play;
+
+  /// No description provided for @gratitude_tag_learn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get gratitude_tag_learn;
+
+  /// No description provided for @gratitude_tag_work.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get gratitude_tag_work;
+
+  /// No description provided for @gratitude_tag_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get gratitude_tag_health;
+
+  /// No description provided for @gratitude_tag_social.
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get gratitude_tag_social;
+
+  /// No description provided for @gratitude_tag_family.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get gratitude_tag_family;
+
+  /// No description provided for @gratitude_invalid_facebook_link.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Facebook link'**
+  String get gratitude_invalid_facebook_link;
+
+  /// No description provided for @gratitude_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this gratitude entry?'**
+  String get gratitude_delete_confirm;
+
+  /// No description provided for @gratitude_pick_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Who or what are you grateful for?'**
+  String get gratitude_pick_title;
+
+  /// No description provided for @gratitude_pick_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick someone or something you\'re grateful for.'**
+  String get gratitude_pick_required;
+
   /// No description provided for @weekly_mood_trend.
   ///
   /// In en, this message translates to:
@@ -5347,6 +5545,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kindness'**
   String get act_kindness;
+
+  /// No description provided for @act_gratitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Gratitude'**
+  String get act_gratitude;
 
   /// No description provided for @act_gaming.
   ///
@@ -11005,6 +11209,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} day streak'**
   String finance_job_work_streak(int count);
+
+  /// No description provided for @finance_job_time_sheet_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan your time and start working'**
+  String get finance_job_time_sheet_subtitle;
+
+  /// No description provided for @finance_job_time_plan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan for today'**
+  String get finance_job_time_plan;
+
+  /// No description provided for @finance_job_time_category.
+  ///
+  /// In en, this message translates to:
+  /// **'Work type'**
+  String get finance_job_time_category;
+
+  /// No description provided for @finance_job_time_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get finance_job_time_start;
+
+  /// No description provided for @finance_job_time_log_now.
+  ///
+  /// In en, this message translates to:
+  /// **'Log now'**
+  String get finance_job_time_log_now;
+
+  /// No description provided for @finance_job_time_start_timer.
+  ///
+  /// In en, this message translates to:
+  /// **'Start timer'**
+  String get finance_job_time_start_timer;
+
+  /// No description provided for @finance_job_time_logged.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged {minutes} min'**
+  String finance_job_time_logged(int minutes);
+
+  /// No description provided for @finance_job_time_stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get finance_job_time_stop;
+
+  /// No description provided for @finance_job_time_minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String finance_job_time_minutes(int minutes);
+
+  /// No description provided for @finance_job_time_elapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min elapsed'**
+  String finance_job_time_elapsed(int minutes);
+
+  /// No description provided for @finance_job_time_actual_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual: {actual} min / planned: {planned} min'**
+  String finance_job_time_actual_summary(int actual, int planned);
+
+  /// No description provided for @finance_job_time_category_code_vibe.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibe code'**
+  String get finance_job_time_category_code_vibe;
+
+  /// No description provided for @finance_job_time_category_code_manual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual code'**
+  String get finance_job_time_category_code_manual;
+
+  /// No description provided for @finance_job_time_category_sales_desk.
+  ///
+  /// In en, this message translates to:
+  /// **'Desk sales'**
+  String get finance_job_time_category_sales_desk;
+
+  /// No description provided for @finance_job_time_category_sales_field.
+  ///
+  /// In en, this message translates to:
+  /// **'Field sales'**
+  String get finance_job_time_category_sales_field;
+
+  /// No description provided for @finance_job_time_category_communication.
+  ///
+  /// In en, this message translates to:
+  /// **'Communication'**
+  String get finance_job_time_category_communication;
+
+  /// No description provided for @finance_job_time_category_meditation.
+  ///
+  /// In en, this message translates to:
+  /// **'Meditation'**
+  String get finance_job_time_category_meditation;
+
+  /// No description provided for @finance_job_task_group_code.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get finance_job_task_group_code;
+
+  /// No description provided for @finance_job_task_group_sales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get finance_job_task_group_sales;
+
+  /// No description provided for @finance_job_task_group_speech.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaking'**
+  String get finance_job_task_group_speech;
+
+  /// No description provided for @finance_job_task_group_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get finance_job_task_group_health;
+
+  /// No description provided for @finance_job_task_group_time_log.
+  ///
+  /// In en, this message translates to:
+  /// **'Log time'**
+  String get finance_job_task_group_time_log;
+
+  /// No description provided for @finance_job_task_add_job.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task'**
+  String get finance_job_task_add_job;
+
+  /// No description provided for @finance_job_sub_task_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Task name'**
+  String get finance_job_sub_task_name;
+
+  /// No description provided for @finance_job_time_log.
+  ///
+  /// In en, this message translates to:
+  /// **'Log time'**
+  String get finance_job_time_log;
+
+  /// No description provided for @finance_job_time_log_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Log time'**
+  String get finance_job_time_log_title;
+
+  /// No description provided for @finance_job_task_read_docs.
+  ///
+  /// In en, this message translates to:
+  /// **'Read docs'**
+  String get finance_job_task_read_docs;
+
+  /// No description provided for @finance_job_task_sales_customer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer contact'**
+  String get finance_job_task_sales_customer;
+
+  /// No description provided for @finance_job_task_sales_report.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get finance_job_task_sales_report;
+
+  /// No description provided for @finance_job_task_pick_group.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose work type'**
+  String get finance_job_task_pick_group;
+
+  /// No description provided for @finance_job_task_full_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Full-time'**
+  String get finance_job_task_full_time;
+
+  /// No description provided for @finance_job_task_part_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Part-time'**
+  String get finance_job_task_part_time;
+
+  /// No description provided for @finance_job_task_part_time_hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours worked'**
+  String get finance_job_task_part_time_hours;
+
+  /// No description provided for @finance_job_task_part_time_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Log hours'**
+  String get finance_job_task_part_time_save;
+
+  /// No description provided for @finance_job_task_pick_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose detail'**
+  String get finance_job_task_pick_detail;
+
+  /// No description provided for @finance_job_history.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get finance_job_history;
+
+  /// No description provided for @finance_job_history_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Work history'**
+  String get finance_job_history_title;
+
+  /// No description provided for @finance_job_history_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced from your job time logs'**
+  String get finance_job_history_subtitle;
+
+  /// No description provided for @finance_job_history_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No time logged yet'**
+  String get finance_job_history_empty;
+
+  /// No description provided for @finance_job_present.
+  ///
+  /// In en, this message translates to:
+  /// **'present'**
+  String get finance_job_present;
+
+  /// No description provided for @finance_job_time_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get finance_job_time_notes;
+
+  /// No description provided for @finance_job_time_notes_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you work on?'**
+  String get finance_job_time_notes_hint;
+
+  /// No description provided for @finance_job_customer_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get finance_job_customer_title;
+
+  /// No description provided for @finance_job_customer_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer name'**
+  String get finance_job_customer_name;
+
+  /// No description provided for @finance_job_customer_company.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get finance_job_customer_company;
+
+  /// No description provided for @finance_job_customer_phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get finance_job_customer_phone;
+
+  /// No description provided for @finance_job_customer_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save customer'**
+  String get finance_job_customer_save;
+
+  /// No description provided for @finance_job_customer_existing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} customers saved'**
+  String finance_job_customer_existing(int count);
+
+  /// No description provided for @finance_job_customer_open_form.
+  ///
+  /// In en, this message translates to:
+  /// **'Open customer form'**
+  String get finance_job_customer_open_form;
 
   /// No description provided for @finance_achievements_subtitle.
   ///

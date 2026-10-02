@@ -35,6 +35,7 @@ class SupabaseService {
     'project_notes': {'extension'},
     // Local Drift has tenant_id; public.subscriptions on Supabase does not (see migrations).
     'subscriptions': {'tenant_id'},
+    'gratitude_entries': {'avatar_local_path'},
   };
 
   Map<String, dynamic> _encodeTransformedRow(
@@ -181,6 +182,11 @@ class SupabaseService {
       'recurring_incomes',
       'job_positions',
       'bonuses',
+      'job_work_days',
+      'job_work_day_plans',
+      'job_time_logs',
+      'job_sub_tasks',
+      'gratitude_entries',
       'events',
       'project_notes'
     ];
@@ -415,6 +421,31 @@ class SupabaseService {
       case 'bonuses':
         for (final r in records) {
           await database.financeDAO.upsertFromSupabaseBonus(r);
+        }
+        break;
+      case 'job_work_days':
+        for (final r in records) {
+          await database.jobWorkTrackingDAO.upsertWorkDayFromSupabase(r);
+        }
+        break;
+      case 'job_work_day_plans':
+        for (final r in records) {
+          await database.jobWorkTrackingDAO.upsertPlanFromSupabase(r);
+        }
+        break;
+      case 'job_time_logs':
+        for (final r in records) {
+          await database.jobWorkTrackingDAO.upsertTimeLogFromSupabase(r);
+        }
+        break;
+      case 'job_sub_tasks':
+        for (final r in records) {
+          await database.jobWorkTrackingDAO.upsertSubTaskFromSupabase(r);
+        }
+        break;
+      case 'gratitude_entries':
+        for (final r in records) {
+          await database.gratitudeDAO.upsertFromSupabase(r);
         }
         break;
       case 'events':

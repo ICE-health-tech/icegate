@@ -25,6 +25,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindGratitudePanel.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:ice_gate/utils/app_log.dart';
 import 'package:ice_gate/utils/journal_media.dart';
@@ -1150,6 +1151,16 @@ class _TextEditorPageState extends State<TextEditorPage>
                           onTap: () {
                             Navigator.pop(ctx);
                             _exportToGoogleDocFromEditor();
+                          },
+                        ),
+                        _optionTile(
+                          ctx,
+                          icon: Icons.flag_rounded,
+                          label: AppLocalizations.of(context)!.gratitude_update_flag,
+                          color: const Color(0xFFE8A317),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            MindGratitudePanel.showUpdateFlagPicker(context);
                           },
                         ),
                         _optionTile(

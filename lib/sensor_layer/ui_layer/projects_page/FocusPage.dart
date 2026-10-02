@@ -3511,6 +3511,15 @@ class _SessionResultDialogState extends State<_SessionResultDialog> {
   bool _markTaskCompleted = false;
 
   @override
+  void initState() {
+    super.initState();
+    final initial = widget.focusBlock.sessionNotes.value.trim();
+    if (initial.isNotEmpty) {
+      _notesController.text = initial;
+    }
+  }
+
+  @override
   void dispose() {
     _notesController.dispose();
     super.dispose();

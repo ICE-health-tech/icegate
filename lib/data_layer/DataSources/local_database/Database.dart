@@ -7,6 +7,7 @@ import 'package:powersync/powersync.dart' show PowerSyncDatabase;
 // import 'package:ice_gate/orchestration_layer/Servic es/PowerPoint/GameConst.dart';
 import 'package:ice_gate/orchestration_layer/ThemeLayer/CurrentThemeData.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/Models/JobDayHistoryEntry.dart';
 import 'package:ice_gate/data_layer/Protocol/User/PersonProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/PersonalInformationProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/UserAccountProtocol.dart';
@@ -34,6 +35,8 @@ import 'package:ice_gate/utils/app_log.dart';
 part 'Database.g.dart';
 part 'daos/InternalWidgetsDao.dart';
 part 'daos/HourlyActivityLogDao.dart';
+part 'daos/JobWorkTrackingDao.dart';
+part 'daos/GratitudeDao.dart';
 part 'daos/ThemeDao.dart';
 part 'daos/ExternalWidgetsDao.dart';
 part 'daos/GrowthDao.dart';
@@ -7193,6 +7196,54 @@ class FeedbackDAO extends DatabaseAccessor<AppDatabase>
   }
 }
 
+@DriftAccessor(tables: [JobWorkingLogsTable])
+class JobWorkingLogsDAO extends DatabaseAccessor<AppDatabase>
+    with _$JobWorkingLogsDAOMixin {
+  JobWorkingLogsDAO(super.db);
+
+  Future<String> insertJob({
+    required String personId,
+    required String jobName,
+    required String status,
+  }) async {
+    final id = IDGen.UUIDV7();
+    await into(jobWorkingLogsTable).insert(
+      JobWorkingLogsTableCompanion.insert(
+        id: id,
+        personId: personId,
+        jobName: jobName,
+        status: status,
+      ),
+    );
+    return id;
+  }
+
+  Future<List<JobWorkingLogData>> forPerson(String personId) {
+    return (select(jobWorkingLogsTable)
+          ..where((t) => t.personId.equals(personId)))
+        .get();
+  }
+
+  Stream<List<JobWorkingLogData>> watchForPerson(String personId) {
+    return (select(jobWorkingLogsTable)
+          ..where((t) => t.personId.equals(personId)))
+        .watch();
+  }
+
+  Future<bool> updateStatus({
+    required String personId,
+    required String jobName,
+    required String status,
+  }) async {
+    final rows = await (update(jobWorkingLogsTable)
+          ..where(
+            (t) => t.personId.equals(personId) & t.jobName.equals(jobName),
+          ))
+        .write(JobWorkingLogsTableCompanion(status: Value(status)));
+    return rows > 0;
+  }
+}
+
 // QuestDAO moved to daos/ProgressionDao.dart
 
 /// Lightweight result class returned by [HealthLogsDAO.getDailyExerciseWithSession].
@@ -7854,6 +7905,7 @@ class IntegrationAccountsTable extends Table {
       ];
 }
 
+
 @DataClassName('ConfigData')
 class ConfigsTable extends Table {
   @override
@@ -7875,6 +7927,155 @@ class ConfigsTable extends Table {
   List<Set<Column>> get uniqueKeys => [
     {personID, configKey},
   ];
+}
+
+
+
+@DataClassName('JobWorkingLogData')
+class JobWorkingLogsTable extends Table {
+  @override
+  String get tableName => 'job_working_logs';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobName =>text().named('job_name')();
+  TextColumn get status =>text().named('status')();
+  
+  
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+  @override
+  List<Set<Column>> get uniqueKeys =>[{jobName,personId}];
+
+}
+
+@DataClassName('JobWorkDayData')
+class JobWorkDaysTable extends Table {
+  @override
+  String get tableName => 'job_work_days';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobPositionId => text().named('job_position_id')();
+  DateTimeColumn get workDate => dateTime()
+      .map(const DateTimeUTCConverter())
+      .named('work_date')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {personId, jobPositionId, workDate},
+      ];
+}
+
+@DataClassName('JobWorkDayPlanData')
+class JobWorkDayPlansTable extends Table {
+  @override
+  String get tableName => 'job_work_day_plans';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobPositionId => text().named('job_position_id')();
+  DateTimeColumn get workDate => dateTime()
+      .map(const DateTimeUTCConverter())
+      .named('work_date')();
+  IntColumn get plannedMinutes =>
+      integer().withDefault(const Constant(0)).named('planned_minutes')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {personId, jobPositionId, workDate},
+      ];
+}
+
+@DataClassName('JobTimeLogData')
+class JobTimeLogsTable extends Table {
+  @override
+  String get tableName => 'job_time_logs';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobPositionId => text().named('job_position_id')();
+  DateTimeColumn get workDate => dateTime()
+      .map(const DateTimeUTCConverter())
+      .named('work_date')();
+  TextColumn get taskCategory => text().named('task_category')();
+  IntColumn get minutes => integer()();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('JobSubTaskData')
+class JobSubTasksTable extends Table {
+  @override
+  String get tableName => 'job_sub_tasks';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobPositionId => text().named('job_position_id')();
+  TextColumn get name => text()();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('GratitudeEntryData')
+class GratitudeEntriesTable extends Table {
+  @override
+  String get tableName => 'gratitude_entries';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get name => text()();
+  /// `person` or `thing`
+  TextColumn get kind => text().withDefault(const Constant('person'))();
+  TextColumn get note => text().nullable()();
+  TextColumn get facebookUrl => text().nullable().named('facebook_url')();
+  TextColumn get avatarLocalPath =>
+      text().nullable().named('avatar_local_path')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 // ConfigsDAO moved to daos/ConfigsDao.dart
@@ -7946,6 +8147,12 @@ class ConfigsTable extends Table {
     AppTimeSpendingTable,
     IntegrationAccountsTable,
     DevQuickTabsTable,
+    JobWorkingLogsTable,
+    JobWorkDaysTable,
+    JobWorkDayPlansTable,
+    JobTimeLogsTable,
+    JobSubTasksTable,
+    GratitudeEntriesTable,
   ],
   daos: [
     ThemeDAO,
@@ -7985,6 +8192,9 @@ class ConfigsTable extends Table {
     MindLogsDAO,
     JournalActivityOptionsDAO,
     LocalMediaIndexDAO,
+    JobWorkingLogsDAO,
+    JobWorkTrackingDAO,
+    GratitudeDAO,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -8320,7 +8530,12 @@ class AppDatabase extends _$AppDatabase {
   // v94 → recurring_incomes.job_position_id (job = master; incomes = salary timeline)
   // v95 → dev_quick_tabs.passkey (bearer token / API key sync)
   // v96 → dev_quick_tabs.remote_url (off-LAN fallback)
-  int get schemaVersion => 96;
+  // v97 → job_working_logs (per-person job name + status)
+  // v98 → job work days, plans, time logs, sub-tasks (Supabase sync)
+  // v99 → job_time_logs.notes
+  // v100 → gratitude_entries (Biết ơn tab)
+  // v101 → gratitude_entries.facebook_url + avatar_local_path
+  int get schemaVersion => 101;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -8466,6 +8681,119 @@ CREATE TABLE IF NOT EXISTS "bonuses" (
   PRIMARY KEY ("id")
 );
 ''');
+      }
+    } catch (_) {}
+  }
+
+  /// Hot reload skips [onUpgrade]; create [job_working_logs] if v97 migration did not run.
+  Future<void> _ensureJobWorkingLogsTableReady() async {
+    try {
+      final exists = await customSelect(
+        "SELECT 1 AS ok FROM sqlite_master "
+        "WHERE type = 'table' AND name = 'job_working_logs' LIMIT 1",
+      ).get();
+      if (exists.isEmpty) {
+        await customStatement('''
+CREATE TABLE IF NOT EXISTS "job_working_logs" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_name" TEXT NOT NULL,
+  "status" TEXT NOT NULL,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  "updated_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id"),
+  UNIQUE ("person_id", "job_name")
+);
+''');
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _ensureJobWorkTrackingTablesReady() async {
+    const statements = [
+      '''
+CREATE TABLE IF NOT EXISTS "job_work_days" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT NOT NULL,
+  "work_date" TEXT NOT NULL,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id"),
+  UNIQUE ("person_id", "job_position_id", "work_date")
+)''',
+      '''
+CREATE TABLE IF NOT EXISTS "job_work_day_plans" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT NOT NULL,
+  "work_date" TEXT NOT NULL,
+  "planned_minutes" INTEGER NOT NULL DEFAULT 0,
+  "updated_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id"),
+  UNIQUE ("person_id", "job_position_id", "work_date")
+)''',
+      '''
+CREATE TABLE IF NOT EXISTS "job_time_logs" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT NOT NULL,
+  "work_date" TEXT NOT NULL,
+  "task_category" TEXT NOT NULL,
+  "minutes" INTEGER NOT NULL,
+  "notes" TEXT,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id")
+)''',
+      '''
+CREATE TABLE IF NOT EXISTS "job_sub_tasks" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT NOT NULL,
+  "name" TEXT NOT NULL,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id")
+)''',
+    ];
+    try {
+      for (final sql in statements) {
+        await customStatement(sql);
+      }
+      final cols = await customSelect('PRAGMA table_info(job_time_logs)').get();
+      final names = cols.map((r) => r.read<String>('name')).toSet();
+      if (!names.contains('notes')) {
+        await customStatement(
+          'ALTER TABLE job_time_logs ADD COLUMN notes TEXT;',
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _ensureGratitudeEntriesTableReady() async {
+    try {
+      await customStatement('''
+CREATE TABLE IF NOT EXISTS "gratitude_entries" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "name" TEXT NOT NULL,
+  "kind" TEXT NOT NULL DEFAULT 'person',
+  "note" TEXT,
+  "facebook_url" TEXT,
+  "avatar_local_path" TEXT,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  "updated_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id")
+)''');
+      final cols = await customSelect('PRAGMA table_info(gratitude_entries)').get();
+      final names = cols.map((r) => r.read<String>('name')).toSet();
+      if (!names.contains('facebook_url')) {
+        await customStatement(
+          'ALTER TABLE gratitude_entries ADD COLUMN facebook_url TEXT;',
+        );
+      }
+      if (!names.contains('avatar_local_path')) {
+        await customStatement(
+          'ALTER TABLE gratitude_entries ADD COLUMN avatar_local_path TEXT;',
+        );
       }
     } catch (_) {}
   }
@@ -9279,6 +9607,41 @@ CREATE TABLE IF NOT EXISTS "dev_quick_tabs" (
             await m.addColumn(devQuickTabsTable, devQuickTabsTable.remoteUrl);
           } catch (_) {}
         }
+        if (from < 97) {
+          try {
+            await m.createTable(jobWorkingLogsTable);
+          } catch (_) {}
+        }
+        if (from < 98) {
+          try {
+            await m.createTable(jobWorkDaysTable);
+            await m.createTable(jobWorkDayPlansTable);
+            await m.createTable(jobTimeLogsTable);
+            await m.createTable(jobSubTasksTable);
+          } catch (_) {}
+        }
+        if (from < 99) {
+          try {
+            await m.addColumn(jobTimeLogsTable, jobTimeLogsTable.notes);
+          } catch (_) {}
+        }
+        if (from < 100) {
+          try {
+            await m.createTable(gratitudeEntriesTable);
+          } catch (_) {}
+        }
+        if (from < 101) {
+          try {
+            await customStatement(
+              'ALTER TABLE gratitude_entries ADD COLUMN facebook_url TEXT;',
+            );
+          } catch (_) {}
+          try {
+            await customStatement(
+              'ALTER TABLE gratitude_entries ADD COLUMN avatar_local_path TEXT;',
+            );
+          } catch (_) {}
+        }
       },
       beforeOpen: (details) async {
         appLog(
@@ -9290,6 +9653,9 @@ CREATE TABLE IF NOT EXISTS "dev_quick_tabs" (
         await repairDevQuickTabsTableForDrift();
         await _ensureJobPositionsTableReady();
         await _ensureBonusesTableReady();
+        await _ensureJobWorkingLogsTableReady();
+        await _ensureJobWorkTrackingTablesReady();
+        await _ensureGratitudeEntriesTableReady();
         // Consolidated cleanups
         try {
           await customStatement(

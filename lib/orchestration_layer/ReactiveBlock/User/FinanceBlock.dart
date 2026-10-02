@@ -1041,6 +1041,20 @@ class FinanceBlock {
     await _reloadSubscriptionsFromDb();
   }
 
+  Future<void> syncJobWork() async {
+    if (_personId.isEmpty) return;
+    print("DUYLONG sync");
+    try {
+      await _dao.db.syncTableDown('job_work_days', _personId);
+      await _dao.db.syncTableDown('job_work_day_plans', _personId);
+      await _dao.db.syncTableDown('job_time_logs', _personId);
+      await _dao.db.syncTableDown('job_sub_tasks', _personId);
+   
+    } catch (e) {
+      debugPrint('FinanceBlock: job work sync failed: $e');
+    }
+  }
+
   Future<void> sync() async {
     if (_personId.isEmpty) return;
     isSyncing.value = true;
@@ -1053,6 +1067,7 @@ class FinanceBlock {
       await _dao.db.syncTableDown('subscriptions', _personId);
       await _dao.db.syncTableDown('recurring_incomes', _personId);
       await _dao.db.syncTableDown('job_positions', _personId);
+      await syncJobWork();
       await _reloadSubscriptionsFromDb();
       await _reloadRecurringIncomesFromDb();
       await _reloadJobPositionsFromDb();

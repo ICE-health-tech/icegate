@@ -18,6 +18,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBl
 import 'package:ice_gate/utils/journal_media.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindLogInsights.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
@@ -170,9 +171,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                                     ? gap
                                     : 0,
                               ),
-                              child: _SocialNoteCard(
+                              child: SocialJournalNoteCard(
                                 note: sortedNotes[index],
-                                layout: _NoteCardLayout.list,
+                                layout: NoteCardLayout.list,
                               ),
                             ),
                             childCount: sortedNotes.length,
@@ -192,9 +193,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                           mainAxisSpacing: gap,
                         ),
                         delegate: SliverChildBuilderDelegate(
-                          (context, index) => _SocialNoteCard(
+                          (context, index) => SocialJournalNoteCard(
                             note: sortedNotes[index],
-                            layout: _NoteCardLayout.grid,
+                            layout: NoteCardLayout.grid,
                           ),
                           childCount: sortedNotes.length,
                         ),
@@ -476,7 +477,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
   }
 
   void _createNewNote(BuildContext context) {
-    context.push('/projects/editor', extra: {'category': 'social'});
+    MindLogEntryDialog.show(context);
   }
 
   Future<void> _pickAndCreateImageNote(BuildContext context) async {
@@ -617,7 +618,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
   }
 }
 
-enum _NoteCardLayout { grid, list }
+enum NoteCardLayout { grid, list }
 
 int _noteMoodScore(String? mood) {
   return switch (mood?.toLowerCase()) {
@@ -641,22 +642,54 @@ IconData _noteMoodIcon(String? mood) {
   };
 }
 
-class _SocialNoteCard extends StatelessWidget {
+class SocialJournalNoteCard extends StatelessWidget {
   final ProjectNoteData note;
-  final _NoteCardLayout layout;
+  final NoteCardLayout layout;
 
-  const _SocialNoteCard({
+  const SocialJournalNoteCard({
+    super.key,
     required this.note,
-    this.layout = _NoteCardLayout.grid,
+    this.layout = NoteCardLayout.grid,
   });
 
   Color get _moodColor => mindMoodAccent(_noteMoodScore(note.mood));
 
+  bool _hasGratitude(BuildContext context) {
+    final label = AppLocalizations.of(context)?.act_gratitude;
+    return MindActivityTokens.noteLooksLikeGratitude(
+      title: note.title,
+      content: note.content,
+      gratitudeLabel: label,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return layout == _NoteCardLayout.list
+    return layout == NoteCardLayout.list
         ? _buildListCard(context)
         : _buildGridCard(context);
+  }
+
+  static const _gratitudeFlag = Color(0xFFE8A317);
+
+  Widget _flagBubble({double size = 28}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _gratitudeFlag,
+        boxShadow: [
+          BoxShadow(
+            color: _gratitudeFlag.withValues(alpha: 0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 1.5),
+      ),
+      child: Icon(Icons.flag_rounded, size: size * 0.5, color: Colors.white),
+    );
   }
 
   Widget _moodBubble({double size = 46}) {
@@ -729,7 +762,18 @@ class _SocialNoteCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _moodBubble(size: 50),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    _moodBubble(size: 50),
+                    if (_hasGratitude(context))
+                      Positioned(
+                        right: -4,
+                        bottom: -4,
+                        child: _flagBubble(size: 22),
+                      ),
+                  ],
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -868,7 +912,18 @@ class _SocialNoteCard extends StatelessWidget {
                         Positioned(
                           top: 10,
                           left: 10,
-                          child: _moodBubble(size: 36),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              _moodBubble(size: 36),
+                              if (_hasGratitude(context))
+                                Positioned(
+                                  right: -6,
+                                  bottom: -6,
+                                  child: _flagBubble(size: 20),
+                                ),
+                            ],
+                          ),
                         ),
                         Positioned(
                           top: 10,
