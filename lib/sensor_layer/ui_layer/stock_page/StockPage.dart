@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
-import 'package:ice_gate/link_layer/finnace_services/stock_service.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/link_layer/finnace_services/StockService.dart';
 import 'package:provider/provider.dart';
 
 /// Detail screen for a ticker; live quotes / charts are not fetched remotely.

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart'; // Standard Flutter Material
+import 'package:ice_gate/utils/app_log.dart';
 import 'package:ice_gate/data_layer/initial_layer/DataLayer.dart';
 import 'package:ice_gate/data_layer/Protocol/Theme/ThemeAdapter.dart';
 import 'package:ice_gate/data_layer/initial_layer/RoutingLayer.dart';
 // import 'package:ice_gate/initial_layer/ThemeLayer/ThemeLayer.dart';
-import 'package:ice_gate/link_layer/ui_route/internal_route.dart';
+import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
 import 'package:ice_gate/orchestration_layer/ThemeLayer/ThemeLayer.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -18,8 +19,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  configureAppLogging();
   await dotenv.load(fileName: ".env");
-  debugPrint("✅ [Boot] .env loaded: ${dotenv.env.keys.length} keys found.");
   MediaKit.ensureInitialized();
 
   // Call runApp immediately to prevent iOS black screen/Xcode hang.
@@ -46,8 +47,9 @@ class MyApp extends StatelessWidget {
         // Assume ThemeStore now provides a standard ThemeData property
         // Replace currentNeumorphicTheme with your actual Material theme observable,
         // for example: themeStore.currentMaterialTheme
+        final ThemeData? loadedTheme = themeStore.currentTheme.value;
         final ThemeData currentTheme =
-            themeStore.currentTheme.value ?? ThemeAdapter.lightTheme;
+            loadedTheme ?? ThemeAdapter.lightTheme;
 
         // Đọc locale hiện tại từ LocaleBlock (reactive)
         Locale? appLocale;
@@ -64,6 +66,7 @@ class MyApp extends StatelessWidget {
 
         // --- Use MaterialApp instead of NeumorphicApp ---
         return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
           // Apply the retrieved Material theme
           routerConfig: router,
           theme: currentTheme,

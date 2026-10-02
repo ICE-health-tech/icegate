@@ -1,10 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Memory/AiMemoryBlock.dart';
-import 'package:ice_gate/orchestration_layer/Services/AutoCaptureJob.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 /// Review surface for screen memory: pending captures, draft memories
@@ -19,7 +18,7 @@ class AiMemoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(t.aiMemoryTitle)),
       body: Watch((_) {
@@ -169,7 +168,7 @@ class _MemoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     final isDraft = memory.status == 'draft';
     List<String> tags = const [];
     try {

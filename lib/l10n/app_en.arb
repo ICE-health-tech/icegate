@@ -5,6 +5,273 @@
   "completed_projects_label": "Completed Projects",
   "active_tasks_label": "Active Tasks",
   "recent_notes_label": "Recent Notes",
+  "projects_tile_reminders": "Reminders",
+  "projects_tile_calendar": "Calendar",
+  "projects_tile_sdlc": "SDLC",
+  "projects_calendar_projects_created": "Projects created",
+  "projects_calendar_day_empty": "No tasks or project starts on this day.",
+  "projects_calendar_day_empty_not_connected": "No calendar connected. Use “Connect calendar” above, then sync.",
+  "projects_calendar_day_empty_other_days": "No events on this day. {count} events elsewhere this month — try dates highlighted on the grid.",
+  "@projects_calendar_day_empty_other_days": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projects_calendar_google_events": "Google Calendar",
+  "projects_calendar_reminders": "Reminders",
+  "projects_calendar_connect_google": "Connect Google Calendar",
+  "projects_calendar_disconnect_google": "Disconnect Google Calendar",
+  "projects_calendar_google_connected": "Google Calendar connected",
+  "projects_calendar_sign_in_failed": "Could not connect Google Calendar",
+  "projects_calendar_sign_in_cancelled": "Google sign-in was cancelled",
+  "projects_calendar_scope_denied": "Calendar permission was not granted. Allow access in your Google account settings.",
+  "projects_calendar_api_not_enabled": "Google Calendar API is disabled for the macOS app (GCP project {projectId}). In Google Cloud Console, enable \"Google Calendar API\" for that project, wait a few minutes, then retry.",
+  "@projects_calendar_api_not_enabled": {
+    "placeholders": {
+      "projectId": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_calendar_insufficient_scopes": "Calendar access was not granted. Disconnect Google, connect again, and accept all permissions.",
+  "projects_calendar_connect_hint": "Sign in with Google to sync all your Google calendars to the Calendar screen.",
+  "projects_calendar_add_reminder": "Add reminder",
+  "projects_calendar_add_event": "Add event",
+  "projects_calendar_event_title": "Event title",
+  "projects_calendar_event_title_required": "Enter an event title",
+  "projects_calendar_event_start": "Start",
+  "projects_calendar_event_end": "End",
+  "projects_calendar_event_saved": "Event saved to calendar",
+  "projects_calendar_event_moved": "Moved to {time}",
+  "@projects_calendar_event_moved": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_calendar_event_deleted": "Event removed",
+  "projects_calendar_event_failed": "Could not save event",
+  "projects_calendar_edit_event": "Edit event",
+  "projects_calendar_delete_event": "Delete event",
+  "projects_calendar_env_title": "Environment check",
+  "projects_calendar_env_ready": "Good fit — you can likely complete this now.",
+  "projects_calendar_env_caution": "Possible, but a few factors may get in the way.",
+  "projects_calendar_env_not_ready": "Tough right now — consider rescheduling.",
+  "projects_calendar_env_score": "{score}% ready",
+  "@projects_calendar_env_score": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "projects_calendar_env_start_focus": "Start focus session",
+  "projects_calendar_env_past": "This block is already over",
+  "projects_calendar_env_too_early": "Still more than 2 hours away",
+  "projects_calendar_env_starting_soon": "Starting within 15 minutes",
+  "projects_calendar_env_low_mood": "Recent mood is low",
+  "projects_calendar_env_neutral_mood": "Mood is neutral",
+  "projects_calendar_env_good_mood": "Mood supports focus",
+  "projects_calendar_env_no_mood": "No mood logged today",
+  "projects_calendar_env_heavy_overlap": "Heavy schedule overlap",
+  "projects_calendar_env_some_overlap": "Another event overlaps",
+  "projects_calendar_env_focus_fatigue": "Already focused 2+ hours today",
+  "projects_calendar_env_low_sleep": "Low sleep last night",
+  "projects_calendar_env_good_sleep": "Well rested",
+  "projects_calendar_edit_reminder": "Edit reminder",
+  "projects_calendar_save": "Save",
+  "projects_calendar_select_calendar": "Calendar",
+  "projects_calendar_tap_day_add_hint": "Tap the selected day again to add an event",
+  "projects_calendar_hold_day_add_hint": "Hold a day to add an event",
+  "projects_calendar_timeline_empty": "No timed events this day",
+  "projects_calendar_timeline_tap_slot": "Tap hour to add · tap event to edit · drag to move (↑↓ + Enter on desktop, hold on mobile)",
+  "projects_calendar_scroll_for_more": "Scroll for tasks",
+  "projects_calendar_drag_hint_desktop": "Drag to reschedule. Arrow keys adjust time, Enter confirms, Escape cancels.",
+  "projects_calendar_drag_hint_mobile": "Long press, then drag to another time slot.",
+  "projects_calendar_drag_move_to": "Move to {time}",
+  "@projects_calendar_drag_move_to": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_calendar_timeline_remove": "Remove from timeline",
+  "projects_calendar_timeline_remove_confirm": "Remove \"{title}\" from this day's timeline?",
+  "@projects_calendar_timeline_remove_confirm": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_calendar_day_timeline": "Daily timeline",
+  "projects_calendar_reminder_title": "Reminder title",
+  "projects_calendar_sync_google": "Sync events",
+  "projects_calendar_all_day": "All day",
+  "projects_calendar_integrations": "Calendar connections",
+  "projects_calendar_connect_device": "Connect device calendar",
+  "projects_calendar_connect_apple": "Connect Apple Calendar",
+  "projects_calendar_disconnect_device": "Disconnect device calendar",
+  "projects_calendar_disconnect_apple": "Disconnect Apple Calendar",
+  "projects_calendar_device_connected": "Device calendar connected",
+  "projects_calendar_apple_connected": "Apple Calendar connected",
+  "projects_calendar_device_events": "Device calendar",
+  "projects_calendar_apple_events": "Apple Calendar",
+  "projects_calendar_device_hint": "Allow calendar access to show events from calendars on this device.",
+  "projects_calendar_sync_device": "Sync device events",
+  "projects_calendar_device_denied": "Calendar access was denied. Enable it in Settings.",
+  "integration_hub_title": "Integration Hub",
+  "integration_hub_subtitle": "Calendars, health platforms, and device sensors — one connection center.",
+  "integration_hub_google_fit": "Google Fit",
+  "integration_hub_google_fit_hint": "Uses the same Google sign-in as Calendar and Drive.",
+  "integration_hub_sensors_section": "Devices & sensors",
+  "integration_hub_open_sensor_hub": "Open Sensor Hub",
+  "integration_hub_sensor_hub_hint": "Wearables, IoT pipelines, SSH streams, and Huawei setup.",
+  "integration_hub_huawei_sensor_hint": "Set up Huawei credentials in Sensor Hub first.",
+  "projects_calendar_all_calendars_events": "All calendars",
+  "projects_calendar_synced_count": "Loaded {count} events this month",
+  "@projects_calendar_synced_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projects_calendar_sync_empty_month": "Connected — no events this month. Try another month or check Google Calendar.",
+  "integration_hub_calendars_section": "Calendars",
+  "integration_hub_health_section": "Health",
+  "integration_hub_notes_section": "Notes & documents",
+  "integration_hub_google_drive_hint": "Sync project notes and vault files from Google Drive.",
+  "integration_hub_notion_hint": "Import shared Notion pages and databases into your vault.",
+  "integration_hub_connect": "Connect",
+  "integration_hub_status_connected": "Connected",
+  "integration_hub_apple_health": "Apple Health",
+  "integration_hub_apple_health_hint": "Steps, sleep, heart rate, and more from HealthKit.",
+  "integration_hub_huawei_health": "Huawei Health",
+  "integration_hub_huawei_health_hint": "Sync from Huawei cloud credentials.",
+  "integration_hub_phase2_notice": "Calendar and Google sign-in work here. Huawei credentials: use Sensor Hub below.",
+  "integration_hub_sign_in_required": "Sign in to your icegate account first, then connect integrations.",
+  "integration_hub_health_coming_soon": "This health source is not available yet.",
+  "integration_hub_open": "Open Integration Hub",
+  "projects_tile_focus": "Focus",
+  "projects_tile_pomodoro": "Pomodoro",
+  "projects_tile_canvas": "Canvas",
+  "projects_tile_whiteboard": "Whiteboard",
+  "projects_whiteboard_clear_title": "Clear whiteboard?",
+  "projects_whiteboard_clear_message": "All strokes will be removed. This cannot be undone.",
+  "projects_whiteboard_clear_confirm": "Clear",
+  "undo": "Undo",
+  "projects_plan_section_title": "Schedule planner",
+  "projects_diagrams_title": "Project diagrams",
+  "projects_diagrams_empty": "No flowcharts yet. Tap + to pick a project and start drawing.",
+  "projects_diagrams_new": "New diagram",
+  "projects_diagrams_pick_project": "Choose a project",
+  "projects_diagrams_no_projects": "Create a project first.",
+  "projects_diagrams_steps": "steps",
+  "plan_workspace_breadcrumb": "WORKSPACE • PROJECTS",
+  "plan_schedule_card_title": "Schedule",
+  "plan_schedule_empty": "No steps yet.",
+  "plan_focus_notes_title": "Focus Notes",
+  "plan_notes_hint": "Type notes here…",
+  "plan_add_step": "Add step",
+  "plan_drop_steps": "Drop steps here",
+  "plan_add_first_step": "Add first step",
+  "plan_add_block_schedule": "Schedule block",
+  "plan_add_block_notes": "Focus notes block",
+  "plan_add_block_goals": "Goals block",
+  "plan_add_block_flow": "Process block",
+  "plan_connect_hint": "Tap a source block, then tap a target block to connect.",
+  "plan_link_added": "Blocks connected",
+  "plan_goals_empty": "No goals yet.",
+  "plan_add_goal": "Add goal",
+  "plan_manage_blocks": "Manage blocks",
+  "projects_tile_social_blocker": "Social Blocker",
+  "social_shield_turn_on": "Turn on Shield",
+  "social_shield_subtitle_no_auth": "Tap row to grant Screen Time (for rules)",
+  "social_shield_subtitle_pick_apps": "Tap row to choose apps — blocking follows rules",
+  "social_shield_subtitle_ready": "On — blocking runs when your rules are active",
+  "social_shield_subtitle_off": "Off — schedules and focus rules are paused",
+  "social_shield_choose_apps": "Choose apps to block",
+  "social_shield_choose_apps_done": "Tap to change blocked apps",
+  "social_shield_pick_apps_required": "Choose at least one app to block (or turn Shield off).",
+  "social_shield_apps_saved": "Blocked apps updated.",
+  "social_shield_unsupported_platform": "App blocking is only on iOS and macOS.",
+  "projects_plugin_open": "Open",
+  "projects_plugin_location_tracker": "Location Tracker",
+  "projects_plugin_live_map": "Live Map",
+  "projects_remove_plugin_title": "Remove shortcut?",
+  "projects_remove_plugin_body": "Remove \"{name}\" from quick actions?",
+  "@projects_remove_plugin_body": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_remove_plugin_confirm": "Remove",
+  "integrations_title": "Integrations",
+  "integrations_subtitle": "Manage your document sources",
+  "integrations_active_services": "Active Services",
+  "integrations_total_notes": "Total Notes",
+  "integrations_search_hint": "Search sources...",
+  "integrations_enabled_connections": "ENABLED CONNECTIONS",
+  "integrations_filters": "Filters",
+  "integrations_internal_notes": "Internal Notes",
+  "integrations_primary_vault": "Primary Vault (Local)",
+  "integrations_explore": "Explore",
+  "integrations_google_drive": "Google Drive",
+  "integrations_synced_cloud": "Synced with Cloud",
+  "integrations_cloud_storage": "Cloud Storage",
+  "integrations_sync_now": "Sync Now",
+  "integrations_connect": "Connect",
+  "integrations_notion_sync": "Notion Sync",
+  "integrations_database_pipeline": "Database Pipeline",
+  "integrations_fetch": "Fetch",
+  "integrations_setup": "Setup",
+  "integrations_slack_docs": "Slack Docs",
+  "integrations_shared_channels": "Shared Channels",
+  "integrations_notify_me": "Notify Me",
+  "integrations_notion_config_title": "Notion Configuration",
+  "integrations_notion_secret_label": "Internal Integration Secret",
+  "integrations_save_fetch": "Save & Fetch",
+  "integrations_marketplace_soon": "Source Marketplace coming soon!",
+  "vault_breadcrumb_root": "Vault",
+  "vault_section_folders": "Folders",
+  "vault_section_notes": "Notes",
+  "vault_section_media": "Media",
+  "vault_section_other": "Other files",
+  "vault_search_files": "Search in this folder…",
+  "vault_empty_folder": "This folder is empty",
+  "vault_stats_folders": "{count, plural, =1{1 folder} other{{count} folders}}",
+  "@vault_stats_folders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "vault_stats_notes": "{count, plural, =1{1 note} other{{count} notes}}",
+  "@vault_stats_notes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "vault_stats_media": "{count, plural, =1{1 file} other{{count} files}}",
+  "@vault_stats_media": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projects_workspace_empty": "No workspace has been set up yet.",
+  "projects_workspace_start": "Get started",
   "project_drive_sync": "Cloud Sync",
   "project_drive_sync_tooltip": "Sync with Google Drive",
   "project_sync_success": "Sync completed successfully!",
@@ -54,7 +321,31 @@
   "health_sync_msg": "Syncing health data...",
   "health_sync_success": "Health data synced!",
   "health_sync_failed": "Sync failed. Please try again.",
+  "health_motivation_engine_title": "Motivation Engine",
+  "health_notification_engine_title": "Notification Engine",
+  "health_notification_engine_desc": "{count} active reminders",
+  "@health_notification_engine_desc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "health_motivation_all_done": "All daily targets hit—momentum is yours today.",
+  "health_motivation_strong": "Strong day—keep your streak alive.",
+  "health_motivation_mid": "Steady progress—stack one more small win.",
+  "health_motivation_low": "Start with water or a short walk—small steps count.",
+  "health_motivation_empty": "Set your goals and we'll coach you through the day.",
   "health_update_weight": "Update Weight",
+  "health_smart_scale_title": "Smart scale",
+  "health_smart_scale_desc": "Sync from Apple Health or Health Connect (Withings, Eufy, Xiaomi, etc.)",
+  "health_smart_scale_sync": "Sync smart scale",
+  "health_smart_scale_syncing": "Syncing…",
+  "health_smart_scale_sync_ok": "Weight synced from smart scale",
+  "health_smart_scale_sync_empty": "No weight found. Weigh in on your scale first, then sync.",
+  "health_smart_scale_sync_denied": "Health access denied. Enable in Settings.",
+  "health_smart_scale_desktop": "Smart scale sync is available on iPhone and Android only.",
+  "health_smart_scale_import": "Import from smart scale",
   "health_log_water": "Log Water",
   "health_daily_goal_reached": "You've reached your daily goal!",
   "health_almost_there": "Almost there! Just a little more.",
@@ -313,6 +604,8 @@
       }
     }
   },
+  "health_at_a_glance": "Your health at a glance.",
+  "health_analyzing_meal": "Analyzing meal…",
   "health_subtitle_health_first": "Health First",
   "health_kcal_label": "kcal",
   "health_subtitle_todays_intake": "Today's intake",
@@ -378,6 +671,8 @@
   "err_network_fail": "Unable to connect to the server. Check your internet.",
   "err_auth_timeout": "Sign-in took too long. Please try again.",
   "err_passkey_canceled": "Passkey login was canceled.",
+  "err_google_canceled": "Google sign-in was canceled.",
+  "err_google_failed": "Google sign-in failed. Enable Google in Supabase and add the web client ID.",
   "err_passkey_failed": "Security check failed. Please try again.",
   "err_biometric_unsupported": "Biometric login is not available on this device.",
   "err_biometric_disabled": "Biometric login is not enabled for this account.",
@@ -617,6 +912,103 @@
   "social_delete_bond": "Delete Bond",
   "social_no_achievements": "No achievements yet",
   "social_no_achievements_msg": "No achievements logged yet.",
+  "achievement_story_section": "Snapshots",
+  "achievement_story_empty_hint": "Tap + to freeze a moment in time.",
+  "achievement_story_add": "Add",
+  "achievement_feats_section": "Memory lane",
+  "achievement_insights_title": "Looking back",
+  "achievement_insights_summary": "Monthly Reflection: {count} feats recorded. Average Meaningfulness: {meaning}, Average Impact: {impact}",
+  "@achievement_insights_summary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "meaning": {
+        "type": "String"
+      },
+      "impact": {
+        "type": "String"
+      }
+    }
+  },
+  "achievement_story_title_dialog": "Name this win",
+  "achievement_story_title_hint": "What did you achieve?",
+  "achievement_story_added": "Story saved to your achievements.",
+  "achievement_story_save_failed": "Could not save photo.",
+  "achievement_filter_label": "Filter",
+  "achievement_filter_all_months": "All months",
+  "achievement_filter_all_projects": "All projects",
+  "plan_action_tab": "PLAN",
+  "plan_action_empty": "Plan an action with expected points, then log real points after you do it.",
+  "plan_action_timeline": "Timeline",
+  "plan_action_scoreboard": "Scoreboard",
+  "plan_action_pending": "Pending",
+  "plan_action_no_pending": "All actions logged for this view.",
+  "plan_action_add": "Plan action",
+  "plan_action_edit": "Edit action",
+  "plan_action_log_real": "Log real",
+  "plan_action_title_label": "What will you do?",
+  "plan_action_title_required": "Add a title for this action.",
+  "plan_action_expected_label": "Expected points (0–100)",
+  "plan_action_real_label": "Real points (0–100)",
+  "plan_action_real_hint": "Leave empty until done",
+  "plan_action_points_invalid": "Points must be 0–100.",
+  "plan_action_expected_short": "Exp",
+  "plan_action_real_short": "Real",
+  "plan_action_expected_value": "Expected: {points} pts",
+  "@plan_action_expected_value": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_action_delta_value": "{delta, plural, =0{even} other{{delta}}}",
+  "@plan_action_delta_value": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_action_month_summary": "{count, plural, =1{1 action in this view} other{{count} actions in this view}}",
+  "@plan_action_month_summary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_action_total_expected": "Total expected",
+  "plan_action_total_real": "Total real",
+  "plan_action_delta": "Net delta",
+  "achievement_on_this_day_title": "On this day",
+  "achievement_on_this_day_subtitle": "Memories from {date}",
+  "@achievement_on_this_day_subtitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "achievement_years_ago": "{years, plural, =1{1 year ago} other{{years} years ago}}",
+  "@achievement_years_ago": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "achievement_archive_empty": "No memories yet. Journal entries and notes will appear here.",
+  "achievement_archive_month_summary": "{count, plural, =1{1 memory in this view} other{{count} memories in this view}}",
+  "@achievement_archive_month_summary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievement_open_project": "Open project",
   "social_delete_feat_title": "Delete feat",
   "social_delete_feat_body": "Remove this achievement? This cannot be undone.",
   "social_feat": "Feat",
@@ -647,7 +1039,317 @@
   "mind_status": "Status",
   "mind_stable": "Stable",
   "mind_needs_care": "Needs Care",
+  "mind_focus_current": "Focus",
+  "mind_focus_none": "Not set",
   "mind_quick_entry_hint": "What's on your mind?",
+  "mindset_learn_title": "Mindset log",
+  "mindset_learn_subtitle": "Capture principles and lessons you're internalizing.",
+  "mindset_learn_topic": "Topic / principle",
+  "mindset_learn_topic_hint": "e.g. Patience, ship small, growth mindset",
+  "mindset_learn_lesson": "What I learned",
+  "mindset_learn_feeling": "Score (0–5)",
+  "mindset_learn_save": "Save insight",
+  "mindset_learn_saved": "Mindset insight saved",
+  "mindset_learn_validation": "Add a topic and what you learned.",
+  "mindset_learn_history": "Past insights",
+  "mindset_learn_empty": "No mindset notes yet. Log your first lesson above.",
+  "mindset_learn_open": "Mindset",
+  "mind_focus_title": "Focus areas",
+  "mind_focus_weekly_title": "Weekly focus",
+  "mind_focus_monthly_title": "Monthly focus",
+  "mind_focus_goal_level": "Goal: Lv. {level}",
+  "@mind_focus_goal_level": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_xp_progress": "{current} / {cap} XP",
+  "@mind_focus_xp_progress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "cap": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_badge": "FOCUS",
+  "mind_total_level": "Total level",
+  "mind_streak_label": "Streak",
+  "mind_streak_days": "{days} days",
+  "@mind_streak_days": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_streak_bonus": "+15% EXP bonus",
+  "mind_skill_tree_title": "Skill tree",
+  "mind_skill_certificates_title": "Certificates",
+  "mind_focus_subtitle": "Define weekly trends so you know where to put your energy.",
+  "mind_focus_empty": "No focus areas yet. Start from a template or create your own.",
+  "mind_focus_add": "New focus area",
+  "mind_focus_edit": "Edit focus area",
+  "mind_focus_save": "Save focus area",
+  "mind_focus_weekly_goal": "Logs per week (goal)",
+  "mind_focus_this_week": "This week",
+  "mind_focus_select_hint": "Tap to focus on this area. Recent matching journal entries:",
+  "mind_focus_template_gym": "Gym week",
+  "mind_focus_template_learn": "Learn week",
+  "mind_focus_template_invest": "Invest week",
+  "mind_focus_name_hint": "Name (e.g. Gym week)",
+  "mind_focus_activities_label": "Linked activities",
+  "mind_focus_name_required": "Enter a name for this focus area",
+  "mind_focus_activities_required": "Pick at least one activity",
+  "mind_focus_icon_label": "Icon",
+  "mind_focus_color_label": "Color",
+  "mind_focus_no_logs_yet": "No journal entries match this area yet.",
+  "mind_focus_log_now": "Log for this area",
+  "mind_focus_log_for_area": "Focus area: {name}",
+  "@mind_focus_log_for_area": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_focus_todos": "To-do",
+  "mind_focus_open_projects": "Projects",
+  "mind_focus_no_todos": "No active project tasks. Add tasks in Projects.",
+  "mind_focus_more_todos": "+{count} more in Projects",
+  "mind_dashboard_today": "Today",
+  "mind_dashboard_title": "My skills",
+  "mind_dashboard_weekly_topic": "Topic this week",
+  "mind_dashboard_edit_topic": "Edit topic this week",
+  "mind_dashboard_topic_title": "Topic title",
+  "mind_dashboard_topic_title_hint": "e.g. Presentation week",
+  "mind_dashboard_topic_quote_hint": "Your weekly focus quote or note",
+  "mind_dashboard_topic_saved": "Weekly topic saved to quotes",
+  "mind_dashboard_target_skills": "Target skills",
+  "mind_dashboard_in_progress": "In progress",
+  "mind_dashboard_focus_week": "Focus this week",
+  "mind_dashboard_add_task": "+ Add task",
+  "mind_dashboard_no_linked_projects": "Link target skills to projects to see tasks here.",
+  "mind_dashboard_status_done": "DONE",
+  "mind_dashboard_status_waiting": "WAITING",
+  "mind_dashboard_certificates": "Skill certificates",
+  "mind_dashboard_see_all": "See all",
+  "mind_dashboard_verified": "Verified",
+  "@mind_focus_more_todos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_avg_mood": "Avg mood this week: {score}",
+  "@mind_focus_avg_mood": {
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_focus_history": "Weekly history",
+  "mind_focus_history_title": "Focus area history",
+  "mind_focus_history_week_range": "{start} – {end}",
+  "@mind_focus_history_week_range": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_focus_history_logs": "{count} / {goal} logs",
+  "@mind_focus_history_logs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_history_no_logs": "No logs",
+  "mind_focus_linked_project": "Linked project",
+  "mind_focus_linked_project_none": "None (all projects)",
+  "mind_focus_linked_project_label": "Project: {name}",
+  "@mind_focus_linked_project_label": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_focus_add_task_title": "Add task",
+  "mind_focus_add_task_name": "Task name",
+  "mind_focus_add_task_desc": "Description (optional)",
+  "mind_focus_add_task_confirm": "Add",
+  "mind_focus_add_task_need_project": "Create a project first, then add tasks here.",
+  "mind_focus_assign_project": "Project",
+  "mind_focus_all_tasks_mood": "All tasks done — mood +6 logged.",
+  "mind_focus_daily_cap": "Daily limit: {max} tasks per focus area.",
+  "@mind_focus_daily_cap": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_daily_progress": "{added}/{max} today · {done} done",
+  "@mind_focus_daily_progress": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_daily_hint": "Add 2–5 tasks today. Finish more than 3 for mood +6.",
+  "mind_focus_weekly_hint": "Add 2–5 tasks this week. Finish more than 3 for mood +6.",
+  "mind_focus_monthly_hint": "Add 2–5 tasks this month. Finish more than 3 for mood +6.",
+  "mind_focus_special_mood": "More than 3 tasks done — mood +6 logged!",
+  "mind_skills_session_title": "Skill session",
+  "mind_skills_session_subtitle": "Pick skills, run a focus block, log what you learned.",
+  "mind_skills_session_start": "Start session",
+  "mind_skills_session_empty_month": "No skill sessions this month yet.",
+  "mind_skills_session_skill_meta": "{sessions} sessions · {minutes}m",
+  "@mind_skills_session_skill_meta": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_session_empty": "No skill sessions in the last {days} days.",
+  "@mind_skills_session_empty": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_session_stats": "{sessions} sessions · {minutes} min · top: {skill}",
+  "@mind_skills_session_stats": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_skills_session_live": "SESSION LIVE",
+  "mind_skills_session_tap_start": "TAP CENTER TO START",
+  "mind_skills_session_tap_finish": "TAP CENTER TO STOP EARLY",
+  "mind_skills_session_listening": "SESSION LIVE · AUTO-LOG WHEN MUSIC ENDS",
+  "mind_skills_session_pick_skills": "Pick at least one skill before starting.",
+  "mind_skills_my_list": "My skills",
+  "mind_skills_add_skill": "Add skill",
+  "mind_skills_tap_list": "Tap skills in the list to select",
+  "mind_skills_tap_list_project": "Select skills · project XP on log",
+  "mind_skills_status_in_session": "In session",
+  "mind_skills_status_selected": "Selected",
+  "mind_skills_level_short": "Lv {level}",
+  "@mind_skills_level_short": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_session_logged": "Session logged · {minutes} min · +{xp} XP",
+  "@mind_skills_session_logged": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_celebration_title": "Skill proof saved",
+  "mind_skills_celebration_proof": "You focused {minutes} min and earned +{xp} XP — real practice on your record.",
+  "@mind_skills_celebration_proof": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_celebration_level_up": "Level up: {skills}",
+  "@mind_skills_celebration_level_up": {
+    "placeholders": {
+      "skills": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_skills_celebration_streak": "{days}-day streak — keep the chain alive.",
+  "@mind_skills_celebration_streak": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_celebration_goal": "Tomorrow’s you is built from sessions like this.",
+  "mind_skill_name_invalid": "Name must be 1–24 characters.",
+  "mind_skill_name_duplicate": "That skill already exists.",
+  "mind_skill_add_title": "Add skill",
+  "mind_skill_edit_title": "Edit skill",
+  "mind_skill_delete_title": "Delete skill?",
+  "mind_skill_delete_body": "Remove “{name}” from your library?",
+  "@mind_skill_delete_body": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_skill_certificate_header": "CERTIFICATE OF PRACTICE",
+  "mind_skill_certificate_subtitle": "Human capital · verified progress",
+  "mind_skill_certificate_awarded_to": "Awarded for sustained skill practice",
+  "mind_skill_certificate_level": "Rank",
+  "mind_skill_certificate_xp": "Experience",
+  "mind_skill_certificate_streak": "Streak",
+  "mind_skill_certificate_proof": "This record reflects real sessions logged in ice_gate — your proof of growth.",
+  "mind_skill_certificate_seal": "ICEGATE SEAL",
+  "mind_skill_certificate_select_session": "Select for session",
+  "mind_skill_certificate_close": "Close",
+  "mind_skill_certificate_created": "Created",
+  "mind_skill_certificate_updated": "Last updated",
+  "mind_skill_certificate_description": "Description",
+  "mind_skill_certificate_description_hint": "What this skill means to you, or how you earned it…",
+  "mind_skill_certificate_edit": "Edit certificate",
+  "mind_skill_certificate_save": "Save certificate",
+  "mind_skill_certificates_table_title": "Practice certificates",
+  "mind_skill_certificates_table_empty": "No skills in your library yet. Open Skills to start earning certificates.",
+  "mind_skill_certificates_col_skill": "Skill",
   "mood_trends_title": "Mood Trends",
   "social_notes_title": "Social Notes",
   "social_empty_state_title": "Your story begins here",
@@ -679,6 +1381,75 @@
   "stat_entries": "Entries",
   "stat_images": "Images",
   "stat_sentiment": "Sentiment",
+  "stat_mind_logs": "Logs (30d)",
+  "stat_active_days": "Active days",
+  "stat_avg_mood": "Avg mood",
+  "journal_hourly_logs": "Logs by hour (today)",
+  "mind_insights_skill_title": "Skill practice (30d)",
+  "mind_insights_skill_summary": "{sessions} sessions · {minutes} min",
+  "@mind_insights_skill_summary": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_insights_top_skill_streak": "Top streak · {skill} · {days}d",
+  "@mind_insights_top_skill_streak": {
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_insights_open_notes": "Mind notes",
+  "mind_insights_open_skills": "Skill certificates",
+  "mind_insights_open_gratitude": "Gratitude",
+  "gratitude_page_subtitle": "Record the people and things you appreciate each day.",
+  "gratitude_section_people": "People",
+  "gratitude_section_things": "Things",
+  "gratitude_count": "{count} entries",
+  "@gratitude_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gratitude_quick_entry_hint": "Log who you're grateful for today...",
+  "gratitude_empty_title": "Your gratitude flag",
+  "gratitude_empty_subtitle": "Tap below to add someone or something you're grateful for.",
+  "gratitude_kind_person": "Person",
+  "gratitude_kind_thing": "Thing",
+  "gratitude_add_title": "Add gratitude",
+  "gratitude_name_label": "Name",
+  "gratitude_note_hint": "A note (optional)",
+  "gratitude_facebook_link_label": "Facebook link",
+  "gratitude_facebook_link_hint": "Paste a Facebook profile URL",
+  "gratitude_pick_avatar": "Choose profile photo",
+  "gratitude_change_photo": "Change photo",
+  "gratitude_open_facebook": "Open Facebook",
+  "gratitude_update_flag": "Update Flag",
+  "gratitude_edit_title": "Edit gratitude",
+  "gratitude_tags_label": "Tags",
+  "gratitude_filter_all": "All",
+  "gratitude_filter_things": "Things",
+  "gratitude_tag_play": "Play",
+  "gratitude_tag_learn": "Learn",
+  "gratitude_tag_work": "Work",
+  "gratitude_tag_health": "Health",
+  "gratitude_tag_social": "Social",
+  "gratitude_tag_family": "Family",
+  "gratitude_invalid_facebook_link": "Invalid Facebook link",
+  "gratitude_delete_confirm": "Remove this gratitude entry?",
+  "gratitude_pick_title": "Who or what are you grateful for?",
+  "gratitude_pick_required": "Pick someone or something you're grateful for.",
   "weekly_mood_trend": "Weekly Mood Trend",
   "no_records_last_7_days": "No records for the last 7 days",
   "frequent_activities": "Frequent Activities",
@@ -700,10 +1471,13 @@
   "act_friends": "Friends",
   "act_dating": "Dating",
   "act_kindness": "Kindness",
+  "act_gratitude": "Gratitude",
   "act_gaming": "Gaming",
   "act_reading": "Reading",
   "act_cinema": "Cinema",
   "act_walking": "Walking",
+  "act_focus_todos_streak": "4+ focus tasks done",
+  "act_focus_todos_complete": "Focus tasks complete",
   "act_logging": "Logging",
   "act_productivity": "Productivity",
   "add_app_plugin": "Add App Plugin",
@@ -727,6 +1501,10 @@
   "finance": "Finance",
   "auth_error_session_not_found": "Error: User session not found. Please log in again.",
   "projects": "Projects",
+  "projects_page_tagline": "Sessions, tasks, and notes in one place.",
+  "projects_summary_workspaces": "Workspaces",
+  "projects_summary_plugins": "Plugins",
+  "projects_quick_more": "More shortcuts",
   "kcal_consume": "Kcal Consumed",
   "hr": "Heart Rate",
   "spent": "Spent",
@@ -885,7 +1663,236 @@
   "canvas_notification_center": "Notification Center",
   "canvas_notification_desc": "Control and oversee all system notifications",
   "canvas_goal_center": "Goal Evolution",
+  "dev_quick_tabs_title": "Software Dev",
+  "dev_quick_tabs_subtitle": "Saved browser tabs — Northflank, Supabase, n8n, and more.",
+  "dev_quick_tabs_empty": "No tabs yet. Tap + to add one.",
+  "dev_quick_tabs_add": "Add tab",
+  "dev_quick_tabs_open": "Open",
+  "dev_quick_tabs_edit": "Edit tab",
+  "dev_quick_tabs_label": "Title",
+  "dev_quick_tabs_url": "Local URL (LAN)",
+  "dev_quick_tabs_remote_url": "Remote URL",
+  "dev_quick_tabs_remote_url_hint": "Used when the LAN address is unreachable (VPN, Tailscale, public host).",
+  "dev_quick_tabs_validation_error": "Title and at least one URL are required",
+  "dev_quick_tabs_delete_title": "Delete tab?",
+  "dev_quick_tabs_delete_message": "Remove \"{title}\" from quick access.",
+  "@dev_quick_tabs_delete_message": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "dev_quick_tabs_delete_confirm": "Delete",
+  "dev_quick_tabs_credentials": "Saved logins",
+  "dev_quick_tabs_credentials_subtitle": "HTTP login and SSL trust per host.",
+  "dev_quick_tabs_credentials_login": "Login saved",
+  "dev_quick_tabs_credentials_ssl": "SSL trusted",
+  "dev_quick_tabs_credentials_none": "No saved data",
+  "dev_quick_tabs_credentials_set_login": "Set login",
+  "dev_quick_tabs_credentials_username": "Username",
+  "dev_quick_tabs_credentials_password": "Password",
+  "dev_quick_tabs_credentials_passkey": "Passkey / API key",
+  "dev_quick_tabs_credentials_saved": "Credentials saved",
+  "dev_quick_tabs_credentials_ssl_hint": "For self-signed homelab HTTPS (e.g. OPNsense).",
+  "dev_quick_tabs_credentials_clear": "Clear all",
+  "dev_quick_tabs_credentials_clear_title": "Clear saved data?",
+  "dev_quick_tabs_credentials_clear_message": "Remove login and SSL trust for {host}.",
+  "@dev_quick_tabs_credentials_clear_message": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "dev_quick_tabs_credentials_revoke_ssl": "Revoke SSL trust",
+  "dev_quick_tabs_login_type": "Login type",
+  "dev_quick_tabs_login_type_html_form": "HTML form (OPNsense, homelab)",
+  "dev_quick_tabs_login_type_email_password": "Email + password (SPA)",
+  "dev_quick_tabs_login_type_http_basic": "HTTP Basic only",
+  "dev_quick_tabs_login_type_api_key": "API key / token",
+  "dev_quick_tabs_login_type_bearer_token": "Bearer token (K8s Dashboard)",
+  "dev_quick_tabs_login_type_external_browser": "Open in Safari / Chrome",
+  "dev_quick_tabs_login_type_oauth": "OAuth / SSO (manual in WebView)",
+  "dev_quick_tabs_login_type_none": "No autofill",
+  "dev_quick_tabs_credentials_email": "Email",
+  "dev_quick_tabs_credentials_bearer_token": "Bearer token",
+  "dev_quick_tabs_login_type_external_browser_hint": "Opens this site in your system browser — best for GitHub, Google SSO, and passkeys.",
+  "dev_quick_tabs_login_type_oauth_hint": "GitHub or Google sign-in cannot be auto-filled. Use manual login.",
+  "webview_connection_error": "Connection Error",
+  "webview_retry": "Retry",
+  "webview_ssl_trust_title": "Trust homelab certificate?",
+  "webview_ssl_trust_message": "The certificate for {host} is not trusted (common for OPNsense and LAN devices). Only continue on networks you trust.",
+  "@webview_ssl_trust_message": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "webview_ssl_trust_continue": "Trust and continue",
+  "webview_choose_url": "Choose URL",
+  "webview_ssl_protocol_hint": "This often means the server uses plain HTTP, not HTTPS. Edit the tab URL to http:// or tap Try HTTP below.",
+  "webview_ssl_protocol_tailscale_hint": "Tailscale HTTPS is usually on your machine name (https://name.tailnet.ts.net on port 443 via Serve), not https://100.x.x.x:9001. Port 9001 is often HTTP-only behind the proxy — put the Serve URL in Remote URL.",
+  "webview_try_http": "Try HTTP",
   "canvas_goal_desc": "Adjust tactical goal parameters",
+  "canvas_finance_reports_title": "Finance reports",
+  "canvas_finance_reports_desc": "Daily summary, local reminders, and shortcuts",
+  "canvas_finance_n8n_title": "Email report",
+  "canvas_finance_n8n_desc": "Finance and health snapshot delivered through n8n",
+  "canvas_finance_n8n_send_success": "Report sent to n8n.",
+  "canvas_finance_n8n_send_failed": "Could not send report. Try again later.",
+  "canvas_finance_n8n_not_configured": "n8n webhook is not configured in the app environment.",
+  "canvas_finance_n8n_no_email": "Add an email to your profile before sending a report.",
+  "canvas_finance_n8n_confirm_title": "Send email report?",
+  "canvas_finance_n8n_confirm_message": "Today's finance and health summary will be sent to n8n for delivery to {email}.",
+  "canvas_mail_summary_recipient": "Recipient",
+  "canvas_mail_summary_finance": "Finance today",
+  "canvas_mail_summary_health": "Health today",
+  "canvas_mail_summary_send": "Send email report",
+  "canvas_mail_summary_auto_title": "Automatic daily email",
+  "canvas_mail_summary_auto_subtitle": "After this time, send once per day while the app is open",
+  "mail_suggestion_title": "Report tips",
+  "mail_suggestion_ai_loading": "AI is analyzing your day…",
+  "mail_suggestion_ai_fallback": "Offline tips — connect MAIL_SUGGESTIONS_AGENT_URL for AI.",
+  "mail_suggestion_negative_net": "Today's spending exceeded income — review recent transactions.",
+  "mail_suggestion_no_transactions": "No transactions logged today — add expenses to keep reports accurate.",
+  "mail_suggestion_budget_high": "You've used {percent}% of your monthly budget — pace spending.",
+  "@mail_suggestion_budget_high": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mail_suggestion_monthly_deficit": "Monthly spending exceeds income — consider trimming fixed costs.",
+  "mail_suggestion_steps_low": "Steps at {percent}% of goal — a short walk helps hit your target.",
+  "@mail_suggestion_steps_low": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mail_suggestion_water_low": "Water intake is below half your goal — hydrate through the day.",
+  "mail_suggestion_sleep_low": "Sleep below your goal — try an earlier wind-down tonight.",
+  "mail_suggestion_log_mood": "No mood logged today — a quick check-in improves your trends.",
+  "mail_suggestion_focus_low": "Focus time is low — schedule a short deep-work block.",
+  "mail_suggestion_tasks_many": "{count} active tasks open — pick one priority for tomorrow.",
+  "@mail_suggestion_tasks_many": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "reports_hub_title": "Report via mail",
+  "reports_hub_subtitle": "Daily finance on device, email delivery through n8n",
+  "system_monitor_title": "System Monitor",
+  "system_monitor_subtitle": "Homelab launcher, dev accounts, DB & sync telemetry — admin only.",
+  "system_monitor_denied_title": "Admin access required",
+  "system_monitor_denied_body": "This page is restricted to accounts with the admin role.",
+  "system_monitor_denied_roles": "Local: {local} · Remote: {remote}",
+  "@system_monitor_denied_roles": {
+    "placeholders": {
+      "local": {
+        "type": "String"
+      },
+      "remote": {
+        "type": "String"
+      }
+    }
+  },
+  "system_monitor_denied_hint": "Set role to admin in Supabase → Table Editor → user_accounts (not Auth metadata). Then tap Refresh role.",
+  "system_monitor_retry": "Refresh role",
+  "system_monitor_overview_section": "Overview",
+  "system_monitor_db_section": "Local database",
+  "system_monitor_sync_section": "Sync engine",
+  "system_monitor_app_version": "App version",
+  "system_monitor_platform": "Platform",
+  "system_monitor_role": "Role",
+  "system_monitor_auth_status": "Auth status",
+  "system_monitor_supabase_user": "Supabase user",
+  "system_monitor_running_checks": "Running diagnostics…",
+  "system_monitor_healthy": "Database healthy",
+  "system_monitor_issues": "Issues detected",
+  "system_monitor_smoke_test": "Smoke test",
+  "system_monitor_sync_active": "Sync active",
+  "system_monitor_sync_status": "Last status",
+  "system_monitor_uptime": "Session uptime",
+  "system_monitor_open_sync_engine": "Open Sync Engine",
+  "dev_launcher_web_title": "Web apps (homelab)",
+  "dev_launcher_accounts_title": "Dev & cloud accounts",
+  "dev_launcher_accounts_empty": "Save OPNsense, Supabase, Northflank, n8n logins here. Secrets stay on device.",
+  "dev_launcher_add_web": "Add web app",
+  "dev_launcher_add_account": "Add dev account",
+  "dev_launcher_name": "Name",
+  "dev_launcher_url": "URL",
+  "dev_launcher_service": "Service",
+  "dev_launcher_username": "Username",
+  "dev_launcher_password": "Password / API key",
+  "dev_launcher_copied": "Copied to clipboard",
+  "dev_launcher_pin_canvas": "Pin to Canvas",
+  "dev_launcher_pinned": "Added to Canvas widgets",
+  "dev_launcher_add_from_catalog": "From plugin catalog",
+  "dev_launcher_pick_plugin": "Homelab web plugins",
+  "infra_api_section_title": "Infra API",
+  "infra_api_section_subtitle": "Connect Cloudflare, Tailscale, Northflank. API tokens stay on this device.",
+  "infra_api_configure": "Configure {provider}",
+  "@infra_api_configure": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "infra_api_token_label": "API token / key",
+  "infra_api_tailnet_label": "Tailnet name",
+  "infra_api_tailnet_hint": "Use - for default tailnet",
+  "infra_api_clear": "Remove",
+  "infra_api_test": "Test connection",
+  "infra_api_not_configured": "Not configured",
+  "infra_api_connected": "Connected",
+  "infra_api_token_saved": "Token saved — tap Test",
+  "infra_api_test_ok": "OK · {summary}",
+  "@infra_api_test_ok": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "infra_api_test_fail": "Failed · {message}",
+  "@infra_api_test_fail": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "island_system_monitor": "SYSTEM MONITOR",
+  "reports_mail_section_title": "Email via n8n",
+  "reports_mail_section_subtitle": "Finance and health snapshot delivered by email",
+  "reports_finance_section": "On-device finance report",
+  "reports_recipient_hint": "recipient@example.com",
+  "reports_recipient_save": "Save recipient",
+  "reports_recipient_saved": "Report recipient saved.",
+  "reports_recipient_profile_fallback": "Profile email default: {email}",
+  "@reports_recipient_profile_fallback": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "@canvas_finance_n8n_confirm_message": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "canvas_finance_n8n_confirm_send": "Send",
   "gps_permissions_required": "GPS permissions required for tracking.",
   "gps_title": "GPS TRACKING",
   "gps_disconnect_tooltip": "Disconnect device",
@@ -1012,12 +2019,176 @@
   "project_complete_label": "COMPLETE",
   "project_no_tasks": "No tasks yet. Tap + to add one.",
   "project_notes_label": "Notes",
+  "note_type_picker_title": "Choose note type",
+  "note_type_markdown": "Markdown (.md)",
+  "note_type_plain_text": "Plain text (.txt)",
+  "note_type_word": "Word (.docx)",
+  "project_journal_label": "Journal",
+  "project_no_journal": "No journal entries yet. Tap + to log mood and progress.",
+  "project_journal_entry": "Project log",
+  "project_log_context": "Project: {name}",
+  "@project_log_context": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "project_journal_mood_label": "Mood",
+  "project_journal_desc_label": "Description",
+  "project_journal_save": "Save log",
+  "project_journal_composer_hint": "Tap to record how this project session felt.",
+  "project_journal_count": "{count}",
+  "@project_journal_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "project_no_notes": "No notes yet. Tap + to create one.",
   "project_no_notes_list": "No notes found",
+  "project_choose_document_type": "Choose document type",
+  "project_doc_blank_note": "Blank note",
+  "project_doc_blank_note_desc": "Start with a clean slate",
+  "project_doc_tech": "Technical doc",
+  "project_doc_tech_desc": "Architecture and implementation template",
+  "project_doc_api": "API specification",
+  "project_doc_api_desc": "Endpoints and schema template",
+  "project_doc_tech_title": "Technical Documentation",
+  "project_doc_api_title": "API Specification",
   "project_finance_label": "Finance",
   "project_no_finance": "No financial records linked to this project.",
+  "project_skills_label": "Skills",
+  "project_no_skills": "No skills yet. Tap + to track what you improve on this project.",
+  "project_add_skill_title": "Add skill",
+  "project_skill_name_hint": "e.g. Flutter, debugging, system design",
+  "project_skill_streak_days": "{count} day streak",
+  "@project_skill_streak_days": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_streak_none": "No streak yet",
+  "project_skill_xp_hint": "{total} XP · {remaining} XP to next level",
+  "@project_skill_xp_hint": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_xp_on_complete": "Complete tasks to earn +15 XP per skill",
+  "project_skill_log_session": "Log a Skill Boost session to level these skills.",
+  "project_skill_practice": "Open Skill Boost",
+  "project_skill_tap_to_start": "Select one or more skills, then start the session",
+  "project_skill_start_session": "Start session ({count})",
+  "@project_skill_start_session": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_catalog_hint": "Pick from the same skills as Mind → Skills tiles.",
+  "project_auto_add_all_skills": "Create new skill",
+  "project_auto_add_all_skills_subtitle": "Add a brand-new skill to Mind and this project",
+  "project_skill_already_exists": "That skill already exists",
+  "project_skill_name_too_long": "Skill name too long (max 24 characters)",
+  "project_skills_all_on_project": "All Mind skills are already on this project",
+  "project_skills_added_count": "{count, plural, one{1 skill added} other{{count} skills added}}",
+  "@project_skills_added_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_delete_confirm": "Remove \"{name}\" from this project?",
+  "@project_skill_delete_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "project_skill_added": "Skill added",
+  "project_skill_xp_granted": "Skills gained +{xp} XP",
+  "@project_skill_xp_granted": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "project_sub_projects_label": "Sub-projects",
+  "project_no_sub_projects": "No sub-projects yet. Tap + to add a child project.",
+  "project_add_sub_project_title": "New sub-project",
+  "project_sub_project_name_hint": "Sub-project name",
   "project_add_task_title": "New Task",
+  "project_task_assign_to": "Assign to project",
   "project_task_title_hint": "Task title",
+  "project_sdlc_board_title": "SDLC board",
+  "project_sdlc_open": "Open SDLC board",
+  "project_sdlc_add_task_title": "Add SDLC task",
+  "project_sdlc_move_phase": "SDLC phase",
+  "project_sdlc_due_date": "Due date",
+  "project_sdlc_due_date_none": "No due date",
+  "project_sdlc_clear_due_date": "Clear due date",
+  "project_sdlc_default_purpose": "Define what this project must deliver and why.",
+  "project_sdlc_empty": "No active tasks. Tap + to add one to a phase.",
+  "project_sdlc_column_empty": "No tasks",
+  "project_sdlc_add_to_phase": "Add task to this phase",
+  "project_sdlc_drop_here": "Drop to move here",
+  "project_sdlc_task_moved": "Moved to {phase}",
+  "@project_sdlc_task_moved": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      }
+    }
+  },
+  "project_sdlc_phase_stat": "P{phase}: {count}",
+  "@project_sdlc_phase_stat": {
+    "placeholders": {
+      "phase": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_sdlc_phase_planning_title": "Planning & requirements",
+  "project_sdlc_phase_planning_hint": "SRS, feasibility",
+  "project_sdlc_phase_design_title": "Architecture & design",
+  "project_sdlc_phase_design_hint": "Tech stack, UI",
+  "project_sdlc_phase_implementation_title": "Implementation",
+  "project_sdlc_phase_implementation_hint": "Code, Git, reviews",
+  "project_sdlc_phase_testing_title": "Testing & QA",
+  "project_sdlc_phase_testing_hint": "Unit, integration, UAT",
+  "project_sdlc_phase_deployment_title": "Deployment",
+  "project_sdlc_phase_deployment_hint": "CI/CD, release",
+  "project_sdlc_phase_maintenance_title": "Operations & maintenance",
+  "project_sdlc_phase_maintenance_hint": "Monitor, patches, scale",
+  "project_sdlc_no_project": "Create a project first to open the SDLC board.",
+  "project_sdlc_pick_project": "Choose project for SDLC board",
+  "task_delete_tooltip": "Delete task",
+  "task_delete_confirm_title": "Delete task",
+  "task_delete_confirm_msg": "Are you sure you want to delete \"{name}\"? This cannot be undone.",
+  "@task_delete_confirm_msg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "task_deleted_msg": "Task deleted",
   "project_add_investment_title": "Add Investment",
   "project_add_investment_desc": "Record an expense or investment for this project.",
   "amount": "Amount",
@@ -1039,6 +2210,34 @@
   "project_delete_note_title": "Delete Note",
   "project_delete_note_msg": "Are you sure you want to delete this note?",
   "project_note_no_content": "No content",
+  "note_editor_write_hint": "Start writing your note…",
+  "note_editor_saved_label": "Saved {when}",
+  "@note_editor_saved_label": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "note_editor_saved_just_now": "just now",
+  "note_editor_saved_minutes": "{count}m ago",
+  "@note_editor_saved_minutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "note_editor_saved_hours": "{count}h ago",
+  "@note_editor_saved_hours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "note_editor_unsaved": "Unsaved",
+  "note_editor_saving": "Saving…",
   "focus_select_project": "TAP TO SELECT PROJECT",
   "focus_select_task": "SELECT TASK",
   "focus_active_exercise": "ACTIVE EXERCISE: {type}",
@@ -1147,6 +2346,15 @@
   "delete_account_plan_step2": "If your project deploys the Supabase Edge Function \"delete-account\", your auth user and linked rows can be removed server-side.",
   "delete_account_plan_step3": "Until that endpoint exists, cloud data may remain — contact support or use the dashboard to request full erasure under applicable privacy laws.",
   "delete_account_acknowledge": "I understand my account may not be fully erased from the server until backend deletion is enabled.",
+  "delete_account_type_key_word": "DELETE-ACCOUNT",
+  "delete_account_type_key_prompt": "Type {word} to confirm:",
+  "@delete_account_type_key_prompt": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
   "delete_account_confirm": "Delete and sign out",
   "delete_account_cancel": "Cancel",
   "delete_account_success": "You have been signed out. Complete cloud deletion may take up to 48 hours once enabled.",
@@ -1162,6 +2370,7 @@
   "notification_ai_waiting": "Gathering intelligence...",
   "notification_ai_analysis": "AI ANALYSIS",
   "notification_daily_quest": "DAILY QUEST",
+  "notification_no_active_quests": "No active quests right now. Complete tasks in Projects to earn daily quests.",
   "notification_quest_completed_snack": "Quest completed: {title} (+{exp} EXP)",
   "@notification_quest_completed_snack": {
     "placeholders": {
@@ -1177,6 +2386,14 @@
   "notification_add_new": "ADD NEW",
   "notification_no_reminders": "No reminders set.",
   "notification_disabled_desc": "System notifications are currently disabled.",
+  "notification_system_preferences": "SYSTEM PREFERENCES",
+  "notification_pomodoro_reminder_title": "Pomodoros Reminder",
+  "notification_pomodoro_reminder_subtitle": "Receive notification after you finish a pomodoro or end a break.",
+  "notification_live_activities_title": "Live Activities",
+  "notification_live_activities_subtitle": "Track focus timer and information on your Lock Screen.",
+  "notification_morning_briefing_subtitle": "Today's schedule, yesterday recap, and motivation when you first open Home (5:00–11:59).",
+  "notification_status_on": "on",
+  "notification_status_off": "off",
   "notification_wisdom_board": "Wisdom Board",
   "notification_add_quote": "ADD QUOTE",
   "notification_quote_empty": "The board of wisdom is empty.",
@@ -1187,6 +2404,7 @@
   "notification_mission_history": "Mission History",
   "notification_mission_success": "MISSION SUCCESS",
   "notification_focus_complete": "FOCUS COMPLETE",
+  "notification_task_success": "TASK SUCCESS",
   "notification_reminder": "REMINDER",
   "notification_no_logs": "LOGS ARE EMPTY",
   "notification_empty_desc": "All system events will be stored here.",
@@ -1211,6 +2429,109 @@
   "finance_label_amount": "Amount",
   "finance_label_category": "Category",
   "finance_label_description_optional": "Description (optional)",
+  "finance_txn_source_account": "Paid from",
+  "finance_txn_source_account_none": "Not specified",
+  "finance_txn_source_account_empty": "Save a wallet or account first, then choose it when logging spend.",
+  "finance_txn_source_account_add": "Add account",
+  "finance_txn_source_account_required": "Choose which account this money left.",
+  "finance_recurring_income": "Recurring income",
+  "finance_recurring_interval": "Repeat every",
+  "finance_fixed_income_title": "Fixed income",
+  "finance_fixed_income_subtitle": "Human capital (skills), salary, rent received, and other steady inflows",
+  "finance_fixed_income_monthly_total": "Monthly total",
+  "finance_fixed_income_empty": "No fixed income yet",
+  "finance_shortcut_transaction": "Transaction",
+  "finance_shortcut_account": "Account",
+  "finance_shortcut_asset": "Asset",
+  "finance_shortcut_income": "Income",
+  "finance_fixed_income_add": "Add fixed income",
+  "finance_fixed_income_new": "New fixed income",
+  "finance_fixed_income_edit": "Edit fixed income",
+  "finance_fixed_income_name": "Income name",
+  "finance_fixed_income_next": "Next payout",
+  "finance_fixed_income_delete_confirm": "Remove this fixed income schedule?",
+  "finance_insight_title": "Analysis",
+  "finance_insight_suggestions": "Suggestions",
+  "finance_insight_enter_amount": "Enter an amount to preview how this affects your month.",
+  "finance_insight_fixed_after": "After saving: about {amount}/month in fixed income.",
+  "@finance_insight_fixed_after": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_insight_covers_spending": "Covers about {percent}% of spending logged this month ({spent}).",
+  "@finance_insight_covers_spending": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      },
+      "spent": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_insight_shortfall": "Still about {amount} short vs monthly spending.",
+  "@finance_insight_shortfall": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_insight_surplus": "Roughly {amount}/month left after typical spending.",
+  "@finance_insight_surplus": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_insight_duplicate_fixed": "You already have fixed income in “{name}” — avoid double counting.",
+  "@finance_insight_duplicate_fixed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_insight_expense_share": "This would be about {percent}% of spending this month.",
+  "@finance_insight_expense_share": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_insight_expense_large": "Large one-off expense — double-check the category.",
+  "finance_insight_income_share": "Adds about {percent}% to income logged this month.",
+  "@finance_insight_income_share": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_insight_recurring_equiv": "As recurring: about {amount}/month on top of fixed income.",
+  "@finance_insight_recurring_equiv": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_insight_savings_total": "Savings balance would reach about {amount}.",
+  "@finance_insight_savings_total": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_interval_weekly": "Week",
+  "finance_interval_monthly": "Month",
+  "finance_interval_yearly": "Year",
   "finance_btn_add": "Add",
   "finance_total_net_worth": "TOTAL NET WORTH",
   "finance_monthly_breakdown": "{month} Breakdown",
@@ -1242,6 +2563,17 @@
     }
   },
   "finance_see_all": "SEE ALL",
+  "finance_daily_report_title": "Daily report",
+  "finance_daily_report_reminder": "Daily reminder",
+  "finance_daily_report_reminder_subtitle": "Local notification that opens this report",
+  "finance_daily_report_open": "Open daily report",
+  "finance_daily_report_income": "Income",
+  "finance_daily_report_expense": "Expenses",
+  "finance_daily_report_net": "Net",
+  "finance_daily_report_spending_by_category": "Spending by category",
+  "finance_daily_report_today_transactions": "Today's activity",
+  "finance_daily_report_empty_day": "No transactions for this day yet.",
+  "finance_daily_report_notifications_off": "Enable system notifications in Settings to use daily reminders.",
   "finance_cat_food": "Food",
   "finance_cat_coffee": "Coffee",
   "finance_cat_transport": "Transport",
@@ -1250,11 +2582,113 @@
   "finance_cat_bills": "Bills",
   "finance_cat_rent": "Rent",
   "finance_cat_subscriptions": "Subscriptions",
+  "finance_subscriptions_active_header": "ACTIVE SUBSCRIPTIONS",
+  "finance_subscriptions_monthly_total": "MONTHLY TOTAL",
+  "finance_subscriptions_next_month_header": "PLAN NEXT MONTH",
+  "finance_subscriptions_next_month_total": "PLANNED TOTAL",
+  "finance_subscriptions_next_month_empty": "No subscription charges scheduled for next month.",
+  "finance_subscriptions_next_month_remove_tooltip": "Remove from this month's plan",
+  "finance_subscriptions_next_month_remove_title": "REMOVE FROM PLAN",
+  "finance_subscriptions_next_month_remove_message": "This only removes the charge from next month's plan. Your subscription stays active and will show again when that billing month arrives.",
+  "finance_subscriptions_next_month_remove_confirm": "REMOVE",
+  "finance_subscriptions_next_month_remove_action": "REMOVE FROM PLAN",
+  "finance_subscription_due_today": "DUE TODAY",
+  "finance_subscription_days_left": "{days} DAYS LEFT",
+  "@finance_subscription_days_left": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "finance_cat_entertainment": "Entertainment",
   "finance_cat_health": "Health",
   "finance_cat_education": "Education",
   "finance_cat_investing": "Investing",
   "finance_cat_general": "General",
+  "finance_cat_human_capital": "Human capital",
+  "finance_inflow_pillar_human_capital": "Human capital",
+  "finance_inflow_pillar_liquidity": "Liquidity",
+  "finance_inflow_pillar_fixed_income": "Fixed income",
+  "finance_inflow_pillar_investment": "Investment",
+  "finance_inflow_pillar_cashflow": "Cashflow",
+  "finance_inflow_pillars_title": "Inflow layers",
+  "finance_inflow_pillars_subtitle": "Skills & work, cash buffer, steady yield, growth assets, recurring systems",
+  "finance_asset_pillars_title": "Asset layers",
+  "finance_asset_pillars_subtitle": "Liquidity, fixed income, investment, cashflow",
+  "finance_asset_pillar_liquidity": "Liquidity",
+  "finance_asset_pillar_fixed_income": "Fixed income",
+  "finance_asset_pillar_investment": "Investment",
+  "finance_asset_pillar_cashflow": "Cashflow",
+  "finance_record_section_title": "Record",
+  "finance_record_section_subtitle": "Add accounts, assets, human capital, and subscriptions",
+  "finance_record_human_capital": "Human capital",
+  "finance_record_human_capital_hint": "Capacity (imputed value)",
+  "finance_record_liquidity_account": "Liquidity account",
+  "finance_record_liquidity_hint": "Cash, checking",
+  "finance_record_fixed_income_asset": "Fixed income asset",
+  "finance_record_fixed_income_hint": "Bond, savings",
+  "finance_record_investment_account": "Investment account",
+  "finance_record_investment_account_hint": "Broker, crypto wallet",
+  "finance_record_investment_holding": "Investment holding",
+  "finance_record_investment_holding_hint": "Stock, crypto, real estate",
+  "finance_account_type_checking": "Checking",
+  "finance_account_type_savings": "Savings",
+  "finance_account_type_cash": "Cash",
+  "finance_account_type_credit_card": "Credit card",
+  "finance_account_type_deposit": "Term deposit",
+  "finance_account_type_investment": "Investment account",
+  "finance_budget_limit_title": "Budget limit",
+  "finance_budget_limit_label": "Limit amount",
+  "finance_budget_limit_per_week": "Per week",
+  "finance_budget_limit_per_month": "Per month",
+  "finance_add_account_title": "Add account",
+  "finance_account_type_section": "Account type",
+  "finance_accounts_liquidity_title": "Liquidity accounts",
+  "finance_accounts_investment_title": "Investment accounts",
+  "finance_account_investment_name_hint": "e.g. VNDirect, SSI, Binance",
+  "finance_record_cashflow_asset": "Cashflow asset",
+  "finance_record_cashflow_hint": "SaaS, recurring system",
+  "finance_record_subscription": "Subscription",
+  "finance_record_subscription_hint": "Recurring expense",
+  "finance_record_contract_hint": "One-time project or contract pay",
+  "finance_record_bonus_hint": "One-time bonus payment",
+  "finance_bonus_section_title": "Bonus & Contract",
+  "finance_bonus_section_subtitle": "One-time income from bonuses and contracts",
+  "finance_bonus_section_total": "Total",
+  "finance_bonus_section_empty": "No bonus or contract income yet",
+  "finance_total_income_title": "Total income",
+  "finance_total_income_recurring": "Recurring / month",
+  "finance_total_income_onetime": "One-time",
+  "finance_hc_capacity_label": "Capacity",
+  "finance_hc_realized_label": "Received",
+  "finance_hc_gap_title": "Human capital",
+  "finance_hc_gap_message": "Capacity {capacity} · received {received} · gap {gap}",
+  "@finance_hc_gap_message": {
+    "placeholders": {
+      "capacity": {
+        "type": "String"
+      },
+      "received": {
+        "type": "String"
+      },
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_add_asset_title": "Add asset",
+  "finance_add_asset_category": "Asset type",
+  "finance_add_asset_name": "Name / symbol",
+  "finance_add_asset_value": "Estimated value",
+  "finance_add_asset_save": "Save asset",
+  "finance_asset_cat_stock": "Stock",
+  "finance_asset_cat_crypto": "Crypto",
+  "finance_asset_cat_bond": "Bond",
+  "finance_asset_cat_deposit": "Deposit",
+  "finance_asset_cat_real_estate": "Real estate",
+  "finance_asset_cat_cashflow": "Cashflow (SaaS)",
+  "finance_cat_skills": "Skills",
   "finance_cat_salary": "Salary",
   "finance_cat_freelance": "Freelance",
   "finance_cat_investment": "Investment",
@@ -1347,6 +2781,63 @@
   "ssh_type_command": "Type a command...",
   "ssh_disconnect": "Disconnect",
   "ssh_search_hint": "Search...",
+  "ssh_connect_host_first": "Connect to a host first to manage live sessions.",
+  "ssh_cursor_api_title": "Cursor API",
+  "ssh_cursor_api_subtitle": "Save your API key to drive cursor-agent on the remote host.",
+  "ssh_cursor_api_key_hint": "cursor_…",
+  "ssh_cursor_api_key_stored": "API key saved on this device.",
+  "ssh_cursor_api_save": "Save key",
+  "ssh_cursor_api_test": "Test connection",
+  "ssh_cursor_api_open_terminal": "Open SSH (Cursor mode)",
+  "ssh_cursor_api_saved": "Cursor API key saved.",
+  "ssh_cursor_api_test_ok": "Cursor API key is valid.",
+  "ssh_cursor_api_missing_key": "Enter or save a Cursor API key first.",
+  "cursor_hub_title": "Cursor",
+  "cursor_hub_page_subtitle": "Control Cursor on your Mac via My Machines and Cloud Agents — no SSH required.",
+  "cursor_hub_canvas_subtitle": "My Machines worker, API tasks, and agents dashboard",
+  "cursor_hub_integration_subtitle": "API key, worker setup, send tasks from your phone",
+  "cursor_hub_section_title": "AI & automation",
+  "cursor_hub_key_ready": "API key verified",
+  "cursor_hub_open_full": "Open Cursor Hub",
+  "cursor_hub_open_agents": "Open Agents",
+  "cursor_hub_worker_title": "My Machine worker",
+  "cursor_hub_worker_body": "On your Mac, run this in Terminal and keep it open. Your machine then appears at cursor.com/agents.",
+  "cursor_hub_copy_worker_cmd": "Copy command",
+  "cursor_hub_worker_copied": "Copied: agent worker start",
+  "cursor_hub_send_title": "Send a task",
+  "cursor_hub_target_machine": "My Mac",
+  "cursor_hub_target_cloud": "Cloud repo",
+  "cursor_hub_machine_name": "Machine name (optional)",
+  "cursor_hub_machine_name_hint": "As shown in Agents environment dropdown",
+  "cursor_hub_pick_repo": "Your repositories",
+  "cursor_hub_refresh_repos": "Refresh repo list",
+  "cursor_hub_repos_empty": "No repos found. Enter a URL below or run on Mac to scan ~/Code.",
+  "cursor_hub_usage_limit": "Cloud agent blocked: enable usage-based pricing on cursor.com (need ~$2 spend limit). Use My Mac mode instead.",
+  "cursor_hub_repo_url": "GitHub repo URL",
+  "cursor_hub_prompt_label": "What should the agent do?",
+  "cursor_hub_send_task": "Send to Cursor",
+  "cursor_hub_task_sent": "Task sent — opening agent…",
+  "cursor_hub_task_failed": "Could not start agent: {reason}",
+  "@cursor_hub_task_failed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "cursor_hub_recent_title": "Recent agents",
+  "island_cursor_ssh_standby": "Awaiting SSH link",
+  "island_cursor_no_api_key": "No API key",
+  "ssh_cursor_api_test_fail": "Connection failed: {reason}",
+  "@ssh_cursor_api_test_fail": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "ssh_go_to_terminal": "GO TO TERMINAL",
+  "ssh_no_tmux_sessions": "No active tmux sessions found.",
   "journal": "Journal",
   "social_notes": "Mind Notes",
   "btn_send_feedback": "Send Feedback",
@@ -1391,6 +2882,306 @@
   "settings_title": "Settings",
   "mind_latest_note": "Latest Note",
   "common_done": "Done",
+  "island_app_name": "ICE GATE",
+  "island_app_blocker": "APP BLOCKER",
+  "island_initializing": "INITIALIZING…",
+  "island_notifications": "NOTIFICATIONS",
+  "island_inbox": "INBOX",
+  "island_documentation": "DOCUMENTATION",
+  "island_canvas": "CANVAS",
+  "island_mind": "MIND",
+  "island_health_data": "DATA",
+  "island_nutrition": "NUTRITION",
+  "island_activity": "ACTIVITY",
+  "island_hydration": "HYDRATION",
+  "island_focus": "FOCUS",
+  "island_steps": "STEPS",
+  "island_vitals": "VITALS",
+  "island_sleep": "SLEEP",
+  "island_calories": "CALORIES",
+  "island_spo2": "SpO₂",
+  "island_biometrics": "BIOMETRICS",
+  "finance_tab_overview": "OVERVIEW",
+  "finance_tab_history": "HISTORY",
+  "finance_tab_daily": "DAILY",
+  "finance_tab_daily_subtitle": "Daily fun spending and income — pick a day on the calendar.",
+  "finance_tab_achievements": "ACHIEVEMENTS",
+  "finance_tab_career": "CAREER",
+  "finance_job_title": "Job positions",
+  "finance_job_subtitle": "Track employers, contracts, and tenure",
+  "finance_job_empty": "No job positions yet",
+  "finance_job_current": "Current",
+  "finance_job_ended": "Ended",
+  "finance_job_tenure": "{months} months",
+  "@finance_job_tenure": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_add": "Add position",
+  "finance_job_new": "New position",
+  "finance_job_edit": "Edit position",
+  "finance_job_employer": "Employer / company",
+  "finance_job_role": "Job title / role",
+  "finance_job_contract_type": "Contract type",
+  "finance_job_contract_full_time": "Full-time",
+  "finance_job_contract_part_time": "Part-time",
+  "finance_job_contract_freelance": "Freelance",
+  "finance_job_contract_internship": "Internship",
+  "finance_job_contract_contract": "Contract",
+  "finance_job_start_date": "Start date",
+  "finance_job_end_date": "End date",
+  "finance_job_end_date_hint": "Leave empty if current",
+  "finance_job_notes": "Notes",
+  "finance_job_salary": "Monthly income",
+  "finance_job_salary_hint": "Creates a fixed income linked to this job",
+  "finance_job_income_type": "Income type",
+  "finance_job_income_salary": "Salary",
+  "finance_job_income_contract": "Contract income",
+  "finance_job_income_bonus": "Bonus",
+  "finance_job_salary_suffix": "{amount} / mo",
+  "@finance_job_salary_suffix": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_job_on_day": "Working that day",
+  "finance_job_delete_confirm": "Delete this job position?",
+  "finance_job_end_confirm": "Mark this position as ended today?",
+  "finance_job_work_days": "Work days",
+  "finance_job_log_today": "Log today",
+  "finance_job_work_streak": "{count} day streak",
+  "@finance_job_work_streak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_sheet_subtitle": "Plan your time and start working",
+  "finance_job_time_plan": "Plan for today",
+  "finance_job_time_category": "Work type",
+  "finance_job_time_start": "Start",
+  "finance_job_time_log_now": "Log now",
+  "finance_job_time_start_timer": "Start timer",
+  "finance_job_time_logged": "Logged {minutes} min",
+  "@finance_job_time_logged": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_stop": "Stop",
+  "finance_job_time_minutes": "{minutes} min",
+  "@finance_job_time_minutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_elapsed": "{minutes} min elapsed",
+  "@finance_job_time_elapsed": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_actual_summary": "Actual: {actual} min / planned: {planned} min",
+  "@finance_job_time_actual_summary": {
+    "placeholders": {
+      "actual": {
+        "type": "int"
+      },
+      "planned": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_category_code_vibe": "Vibe code",
+  "finance_job_time_category_code_manual": "Manual code",
+  "finance_job_time_category_sales_desk": "Desk sales",
+  "finance_job_time_category_sales_field": "Field sales",
+  "finance_job_time_category_communication": "Communication",
+  "finance_job_time_category_meditation": "Meditation",
+  "finance_job_task_group_code": "Code",
+  "finance_job_task_group_sales": "Sales",
+  "finance_job_task_group_speech": "Speaking",
+  "finance_job_task_group_health": "Health",
+  "finance_job_task_group_time_log": "Log time",
+  "finance_job_task_add_job": "Add task",
+  "finance_job_sub_task_name": "Task name",
+  "finance_job_time_log": "Log time",
+  "finance_job_time_log_title": "Log time",
+  "finance_job_task_read_docs": "Read docs",
+  "finance_job_task_sales_customer": "Customer contact",
+  "finance_job_task_sales_report": "Reports",
+  "finance_job_task_pick_group": "Choose work type",
+  "finance_job_task_full_time": "Full-time",
+  "finance_job_task_part_time": "Part-time",
+  "finance_job_task_part_time_hours": "Hours worked",
+  "finance_job_task_part_time_save": "Log hours",
+  "finance_job_task_pick_detail": "Choose detail",
+  "finance_job_history": "History",
+  "finance_job_history_title": "Work history",
+  "finance_job_history_subtitle": "Synced from your job time logs",
+  "finance_job_history_empty": "No time logged yet",
+  "finance_job_present": "present",
+  "finance_job_time_notes": "Notes",
+  "finance_job_time_notes_hint": "What did you work on?",
+  "finance_job_customer_title": "Customer",
+  "finance_job_customer_name": "Customer name",
+  "finance_job_customer_company": "Company",
+  "finance_job_customer_phone": "Phone",
+  "finance_job_customer_save": "Save customer",
+  "finance_job_customer_existing": "{count} customers saved",
+  "@finance_job_customer_existing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_customer_open_form": "Open customer form",
+  "finance_achievements_subtitle": "Major financial wins by month and year.",
+  "finance_period_month": "Month",
+  "finance_period_year": "Year",
+  "finance_daily_in": "Money in",
+  "finance_daily_out": "Money out",
+  "finance_daily_empty": "Nothing logged this day",
+  "finance_achievements_empty": "No major achievements in this period yet",
+  "finance_achievements_add": "Record achievement",
+  "finance_milestone_month_income": "Monthly income recorded",
+  "finance_milestone_month_savings": "Monthly savings added",
+  "finance_milestone_year_total": "Year total income",
+  "finance_tab_billing": "BILLING",
+  "finance_tab_saving": "SAVINGS",
+  "island_documents": "DOCUMENTS",
+  "island_editor": "EDITOR",
+  "island_identity": "IDENTITY",
+  "island_id_update": "ID UPDATE",
+  "island_protocols": "PROTOCOLS",
+  "island_sync_core": "SYNC CORE",
+  "island_settings": "SETTINGS",
+  "island_remote_ssh": "REMOTE SSH",
+  "island_connected": "CONNECTED",
+  "island_not_active": "NOT ACTIVE",
+  "island_connect": "CONNECT",
+  "island_tmux_active": "TMUX ACTIVE",
+  "daily_loop_title": "Today's loop",
+  "daily_loop_subtitle": "Complete all 4 pillars to extend your streak",
+  "daily_loop_complete": "Loop complete — you're on fire!",
+  "daily_loop_streak": "{count}d",
+  "@daily_loop_streak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daily_loop_progress": "{done} / {total} done",
+  "@daily_loop_progress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "daily_loop_health": "Health pulse",
+  "daily_loop_finance": "Money check",
+  "daily_loop_mind": "Mood log",
+  "daily_loop_projects": "Project touch",
+  "morning_loop_reminder_title": "Morning push reminder",
+  "morning_loop_reminder_subtitle": "Optional phone notification — your in-app summary on Home works without this",
+  "morning_briefing_toggle": "Morning summary on Home",
+  "morning_briefing_today_schedule": "Today's schedule",
+  "morning_briefing_today_empty": "No events today — a clear day to plan.",
+  "morning_briefing_today_connect_hint": "Connect Google or device calendar to see today's events here.",
+  "morning_briefing_today_more": "+{count} more in calendar",
+  "@morning_briefing_today_more": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_all_day": "All day",
+  "morning_briefing_open_calendar": "Open calendar",
+  "morning_briefing_title": "Good morning",
+  "morning_briefing_title_name": "Good morning, {name}",
+  "@morning_briefing_title_name": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "morning_briefing_subtitle": "Care for body and mind — then finish your 4-pillar loop today.",
+  "morning_briefing_yesterday_title": "Yesterday",
+  "morning_briefing_yesterday_empty": "A quiet day — today is a fresh start.",
+  "morning_briefing_yesterday_steps": "{steps} steps",
+  "@morning_briefing_yesterday_steps": {
+    "placeholders": {
+      "steps": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_yesterday_water": "{ml} ml water",
+  "@morning_briefing_yesterday_water": {
+    "placeholders": {
+      "ml": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_yesterday_sleep": "{hours} h sleep",
+  "@morning_briefing_yesterday_sleep": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "morning_briefing_yesterday_loop": "{done}/{total} pillars completed",
+  "@morning_briefing_yesterday_loop": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_motivation_title": "Today's motivation",
+  "morning_briefing_motivation_empty": "Yesterday was light — one small win today resets your rhythm.",
+  "morning_briefing_motivation_all_done": "You closed yesterday strong — ride that momentum into today.",
+  "morning_briefing_motivation_strong": "Solid progress yesterday — one more pillar today keeps the streak alive.",
+  "morning_briefing_motivation_mid": "You moved forward yesterday — stack another small win this morning.",
+  "morning_briefing_motivation_low": "Yesterday was a rest day — water, a walk, or a mood log is enough to begin.",
+  "morning_briefing_progress": "{done} of {total} pillars done today",
+  "@morning_briefing_progress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_start": "Start my day",
+  "morning_briefing_log_mood": "Log mood first",
   "aiMemoryTitle": "Screen Memory",
   "aiMemoryDraftsTitle": "Waiting for review",
   "aiMemoryConfirmedTitle": "Confirmed memories",

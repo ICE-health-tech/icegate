@@ -1,9 +1,14 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/utils/L10nExtensions.dart';
 
 class NoteManagerPage extends StatefulWidget {
   const NoteManagerPage({super.key});
@@ -15,6 +20,19 @@ class NoteManagerPage extends StatefulWidget {
 class _NoteManagerPageState extends State<NoteManagerPage> {
   final _searchController = TextEditingController();
   final _notionSecretController = TextEditingController();
+  bool _journalSyncStarted = false;
+
+  void _maybeSyncJournalImages(String personId) {
+    if (_journalSyncStarted || personId.isEmpty) return;
+    _journalSyncStarted = true;
+
+    unawaited(
+      context.read<StorageBlock>().syncJournalNotes(
+        personId: personId,
+        notesDao: context.read<ProjectNoteDAO>(),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -28,6 +46,11 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final block = context.watch<DocumentationBlock>();
+    final l10n = context.l10n;
+    final personId = context.read<PersonBlock>().currentPersonID.value;
+    if (personId != null && personId.isNotEmpty) {
+      _maybeSyncJournalImages(personId);
+    }
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -70,7 +93,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                       horizontal: 24,
                       vertical: 8,
                     ),
-                    child: _buildSearchSection(colorScheme),
+                    child: _buildSearchSection(context, colorScheme),
                   ),
                 ),
 
@@ -81,7 +104,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                     child: Row(
                       children: [
                         Text(
-                          'ENABLED CONNECTIONS',
+                          l10n.integrations_enabled_connections,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w900,
@@ -97,7 +120,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Filters',
+                          l10n.integrations_filters,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -117,21 +140,21 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                       delegate: SliverChildListDelegate([
                         _buildConnectionItem(
                           context: context,
-                          name: 'Internal Notes',
-                          subtitle: 'Primary Vault (Local)',
+                          name: l10n.integrations_internal_notes,
+                          subtitle: l10n.integrations_primary_vault,
                           icon: Icons.article_rounded,
                           color: Colors.blue,
                           isConnected: true,
                           onCardTap: () => _navigateToExplorer(context),
                           onAction: () => _navigateToExplorer(context),
-                          actionLabel: 'Explore',
+                          actionLabel: l10n.integrations_explore,
                         ),
                         _buildConnectionItem(
                           context: context,
-                          name: 'Google Drive',
+                          name: l10n.integrations_google_drive,
                           subtitle: block.isGoogleDriveConnected.value
-                              ? 'Synced with Cloud'
-                              : 'Cloud Storage',
+                              ? l10n.integrations_synced_cloud
+                              : l10n.integrations_cloud_storage,
                           icon: Icons.add_to_drive_rounded,
                           color: Colors.green,
                           isConnected: block.isGoogleDriveConnected.value,
@@ -147,13 +170,13 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                           },
                           onAction: () => block.syncWithGoogleDrive(),
                           actionLabel: block.isGoogleDriveConnected.value
-                              ? 'Sync Now'
-                              : 'Connect',
+                              ? l10n.integrations_sync_now
+                              : l10n.integrations_connect,
                         ),
                         _buildConnectionItem(
                           context: context,
-                          name: 'Notion Sync',
-                          subtitle: 'Database Pipeline',
+                          name: l10n.integrations_notion_sync,
+                          subtitle: l10n.integrations_database_pipeline,
                           icon: Icons.grid_view_rounded,
                           color: Colors.indigo,
                           isConnected: block.notionSecret.value != null,
@@ -169,19 +192,19 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                             }
                           },
                           actionLabel: block.notionSecret.value != null
-                              ? 'Fetch'
-                              : 'Setup',
+                              ? l10n.integrations_fetch
+                              : l10n.integrations_setup,
                         ),
                         _buildConnectionItem(
                           context: context,
-                          name: 'Slack Docs',
-                          subtitle: 'Shared Channels',
+                          name: l10n.integrations_slack_docs,
+                          subtitle: l10n.integrations_shared_channels,
                           icon: Icons.forum_rounded,
                           color: Colors.orange,
                           isConnected: false,
                           onCardTap: () {},
                           onAction: () {},
-                          actionLabel: 'Notify Me',
+                          actionLabel: l10n.integrations_notify_me,
                           isPlaceholder: true,
                         ),
                       ]),
@@ -211,6 +234,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
   }
 
   Widget _buildHeader(BuildContext context, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
       sliver: SliverToBoxAdapter(
@@ -221,7 +245,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Integrations',
+                  l10n.integrations_title,
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
@@ -230,7 +254,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                   ),
                 ),
                 Text(
-                  'Manage your document sources',
+                  l10n.integrations_subtitle,
                   style: TextStyle(
                     fontSize: 14,
                     color: colorScheme.onSurface.withValues(alpha: 0.5),
@@ -268,11 +292,12 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
     ColorScheme colorScheme,
   ) {
     return Watch((context) {
+      final l10n = context.l10n;
       return Row(
         children: [
           Expanded(
             child: _buildStatCard(
-              'Active Services',
+              l10n.integrations_active_services,
               '${block.activeConnectionsCount.value}/${block.totalServicesAvailable}',
               Icons.lan_rounded,
               colorScheme.primary,
@@ -282,7 +307,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
           const SizedBox(width: 12),
           Expanded(
             child: _buildStatCard(
-              'Total Notes',
+              l10n.integrations_total_notes,
               '${block.files.value.length}',
               Icons.description_rounded,
               colorScheme.secondary,
@@ -346,7 +371,8 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
     );
   }
 
-  Widget _buildSearchSection(ColorScheme colorScheme) {
+  Widget _buildSearchSection(BuildContext context, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -362,7 +388,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
             color: colorScheme.onSurface.withValues(alpha: 0.3),
             size: 20,
           ),
-          hintText: 'Search sources...',
+          hintText: l10n.integrations_search_hint,
           hintStyle: TextStyle(
             color: colorScheme.onSurface.withValues(alpha: 0.3),
             fontSize: 14,
@@ -518,31 +544,32 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
   }
 
   void _showNotionDialog(BuildContext context, DocumentationBlock block) {
+    final l10n = context.l10n;
     _notionSecretController.text = block.notionSecret.value ?? '';
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Notion Configuration'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.integrations_notion_config_title),
         content: TextField(
           controller: _notionSecretController,
-          decoration: const InputDecoration(
-            labelText: 'Internal Integration Secret',
+          decoration: InputDecoration(
+            labelText: l10n.integrations_notion_secret_label,
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
               block.setNotionSecret(_notionSecretController.text);
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               if (_notionSecretController.text.isNotEmpty) {
                 block.fetchFromNotionAuto();
               }
             },
-            child: const Text('Save & Fetch'),
+            child: Text(l10n.integrations_save_fetch),
           ),
         ],
       ),
@@ -551,7 +578,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
 
   void _showNewSourceDialog(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Source Marketplace coming soon!')),
+      SnackBar(content: Text(context.l10n.integrations_marketplace_soon)),
     );
   }
 }

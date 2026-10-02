@@ -6,15 +6,27 @@ import 'package:signals_flutter/signals_flutter.dart';
 
 class HomePageSettings extends StatelessWidget {
   final ConfigBlock configBlock;
+  final VoidCallback? onChangeTheme;
 
-  const HomePageSettings({super.key, required this.configBlock});
+  const HomePageSettings({
+    super.key,
+    required this.configBlock,
+    this.onChangeTheme,
+  });
 
   static void show(BuildContext context, ConfigBlock configBlock) {
+    final parentContext = context;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => HomePageSettings(configBlock: configBlock),
+      builder: (sheetContext) => HomePageSettings(
+        configBlock: configBlock,
+        onChangeTheme: () {
+          Navigator.pop(sheetContext);
+          ThemeManager.showThemeSelectionDialog(parentContext);
+        },
+      ),
     );
   }
 
@@ -36,6 +48,9 @@ class HomePageSettings extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -49,9 +64,7 @@ class HomePageSettings extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 36),
-         
-
-          Expanded(
+          Flexible(
             child: SingleChildScrollView(
               child: Column(
                 children: [
@@ -76,8 +89,8 @@ class HomePageSettings extends StatelessWidget {
                       Icons.chevron_right_rounded,
                       color: colorScheme.outline,
                     ),
-                    onTap: () =>
-                        ThemeManager.showThemeSelectionDialog(context),
+                    onTap: onChangeTheme ??
+                        () => ThemeManager.showThemeSelectionDialog(context),
                   ),
                   const SizedBox(height: 20),
                   const Divider(height: 1),

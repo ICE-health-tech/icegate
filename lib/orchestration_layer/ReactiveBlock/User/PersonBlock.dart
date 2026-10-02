@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:ice_gate/orchestration_layer/Services/AdminAccess.dart';
 import 'package:ice_gate/orchestration_layer/Services/CustomAuthService.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 // --- Interfaces for State ---
 class UserDetails {
@@ -350,7 +352,7 @@ class PersonBlock {
   /// background remote fetch to keep UI non-blocking
   Future<void> _fetchRemoteAndUpdate(User user) async {
     try {
-      print("🌐 [PersonBlock] Fetching remote data in background...");
+      appLog("🌐 [PersonBlock] Fetching remote data in background...");
       final remotePerson = await Supabase.instance.client
           .from('persons')
           .select()
@@ -392,9 +394,9 @@ class PersonBlock {
         unawaited(personDao.updateCoverImageUrl(user.id, coverUrl));
       }
 
-      print("✅ [PersonBlock] Remote sync completed.");
+      appLog("✅ [PersonBlock] Remote sync completed.");
     } catch (e) {
-      print("⚠️ [PersonBlock] Remote background sync failed: $e");
+      appLog("⚠️ [PersonBlock] Remote background sync failed: $e");
     }
   }
 
@@ -506,7 +508,7 @@ class PersonBlock {
   }
 
   void _applyGuestFallback() {
-    print("👤 [PersonBlock] Applying default fallback data...");
+    appLog("👤 [PersonBlock] Applying default fallback data...");
     untracked(() {
       batch(() {
         information.value = UserInformation(
@@ -620,7 +622,7 @@ class PersonBlock {
   Future<void> updateProfileDatabase(String token) async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
-      print("❌ [PersonBlock] No user logged in to update profile.");
+      appLog("❌ [PersonBlock] No user logged in to update profile.");
       throw Exception("No user logged in");
     }
 
@@ -628,12 +630,12 @@ class PersonBlock {
       final details = information.value.details;
       final profile = information.value.profiles;
 
-      print(
+      appLog(
         "💾 [PersonBlock] Updating profile across tables for ${user.id}...",
       );
 
       // We'll update via Drift first, and PowerSync will handle the remote sync.
-      print(
+      appLog(
         "   - Updating local database via Drift (PowerSync will sync to Supabase)...",
       );
       await personDao.upsertPersonProfileData(
@@ -656,11 +658,40 @@ class PersonBlock {
         country: details.country,
       );
 
-      print(
-        "✅ [PersonBlock] Multi-table Profile Update COMPLETED locally for ${user.id}. PowerSync will sync shortly.",
+      // Manual push: PowerSync uploadData drains the outbox without uploading, so
+      // remote `persons` would stay stale and _fetchRemoteAndUpdate would revert the UI.
+      // RLS: UPDATE requires a matching row the user can SELECT; otherwise PostgREST returns [].
+      final client = Supabase.instance.client;
+      final firstNameRemote = profile.firstName.trim().isEmpty
+          ? 'User'
+          : profile.firstName.trim();
+      final lastNameRemote = profile.lastName.trim();
+      final remoteRows = await client
+          .from('persons')
+          .update({
+            'first_name': firstNameRemote,
+            'last_name': lastNameRemote,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', user.id)
+          .select('id, first_name, last_name');
+
+      if (remoteRows.isEmpty) {
+        debugPrint(
+          "⚠️ [PersonBlock] Supabase persons update returned 0 rows for ${user.id}. "
+          "Check RLS (SELECT + UPDATE for own row) or that persons.id matches auth user id.",
+        );
+        throw Exception(
+          'Could not save name to the server (no permission or missing persons row).',
+        );
+      }
+      debugPrint("✅ [PersonBlock] Supabase persons name updated: $remoteRows");
+
+      appLog(
+        "✅ [PersonBlock] Multi-table Profile Update COMPLETED locally + remote name for ${user.id}.",
       );
     } catch (e) {
-      print("❌ [PersonBlock] Failed to update profile in database: $e");
+      appLog("❌ [PersonBlock] Failed to update profile in database: $e");
       rethrow;
     }
   }
@@ -674,15 +705,48 @@ class PersonBlock {
     }
 
     try {
-      // For now, assume a field exists or just default to USER
-      // Role management might be in a separate table or app_metadata
-      final role = user.appMetadata['role'] ?? 'USER';
-      untracked(() => account.value = UserAccount(role: role));
-      print("✅ [PersonBlock] User Role: $role");
+      String? role;
+
+      // Primary: public.user_accounts (editable in Supabase Table Editor)
+      final personId = information.value.profiles.id;
+      if (personId != null && personId.isNotEmpty) {
+        final row = await Supabase.instance.client
+            .from('user_accounts')
+            .select('role')
+            .eq('person_id', personId)
+            .maybeSingle();
+        final tableRole = row?['role'];
+        if (tableRole is String && tableRole.trim().isNotEmpty) {
+          role = tableRole;
+        }
+      }
+
+      // Fallback: auth JWT metadata (app_metadata needs service role to set)
+      role ??= AdminAccess.roleFromAuthMetadata(
+        user.appMetadata,
+        user.userMetadata,
+      );
+
+      untracked(() => account.value = UserAccount(role: role ?? 'USER'));
+      appLog("✅ [PersonBlock] User Role: ${role ?? 'USER'}");
     } catch (e) {
-      print("❌ [PersonBlock] Failed to get user role: $e");
+      appLog("❌ [PersonBlock] Failed to get user role: $e");
       untracked(() => account.value = const UserAccount(role: 'USER'));
     }
+  }
+
+  /// Re-fetch role from Supabase (e.g. after dashboard role change).
+  Future<void> refreshRole() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    final token = session?.accessToken;
+    if (token == null || token.isEmpty) return;
+    try {
+      await Supabase.instance.client.auth.refreshSession();
+    } catch (e) {
+      appLog("⚠️ [PersonBlock] refreshSession before role refresh: $e");
+    }
+    final refreshed = Supabase.instance.client.auth.currentSession?.accessToken;
+    await getUserRole(refreshed ?? token);
   }
 
   // Fetch Skills from Supabase
@@ -696,7 +760,7 @@ class PersonBlock {
     try {
       final personId = information.value.profiles.id;
       if (personId == null) {
-        print(
+        appLog(
           "⚠️ [PersonBlock] Skipping skills fetch: No personID resolved yet.",
         );
         untracked(() => skills.value = []);
@@ -713,9 +777,9 @@ class PersonBlock {
           .toList();
 
       untracked(() => skills.value = skillList);
-      print("✅ [PersonBlock] ${skillList.length} skills fetched.");
+      appLog("✅ [PersonBlock] ${skillList.length} skills fetched.");
     } catch (e) {
-      print("❌ [PersonBlock] Failed to get user skills: $e");
+      appLog("❌ [PersonBlock] Failed to get user skills: $e");
       untracked(() => skills.value = []);
     }
   }
@@ -724,14 +788,14 @@ class PersonBlock {
   Future<void> fetchInitialData(String token) async {
     if (token.isEmpty) return;
 
-    print("🚀 [PersonBlock] Starting Initial Data Fetch (Sequential Flow)...");
+    appLog("🚀 [PersonBlock] Starting Initial Data Fetch (Sequential Flow)...");
 
     // 1. First resolve person identity
     await fetchFromDatabase(token);
 
     // 2. Then fetch dependent data
     await Future.wait([getUserRole(token), getUserSkill(token)]);
-    print("✅ [PersonBlock] Initial Data Fetch Completed");
+    appLog("✅ [PersonBlock] Initial Data Fetch Completed");
   }
 
   /// Fetch a specific person's profile for viewing

@@ -134,6 +134,1146 @@ abstract class AppLocalizations {
   /// **'Recent Notes'**
   String get recent_notes_label;
 
+  /// No description provided for @projects_tile_reminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get projects_tile_reminders;
+
+  /// No description provided for @projects_tile_calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get projects_tile_calendar;
+
+  /// No description provided for @projects_tile_sdlc.
+  ///
+  /// In en, this message translates to:
+  /// **'SDLC'**
+  String get projects_tile_sdlc;
+
+  /// No description provided for @projects_calendar_projects_created.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects created'**
+  String get projects_calendar_projects_created;
+
+  /// No description provided for @projects_calendar_day_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks or project starts on this day.'**
+  String get projects_calendar_day_empty;
+
+  /// No description provided for @projects_calendar_day_empty_not_connected.
+  ///
+  /// In en, this message translates to:
+  /// **'No calendar connected. Use “Connect calendar” above, then sync.'**
+  String get projects_calendar_day_empty_not_connected;
+
+  /// No description provided for @projects_calendar_day_empty_other_days.
+  ///
+  /// In en, this message translates to:
+  /// **'No events on this day. {count} events elsewhere this month — try dates highlighted on the grid.'**
+  String projects_calendar_day_empty_other_days(int count);
+
+  /// No description provided for @projects_calendar_google_events.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Calendar'**
+  String get projects_calendar_google_events;
+
+  /// No description provided for @projects_calendar_reminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get projects_calendar_reminders;
+
+  /// No description provided for @projects_calendar_connect_google.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Google Calendar'**
+  String get projects_calendar_connect_google;
+
+  /// No description provided for @projects_calendar_disconnect_google.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect Google Calendar'**
+  String get projects_calendar_disconnect_google;
+
+  /// No description provided for @projects_calendar_google_connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Calendar connected'**
+  String get projects_calendar_google_connected;
+
+  /// No description provided for @projects_calendar_sign_in_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect Google Calendar'**
+  String get projects_calendar_sign_in_failed;
+
+  /// No description provided for @projects_calendar_sign_in_cancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was cancelled'**
+  String get projects_calendar_sign_in_cancelled;
+
+  /// No description provided for @projects_calendar_scope_denied.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar permission was not granted. Allow access in your Google account settings.'**
+  String get projects_calendar_scope_denied;
+
+  /// No description provided for @projects_calendar_api_not_enabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Calendar API is disabled for the macOS app (GCP project {projectId}). In Google Cloud Console, enable \"Google Calendar API\" for that project, wait a few minutes, then retry.'**
+  String projects_calendar_api_not_enabled(String projectId);
+
+  /// No description provided for @projects_calendar_insufficient_scopes.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar access was not granted. Disconnect Google, connect again, and accept all permissions.'**
+  String get projects_calendar_insufficient_scopes;
+
+  /// No description provided for @projects_calendar_connect_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google to sync all your Google calendars to the Calendar screen.'**
+  String get projects_calendar_connect_hint;
+
+  /// No description provided for @projects_calendar_add_reminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add reminder'**
+  String get projects_calendar_add_reminder;
+
+  /// No description provided for @projects_calendar_add_event.
+  ///
+  /// In en, this message translates to:
+  /// **'Add event'**
+  String get projects_calendar_add_event;
+
+  /// No description provided for @projects_calendar_event_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Event title'**
+  String get projects_calendar_event_title;
+
+  /// No description provided for @projects_calendar_event_title_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an event title'**
+  String get projects_calendar_event_title_required;
+
+  /// No description provided for @projects_calendar_event_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get projects_calendar_event_start;
+
+  /// No description provided for @projects_calendar_event_end.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get projects_calendar_event_end;
+
+  /// No description provided for @projects_calendar_event_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Event saved to calendar'**
+  String get projects_calendar_event_saved;
+
+  /// No description provided for @projects_calendar_event_moved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to {time}'**
+  String projects_calendar_event_moved(String time);
+
+  /// No description provided for @projects_calendar_event_deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Event removed'**
+  String get projects_calendar_event_deleted;
+
+  /// No description provided for @projects_calendar_event_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save event'**
+  String get projects_calendar_event_failed;
+
+  /// No description provided for @projects_calendar_edit_event.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit event'**
+  String get projects_calendar_edit_event;
+
+  /// No description provided for @projects_calendar_delete_event.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete event'**
+  String get projects_calendar_delete_event;
+
+  /// No description provided for @projects_calendar_env_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment check'**
+  String get projects_calendar_env_title;
+
+  /// No description provided for @projects_calendar_env_ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Good fit — you can likely complete this now.'**
+  String get projects_calendar_env_ready;
+
+  /// No description provided for @projects_calendar_env_caution.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible, but a few factors may get in the way.'**
+  String get projects_calendar_env_caution;
+
+  /// No description provided for @projects_calendar_env_not_ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Tough right now — consider rescheduling.'**
+  String get projects_calendar_env_not_ready;
+
+  /// No description provided for @projects_calendar_env_score.
+  ///
+  /// In en, this message translates to:
+  /// **'{score}% ready'**
+  String projects_calendar_env_score(int score);
+
+  /// No description provided for @projects_calendar_env_start_focus.
+  ///
+  /// In en, this message translates to:
+  /// **'Start focus session'**
+  String get projects_calendar_env_start_focus;
+
+  /// No description provided for @projects_calendar_env_past.
+  ///
+  /// In en, this message translates to:
+  /// **'This block is already over'**
+  String get projects_calendar_env_past;
+
+  /// No description provided for @projects_calendar_env_too_early.
+  ///
+  /// In en, this message translates to:
+  /// **'Still more than 2 hours away'**
+  String get projects_calendar_env_too_early;
+
+  /// No description provided for @projects_calendar_env_starting_soon.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting within 15 minutes'**
+  String get projects_calendar_env_starting_soon;
+
+  /// No description provided for @projects_calendar_env_low_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent mood is low'**
+  String get projects_calendar_env_low_mood;
+
+  /// No description provided for @projects_calendar_env_neutral_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood is neutral'**
+  String get projects_calendar_env_neutral_mood;
+
+  /// No description provided for @projects_calendar_env_good_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood supports focus'**
+  String get projects_calendar_env_good_mood;
+
+  /// No description provided for @projects_calendar_env_no_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'No mood logged today'**
+  String get projects_calendar_env_no_mood;
+
+  /// No description provided for @projects_calendar_env_heavy_overlap.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy schedule overlap'**
+  String get projects_calendar_env_heavy_overlap;
+
+  /// No description provided for @projects_calendar_env_some_overlap.
+  ///
+  /// In en, this message translates to:
+  /// **'Another event overlaps'**
+  String get projects_calendar_env_some_overlap;
+
+  /// No description provided for @projects_calendar_env_focus_fatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Already focused 2+ hours today'**
+  String get projects_calendar_env_focus_fatigue;
+
+  /// No description provided for @projects_calendar_env_low_sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Low sleep last night'**
+  String get projects_calendar_env_low_sleep;
+
+  /// No description provided for @projects_calendar_env_good_sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Well rested'**
+  String get projects_calendar_env_good_sleep;
+
+  /// No description provided for @projects_calendar_edit_reminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit reminder'**
+  String get projects_calendar_edit_reminder;
+
+  /// No description provided for @projects_calendar_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get projects_calendar_save;
+
+  /// No description provided for @projects_calendar_select_calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get projects_calendar_select_calendar;
+
+  /// No description provided for @projects_calendar_tap_day_add_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the selected day again to add an event'**
+  String get projects_calendar_tap_day_add_hint;
+
+  /// No description provided for @projects_calendar_hold_day_add_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold a day to add an event'**
+  String get projects_calendar_hold_day_add_hint;
+
+  /// No description provided for @projects_calendar_timeline_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No timed events this day'**
+  String get projects_calendar_timeline_empty;
+
+  /// No description provided for @projects_calendar_timeline_tap_slot.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap hour to add · tap event to edit · drag to move (↑↓ + Enter on desktop, hold on mobile)'**
+  String get projects_calendar_timeline_tap_slot;
+
+  /// No description provided for @projects_calendar_scroll_for_more.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll for tasks'**
+  String get projects_calendar_scroll_for_more;
+
+  /// No description provided for @projects_calendar_drag_hint_desktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reschedule. Arrow keys adjust time, Enter confirms, Escape cancels.'**
+  String get projects_calendar_drag_hint_desktop;
+
+  /// No description provided for @projects_calendar_drag_hint_mobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Long press, then drag to another time slot.'**
+  String get projects_calendar_drag_hint_mobile;
+
+  /// No description provided for @projects_calendar_drag_move_to.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to {time}'**
+  String projects_calendar_drag_move_to(String time);
+
+  /// No description provided for @projects_calendar_timeline_remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from timeline'**
+  String get projects_calendar_timeline_remove;
+
+  /// No description provided for @projects_calendar_timeline_remove_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{title}\" from this day\'s timeline?'**
+  String projects_calendar_timeline_remove_confirm(String title);
+
+  /// No description provided for @projects_calendar_day_timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily timeline'**
+  String get projects_calendar_day_timeline;
+
+  /// No description provided for @projects_calendar_reminder_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder title'**
+  String get projects_calendar_reminder_title;
+
+  /// No description provided for @projects_calendar_sync_google.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync events'**
+  String get projects_calendar_sync_google;
+
+  /// No description provided for @projects_calendar_all_day.
+  ///
+  /// In en, this message translates to:
+  /// **'All day'**
+  String get projects_calendar_all_day;
+
+  /// No description provided for @projects_calendar_integrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar connections'**
+  String get projects_calendar_integrations;
+
+  /// No description provided for @projects_calendar_connect_device.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect device calendar'**
+  String get projects_calendar_connect_device;
+
+  /// No description provided for @projects_calendar_connect_apple.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Apple Calendar'**
+  String get projects_calendar_connect_apple;
+
+  /// No description provided for @projects_calendar_disconnect_device.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect device calendar'**
+  String get projects_calendar_disconnect_device;
+
+  /// No description provided for @projects_calendar_disconnect_apple.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect Apple Calendar'**
+  String get projects_calendar_disconnect_apple;
+
+  /// No description provided for @projects_calendar_device_connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Device calendar connected'**
+  String get projects_calendar_device_connected;
+
+  /// No description provided for @projects_calendar_apple_connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Calendar connected'**
+  String get projects_calendar_apple_connected;
+
+  /// No description provided for @projects_calendar_device_events.
+  ///
+  /// In en, this message translates to:
+  /// **'Device calendar'**
+  String get projects_calendar_device_events;
+
+  /// No description provided for @projects_calendar_apple_events.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Calendar'**
+  String get projects_calendar_apple_events;
+
+  /// No description provided for @projects_calendar_device_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow calendar access to show events from calendars on this device.'**
+  String get projects_calendar_device_hint;
+
+  /// No description provided for @projects_calendar_sync_device.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync device events'**
+  String get projects_calendar_sync_device;
+
+  /// No description provided for @projects_calendar_device_denied.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar access was denied. Enable it in Settings.'**
+  String get projects_calendar_device_denied;
+
+  /// No description provided for @integration_hub_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Integration Hub'**
+  String get integration_hub_title;
+
+  /// No description provided for @integration_hub_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendars, health platforms, and device sensors — one connection center.'**
+  String get integration_hub_subtitle;
+
+  /// No description provided for @integration_hub_google_fit.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Fit'**
+  String get integration_hub_google_fit;
+
+  /// No description provided for @integration_hub_google_fit_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the same Google sign-in as Calendar and Drive.'**
+  String get integration_hub_google_fit_hint;
+
+  /// No description provided for @integration_hub_sensors_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices & sensors'**
+  String get integration_hub_sensors_section;
+
+  /// No description provided for @integration_hub_open_sensor_hub.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Sensor Hub'**
+  String get integration_hub_open_sensor_hub;
+
+  /// No description provided for @integration_hub_sensor_hub_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Wearables, IoT pipelines, SSH streams, and Huawei setup.'**
+  String get integration_hub_sensor_hub_hint;
+
+  /// No description provided for @integration_hub_huawei_sensor_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Huawei credentials in Sensor Hub first.'**
+  String get integration_hub_huawei_sensor_hint;
+
+  /// No description provided for @projects_calendar_all_calendars_events.
+  ///
+  /// In en, this message translates to:
+  /// **'All calendars'**
+  String get projects_calendar_all_calendars_events;
+
+  /// No description provided for @projects_calendar_synced_count.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded {count} events this month'**
+  String projects_calendar_synced_count(int count);
+
+  /// No description provided for @projects_calendar_sync_empty_month.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected — no events this month. Try another month or check Google Calendar.'**
+  String get projects_calendar_sync_empty_month;
+
+  /// No description provided for @integration_hub_calendars_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendars'**
+  String get integration_hub_calendars_section;
+
+  /// No description provided for @integration_hub_health_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get integration_hub_health_section;
+
+  /// No description provided for @integration_hub_notes_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes & documents'**
+  String get integration_hub_notes_section;
+
+  /// No description provided for @integration_hub_google_drive_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync project notes and vault files from Google Drive.'**
+  String get integration_hub_google_drive_hint;
+
+  /// No description provided for @integration_hub_notion_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Import shared Notion pages and databases into your vault.'**
+  String get integration_hub_notion_hint;
+
+  /// No description provided for @integration_hub_connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get integration_hub_connect;
+
+  /// No description provided for @integration_hub_status_connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get integration_hub_status_connected;
+
+  /// No description provided for @integration_hub_apple_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health'**
+  String get integration_hub_apple_health;
+
+  /// No description provided for @integration_hub_apple_health_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps, sleep, heart rate, and more from HealthKit.'**
+  String get integration_hub_apple_health_hint;
+
+  /// No description provided for @integration_hub_huawei_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Huawei Health'**
+  String get integration_hub_huawei_health;
+
+  /// No description provided for @integration_hub_huawei_health_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync from Huawei cloud credentials.'**
+  String get integration_hub_huawei_health_hint;
+
+  /// No description provided for @integration_hub_phase2_notice.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar and Google sign-in work here. Huawei credentials: use Sensor Hub below.'**
+  String get integration_hub_phase2_notice;
+
+  /// No description provided for @integration_hub_sign_in_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to your icegate account first, then connect integrations.'**
+  String get integration_hub_sign_in_required;
+
+  /// No description provided for @integration_hub_health_coming_soon.
+  ///
+  /// In en, this message translates to:
+  /// **'This health source is not available yet.'**
+  String get integration_hub_health_coming_soon;
+
+  /// No description provided for @integration_hub_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Integration Hub'**
+  String get integration_hub_open;
+
+  /// No description provided for @projects_tile_focus.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get projects_tile_focus;
+
+  /// No description provided for @projects_tile_pomodoro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoro'**
+  String get projects_tile_pomodoro;
+
+  /// No description provided for @projects_tile_canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas'**
+  String get projects_tile_canvas;
+
+  /// No description provided for @projects_tile_whiteboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Whiteboard'**
+  String get projects_tile_whiteboard;
+
+  /// No description provided for @projects_whiteboard_clear_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear whiteboard?'**
+  String get projects_whiteboard_clear_title;
+
+  /// No description provided for @projects_whiteboard_clear_message.
+  ///
+  /// In en, this message translates to:
+  /// **'All strokes will be removed. This cannot be undone.'**
+  String get projects_whiteboard_clear_message;
+
+  /// No description provided for @projects_whiteboard_clear_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get projects_whiteboard_clear_confirm;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @projects_plan_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule planner'**
+  String get projects_plan_section_title;
+
+  /// No description provided for @projects_diagrams_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Project diagrams'**
+  String get projects_diagrams_title;
+
+  /// No description provided for @projects_diagrams_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No flowcharts yet. Tap + to pick a project and start drawing.'**
+  String get projects_diagrams_empty;
+
+  /// No description provided for @projects_diagrams_new.
+  ///
+  /// In en, this message translates to:
+  /// **'New diagram'**
+  String get projects_diagrams_new;
+
+  /// No description provided for @projects_diagrams_pick_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a project'**
+  String get projects_diagrams_pick_project;
+
+  /// No description provided for @projects_diagrams_no_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a project first.'**
+  String get projects_diagrams_no_projects;
+
+  /// No description provided for @projects_diagrams_steps.
+  ///
+  /// In en, this message translates to:
+  /// **'steps'**
+  String get projects_diagrams_steps;
+
+  /// No description provided for @plan_workspace_breadcrumb.
+  ///
+  /// In en, this message translates to:
+  /// **'WORKSPACE • PROJECTS'**
+  String get plan_workspace_breadcrumb;
+
+  /// No description provided for @plan_schedule_card_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get plan_schedule_card_title;
+
+  /// No description provided for @plan_schedule_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No steps yet.'**
+  String get plan_schedule_empty;
+
+  /// No description provided for @plan_focus_notes_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Notes'**
+  String get plan_focus_notes_title;
+
+  /// No description provided for @plan_notes_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type notes here…'**
+  String get plan_notes_hint;
+
+  /// No description provided for @plan_add_step.
+  ///
+  /// In en, this message translates to:
+  /// **'Add step'**
+  String get plan_add_step;
+
+  /// No description provided for @plan_drop_steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop steps here'**
+  String get plan_drop_steps;
+
+  /// No description provided for @plan_add_first_step.
+  ///
+  /// In en, this message translates to:
+  /// **'Add first step'**
+  String get plan_add_first_step;
+
+  /// No description provided for @plan_add_block_schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule block'**
+  String get plan_add_block_schedule;
+
+  /// No description provided for @plan_add_block_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus notes block'**
+  String get plan_add_block_notes;
+
+  /// No description provided for @plan_add_block_goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals block'**
+  String get plan_add_block_goals;
+
+  /// No description provided for @plan_add_block_flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Process block'**
+  String get plan_add_block_flow;
+
+  /// No description provided for @plan_connect_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a source block, then tap a target block to connect.'**
+  String get plan_connect_hint;
+
+  /// No description provided for @plan_link_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks connected'**
+  String get plan_link_added;
+
+  /// No description provided for @plan_goals_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No goals yet.'**
+  String get plan_goals_empty;
+
+  /// No description provided for @plan_add_goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add goal'**
+  String get plan_add_goal;
+
+  /// No description provided for @plan_manage_blocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage blocks'**
+  String get plan_manage_blocks;
+
+  /// No description provided for @projects_tile_social_blocker.
+  ///
+  /// In en, this message translates to:
+  /// **'Social Blocker'**
+  String get projects_tile_social_blocker;
+
+  /// No description provided for @social_shield_turn_on.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Shield'**
+  String get social_shield_turn_on;
+
+  /// No description provided for @social_shield_subtitle_no_auth.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap row to grant Screen Time (for rules)'**
+  String get social_shield_subtitle_no_auth;
+
+  /// No description provided for @social_shield_subtitle_pick_apps.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap row to choose apps — blocking follows rules'**
+  String get social_shield_subtitle_pick_apps;
+
+  /// No description provided for @social_shield_subtitle_ready.
+  ///
+  /// In en, this message translates to:
+  /// **'On — blocking runs when your rules are active'**
+  String get social_shield_subtitle_ready;
+
+  /// No description provided for @social_shield_subtitle_off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off — schedules and focus rules are paused'**
+  String get social_shield_subtitle_off;
+
+  /// No description provided for @social_shield_choose_apps.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose apps to block'**
+  String get social_shield_choose_apps;
+
+  /// No description provided for @social_shield_choose_apps_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change blocked apps'**
+  String get social_shield_choose_apps_done;
+
+  /// No description provided for @social_shield_pick_apps_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one app to block (or turn Shield off).'**
+  String get social_shield_pick_apps_required;
+
+  /// No description provided for @social_shield_apps_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked apps updated.'**
+  String get social_shield_apps_saved;
+
+  /// No description provided for @social_shield_unsupported_platform.
+  ///
+  /// In en, this message translates to:
+  /// **'App blocking is only on iOS and macOS.'**
+  String get social_shield_unsupported_platform;
+
+  /// No description provided for @projects_plugin_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get projects_plugin_open;
+
+  /// No description provided for @projects_plugin_location_tracker.
+  ///
+  /// In en, this message translates to:
+  /// **'Location Tracker'**
+  String get projects_plugin_location_tracker;
+
+  /// No description provided for @projects_plugin_live_map.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Map'**
+  String get projects_plugin_live_map;
+
+  /// No description provided for @projects_remove_plugin_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove shortcut?'**
+  String get projects_remove_plugin_title;
+
+  /// No description provided for @projects_remove_plugin_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{name}\" from quick actions?'**
+  String projects_remove_plugin_body(String name);
+
+  /// No description provided for @projects_remove_plugin_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get projects_remove_plugin_confirm;
+
+  /// No description provided for @integrations_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get integrations_title;
+
+  /// No description provided for @integrations_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your document sources'**
+  String get integrations_subtitle;
+
+  /// No description provided for @integrations_active_services.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Services'**
+  String get integrations_active_services;
+
+  /// No description provided for @integrations_total_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Notes'**
+  String get integrations_total_notes;
+
+  /// No description provided for @integrations_search_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search sources...'**
+  String get integrations_search_hint;
+
+  /// No description provided for @integrations_enabled_connections.
+  ///
+  /// In en, this message translates to:
+  /// **'ENABLED CONNECTIONS'**
+  String get integrations_enabled_connections;
+
+  /// No description provided for @integrations_filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get integrations_filters;
+
+  /// No description provided for @integrations_internal_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal Notes'**
+  String get integrations_internal_notes;
+
+  /// No description provided for @integrations_primary_vault.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary Vault (Local)'**
+  String get integrations_primary_vault;
+
+  /// No description provided for @integrations_explore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get integrations_explore;
+
+  /// No description provided for @integrations_google_drive.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive'**
+  String get integrations_google_drive;
+
+  /// No description provided for @integrations_synced_cloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced with Cloud'**
+  String get integrations_synced_cloud;
+
+  /// No description provided for @integrations_cloud_storage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Storage'**
+  String get integrations_cloud_storage;
+
+  /// No description provided for @integrations_sync_now.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Now'**
+  String get integrations_sync_now;
+
+  /// No description provided for @integrations_connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get integrations_connect;
+
+  /// No description provided for @integrations_notion_sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Notion Sync'**
+  String get integrations_notion_sync;
+
+  /// No description provided for @integrations_database_pipeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Database Pipeline'**
+  String get integrations_database_pipeline;
+
+  /// No description provided for @integrations_fetch.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch'**
+  String get integrations_fetch;
+
+  /// No description provided for @integrations_setup.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup'**
+  String get integrations_setup;
+
+  /// No description provided for @integrations_slack_docs.
+  ///
+  /// In en, this message translates to:
+  /// **'Slack Docs'**
+  String get integrations_slack_docs;
+
+  /// No description provided for @integrations_shared_channels.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared Channels'**
+  String get integrations_shared_channels;
+
+  /// No description provided for @integrations_notify_me.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify Me'**
+  String get integrations_notify_me;
+
+  /// No description provided for @integrations_notion_config_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Notion Configuration'**
+  String get integrations_notion_config_title;
+
+  /// No description provided for @integrations_notion_secret_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal Integration Secret'**
+  String get integrations_notion_secret_label;
+
+  /// No description provided for @integrations_save_fetch.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Fetch'**
+  String get integrations_save_fetch;
+
+  /// No description provided for @integrations_marketplace_soon.
+  ///
+  /// In en, this message translates to:
+  /// **'Source Marketplace coming soon!'**
+  String get integrations_marketplace_soon;
+
+  /// No description provided for @vault_breadcrumb_root.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault'**
+  String get vault_breadcrumb_root;
+
+  /// No description provided for @vault_section_folders.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get vault_section_folders;
+
+  /// No description provided for @vault_section_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get vault_section_notes;
+
+  /// No description provided for @vault_section_media.
+  ///
+  /// In en, this message translates to:
+  /// **'Media'**
+  String get vault_section_media;
+
+  /// No description provided for @vault_section_other.
+  ///
+  /// In en, this message translates to:
+  /// **'Other files'**
+  String get vault_section_other;
+
+  /// No description provided for @vault_search_files.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in this folder…'**
+  String get vault_search_files;
+
+  /// No description provided for @vault_empty_folder.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is empty'**
+  String get vault_empty_folder;
+
+  /// No description provided for @vault_stats_folders.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 folder} other{{count} folders}}'**
+  String vault_stats_folders(int count);
+
+  /// No description provided for @vault_stats_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 note} other{{count} notes}}'**
+  String vault_stats_notes(int count);
+
+  /// No description provided for @vault_stats_media.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String vault_stats_media(int count);
+
+  /// No description provided for @projects_workspace_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No workspace has been set up yet.'**
+  String get projects_workspace_empty;
+
+  /// No description provided for @projects_workspace_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get projects_workspace_start;
+
   /// No description provided for @project_drive_sync.
   ///
   /// In en, this message translates to:
@@ -338,11 +1478,113 @@ abstract class AppLocalizations {
   /// **'Sync failed. Please try again.'**
   String get health_sync_failed;
 
+  /// No description provided for @health_motivation_engine_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Motivation Engine'**
+  String get health_motivation_engine_title;
+
+  /// No description provided for @health_notification_engine_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Engine'**
+  String get health_notification_engine_title;
+
+  /// No description provided for @health_notification_engine_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active reminders'**
+  String health_notification_engine_desc(int count);
+
+  /// No description provided for @health_motivation_all_done.
+  ///
+  /// In en, this message translates to:
+  /// **'All daily targets hit—momentum is yours today.'**
+  String get health_motivation_all_done;
+
+  /// No description provided for @health_motivation_strong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong day—keep your streak alive.'**
+  String get health_motivation_strong;
+
+  /// No description provided for @health_motivation_mid.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady progress—stack one more small win.'**
+  String get health_motivation_mid;
+
+  /// No description provided for @health_motivation_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with water or a short walk—small steps count.'**
+  String get health_motivation_low;
+
+  /// No description provided for @health_motivation_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your goals and we\'ll coach you through the day.'**
+  String get health_motivation_empty;
+
   /// No description provided for @health_update_weight.
   ///
   /// In en, this message translates to:
   /// **'Update Weight'**
   String get health_update_weight;
+
+  /// No description provided for @health_smart_scale_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart scale'**
+  String get health_smart_scale_title;
+
+  /// No description provided for @health_smart_scale_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync from Apple Health or Health Connect (Withings, Eufy, Xiaomi, etc.)'**
+  String get health_smart_scale_desc;
+
+  /// No description provided for @health_smart_scale_sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync smart scale'**
+  String get health_smart_scale_sync;
+
+  /// No description provided for @health_smart_scale_syncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get health_smart_scale_syncing;
+
+  /// No description provided for @health_smart_scale_sync_ok.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight synced from smart scale'**
+  String get health_smart_scale_sync_ok;
+
+  /// No description provided for @health_smart_scale_sync_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No weight found. Weigh in on your scale first, then sync.'**
+  String get health_smart_scale_sync_empty;
+
+  /// No description provided for @health_smart_scale_sync_denied.
+  ///
+  /// In en, this message translates to:
+  /// **'Health access denied. Enable in Settings.'**
+  String get health_smart_scale_sync_denied;
+
+  /// No description provided for @health_smart_scale_desktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart scale sync is available on iPhone and Android only.'**
+  String get health_smart_scale_desktop;
+
+  /// No description provided for @health_smart_scale_import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from smart scale'**
+  String get health_smart_scale_import;
 
   /// No description provided for @health_log_water.
   ///
@@ -1346,6 +2588,18 @@ abstract class AppLocalizations {
   /// **'Goal: {goal} steps'**
   String health_subtitle_goal_steps(int goal);
 
+  /// No description provided for @health_at_a_glance.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health at a glance.'**
+  String get health_at_a_glance;
+
+  /// No description provided for @health_analyzing_meal.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing meal…'**
+  String get health_analyzing_meal;
+
   /// No description provided for @health_subtitle_health_first.
   ///
   /// In en, this message translates to:
@@ -1651,6 +2905,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Passkey login was canceled.'**
   String get err_passkey_canceled;
+
+  /// No description provided for @err_google_canceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was canceled.'**
+  String get err_google_canceled;
+
+  /// No description provided for @err_google_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in failed. Enable Google in Supabase and add the web client ID.'**
+  String get err_google_failed;
 
   /// No description provided for @err_passkey_failed.
   ///
@@ -2522,6 +3788,258 @@ abstract class AppLocalizations {
   /// **'No achievements logged yet.'**
   String get social_no_achievements_msg;
 
+  /// No description provided for @achievement_story_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshots'**
+  String get achievement_story_section;
+
+  /// No description provided for @achievement_story_empty_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to freeze a moment in time.'**
+  String get achievement_story_empty_hint;
+
+  /// No description provided for @achievement_story_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get achievement_story_add;
+
+  /// No description provided for @achievement_feats_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory lane'**
+  String get achievement_feats_section;
+
+  /// No description provided for @achievement_insights_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking back'**
+  String get achievement_insights_title;
+
+  /// No description provided for @achievement_insights_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Reflection: {count} feats recorded. Average Meaningfulness: {meaning}, Average Impact: {impact}'**
+  String achievement_insights_summary(int count, String meaning, String impact);
+
+  /// No description provided for @achievement_story_title_dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Name this win'**
+  String get achievement_story_title_dialog;
+
+  /// No description provided for @achievement_story_title_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you achieve?'**
+  String get achievement_story_title_hint;
+
+  /// No description provided for @achievement_story_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Story saved to your achievements.'**
+  String get achievement_story_added;
+
+  /// No description provided for @achievement_story_save_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save photo.'**
+  String get achievement_story_save_failed;
+
+  /// No description provided for @achievement_filter_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get achievement_filter_label;
+
+  /// No description provided for @achievement_filter_all_months.
+  ///
+  /// In en, this message translates to:
+  /// **'All months'**
+  String get achievement_filter_all_months;
+
+  /// No description provided for @achievement_filter_all_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'All projects'**
+  String get achievement_filter_all_projects;
+
+  /// No description provided for @plan_action_tab.
+  ///
+  /// In en, this message translates to:
+  /// **'PLAN'**
+  String get plan_action_tab;
+
+  /// No description provided for @plan_action_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan an action with expected points, then log real points after you do it.'**
+  String get plan_action_empty;
+
+  /// No description provided for @plan_action_timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get plan_action_timeline;
+
+  /// No description provided for @plan_action_scoreboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Scoreboard'**
+  String get plan_action_scoreboard;
+
+  /// No description provided for @plan_action_pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get plan_action_pending;
+
+  /// No description provided for @plan_action_no_pending.
+  ///
+  /// In en, this message translates to:
+  /// **'All actions logged for this view.'**
+  String get plan_action_no_pending;
+
+  /// No description provided for @plan_action_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan action'**
+  String get plan_action_add;
+
+  /// No description provided for @plan_action_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit action'**
+  String get plan_action_edit;
+
+  /// No description provided for @plan_action_log_real.
+  ///
+  /// In en, this message translates to:
+  /// **'Log real'**
+  String get plan_action_log_real;
+
+  /// No description provided for @plan_action_title_label.
+  ///
+  /// In en, this message translates to:
+  /// **'What will you do?'**
+  String get plan_action_title_label;
+
+  /// No description provided for @plan_action_title_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a title for this action.'**
+  String get plan_action_title_required;
+
+  /// No description provided for @plan_action_expected_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected points (0–100)'**
+  String get plan_action_expected_label;
+
+  /// No description provided for @plan_action_real_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Real points (0–100)'**
+  String get plan_action_real_label;
+
+  /// No description provided for @plan_action_real_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty until done'**
+  String get plan_action_real_hint;
+
+  /// No description provided for @plan_action_points_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Points must be 0–100.'**
+  String get plan_action_points_invalid;
+
+  /// No description provided for @plan_action_expected_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Exp'**
+  String get plan_action_expected_short;
+
+  /// No description provided for @plan_action_real_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Real'**
+  String get plan_action_real_short;
+
+  /// No description provided for @plan_action_expected_value.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected: {points} pts'**
+  String plan_action_expected_value(int points);
+
+  /// No description provided for @plan_action_delta_value.
+  ///
+  /// In en, this message translates to:
+  /// **'{delta, plural, =0{even} other{{delta}}}'**
+  String plan_action_delta_value(int delta);
+
+  /// No description provided for @plan_action_month_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 action in this view} other{{count} actions in this view}}'**
+  String plan_action_month_summary(int count);
+
+  /// No description provided for @plan_action_total_expected.
+  ///
+  /// In en, this message translates to:
+  /// **'Total expected'**
+  String get plan_action_total_expected;
+
+  /// No description provided for @plan_action_total_real.
+  ///
+  /// In en, this message translates to:
+  /// **'Total real'**
+  String get plan_action_total_real;
+
+  /// No description provided for @plan_action_delta.
+  ///
+  /// In en, this message translates to:
+  /// **'Net delta'**
+  String get plan_action_delta;
+
+  /// No description provided for @achievement_on_this_day_title.
+  ///
+  /// In en, this message translates to:
+  /// **'On this day'**
+  String get achievement_on_this_day_title;
+
+  /// No description provided for @achievement_on_this_day_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories from {date}'**
+  String achievement_on_this_day_subtitle(String date);
+
+  /// No description provided for @achievement_years_ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{years, plural, =1{1 year ago} other{{years} years ago}}'**
+  String achievement_years_ago(int years);
+
+  /// No description provided for @achievement_archive_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No memories yet. Journal entries and notes will appear here.'**
+  String get achievement_archive_empty;
+
+  /// No description provided for @achievement_archive_month_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 memory in this view} other{{count} memories in this view}}'**
+  String achievement_archive_month_summary(int count);
+
+  /// No description provided for @achievement_open_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Open project'**
+  String get achievement_open_project;
+
   /// No description provided for @social_delete_feat_title.
   ///
   /// In en, this message translates to:
@@ -2660,11 +4178,851 @@ abstract class AppLocalizations {
   /// **'Needs Care'**
   String get mind_needs_care;
 
+  /// No description provided for @mind_focus_current.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get mind_focus_current;
+
+  /// No description provided for @mind_focus_none.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get mind_focus_none;
+
   /// No description provided for @mind_quick_entry_hint.
   ///
   /// In en, this message translates to:
   /// **'What\'s on your mind?'**
   String get mind_quick_entry_hint;
+
+  /// No description provided for @mindset_learn_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Mindset log'**
+  String get mindset_learn_title;
+
+  /// No description provided for @mindset_learn_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture principles and lessons you\'re internalizing.'**
+  String get mindset_learn_subtitle;
+
+  /// No description provided for @mindset_learn_topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic / principle'**
+  String get mindset_learn_topic;
+
+  /// No description provided for @mindset_learn_topic_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Patience, ship small, growth mindset'**
+  String get mindset_learn_topic_hint;
+
+  /// No description provided for @mindset_learn_lesson.
+  ///
+  /// In en, this message translates to:
+  /// **'What I learned'**
+  String get mindset_learn_lesson;
+
+  /// No description provided for @mindset_learn_feeling.
+  ///
+  /// In en, this message translates to:
+  /// **'Score (0–5)'**
+  String get mindset_learn_feeling;
+
+  /// No description provided for @mindset_learn_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save insight'**
+  String get mindset_learn_save;
+
+  /// No description provided for @mindset_learn_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mindset insight saved'**
+  String get mindset_learn_saved;
+
+  /// No description provided for @mindset_learn_validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a topic and what you learned.'**
+  String get mindset_learn_validation;
+
+  /// No description provided for @mindset_learn_history.
+  ///
+  /// In en, this message translates to:
+  /// **'Past insights'**
+  String get mindset_learn_history;
+
+  /// No description provided for @mindset_learn_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No mindset notes yet. Log your first lesson above.'**
+  String get mindset_learn_empty;
+
+  /// No description provided for @mindset_learn_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Mindset'**
+  String get mindset_learn_open;
+
+  /// No description provided for @mind_focus_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus areas'**
+  String get mind_focus_title;
+
+  /// No description provided for @mind_focus_weekly_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly focus'**
+  String get mind_focus_weekly_title;
+
+  /// No description provided for @mind_focus_monthly_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly focus'**
+  String get mind_focus_monthly_title;
+
+  /// No description provided for @mind_focus_goal_level.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: Lv. {level}'**
+  String mind_focus_goal_level(int level);
+
+  /// No description provided for @mind_focus_xp_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {cap} XP'**
+  String mind_focus_xp_progress(int current, int cap);
+
+  /// No description provided for @mind_focus_badge.
+  ///
+  /// In en, this message translates to:
+  /// **'FOCUS'**
+  String get mind_focus_badge;
+
+  /// No description provided for @mind_total_level.
+  ///
+  /// In en, this message translates to:
+  /// **'Total level'**
+  String get mind_total_level;
+
+  /// No description provided for @mind_streak_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get mind_streak_label;
+
+  /// No description provided for @mind_streak_days.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String mind_streak_days(int days);
+
+  /// No description provided for @mind_streak_bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'+15% EXP bonus'**
+  String get mind_streak_bonus;
+
+  /// No description provided for @mind_skill_tree_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill tree'**
+  String get mind_skill_tree_title;
+
+  /// No description provided for @mind_skill_certificates_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificates'**
+  String get mind_skill_certificates_title;
+
+  /// No description provided for @mind_focus_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Define weekly trends so you know where to put your energy.'**
+  String get mind_focus_subtitle;
+
+  /// No description provided for @mind_focus_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No focus areas yet. Start from a template or create your own.'**
+  String get mind_focus_empty;
+
+  /// No description provided for @mind_focus_add.
+  ///
+  /// In en, this message translates to:
+  /// **'New focus area'**
+  String get mind_focus_add;
+
+  /// No description provided for @mind_focus_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit focus area'**
+  String get mind_focus_edit;
+
+  /// No description provided for @mind_focus_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save focus area'**
+  String get mind_focus_save;
+
+  /// No description provided for @mind_focus_weekly_goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs per week (goal)'**
+  String get mind_focus_weekly_goal;
+
+  /// No description provided for @mind_focus_this_week.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get mind_focus_this_week;
+
+  /// No description provided for @mind_focus_select_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to focus on this area. Recent matching journal entries:'**
+  String get mind_focus_select_hint;
+
+  /// No description provided for @mind_focus_template_gym.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym week'**
+  String get mind_focus_template_gym;
+
+  /// No description provided for @mind_focus_template_learn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn week'**
+  String get mind_focus_template_learn;
+
+  /// No description provided for @mind_focus_template_invest.
+  ///
+  /// In en, this message translates to:
+  /// **'Invest week'**
+  String get mind_focus_template_invest;
+
+  /// No description provided for @mind_focus_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (e.g. Gym week)'**
+  String get mind_focus_name_hint;
+
+  /// No description provided for @mind_focus_activities_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked activities'**
+  String get mind_focus_activities_label;
+
+  /// No description provided for @mind_focus_name_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name for this focus area'**
+  String get mind_focus_name_required;
+
+  /// No description provided for @mind_focus_activities_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one activity'**
+  String get mind_focus_activities_required;
+
+  /// No description provided for @mind_focus_icon_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get mind_focus_icon_label;
+
+  /// No description provided for @mind_focus_color_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get mind_focus_color_label;
+
+  /// No description provided for @mind_focus_no_logs_yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No journal entries match this area yet.'**
+  String get mind_focus_no_logs_yet;
+
+  /// No description provided for @mind_focus_log_now.
+  ///
+  /// In en, this message translates to:
+  /// **'Log for this area'**
+  String get mind_focus_log_now;
+
+  /// No description provided for @mind_focus_log_for_area.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus area: {name}'**
+  String mind_focus_log_for_area(String name);
+
+  /// No description provided for @mind_focus_todos.
+  ///
+  /// In en, this message translates to:
+  /// **'To-do'**
+  String get mind_focus_todos;
+
+  /// No description provided for @mind_focus_open_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get mind_focus_open_projects;
+
+  /// No description provided for @mind_focus_no_todos.
+  ///
+  /// In en, this message translates to:
+  /// **'No active project tasks. Add tasks in Projects.'**
+  String get mind_focus_no_todos;
+
+  /// No description provided for @mind_focus_more_todos.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more in Projects'**
+  String mind_focus_more_todos(int count);
+
+  /// No description provided for @mind_dashboard_today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get mind_dashboard_today;
+
+  /// No description provided for @mind_dashboard_title.
+  ///
+  /// In en, this message translates to:
+  /// **'My skills'**
+  String get mind_dashboard_title;
+
+  /// No description provided for @mind_dashboard_weekly_topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic this week'**
+  String get mind_dashboard_weekly_topic;
+
+  /// No description provided for @mind_dashboard_edit_topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit topic this week'**
+  String get mind_dashboard_edit_topic;
+
+  /// No description provided for @mind_dashboard_topic_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic title'**
+  String get mind_dashboard_topic_title;
+
+  /// No description provided for @mind_dashboard_topic_title_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Presentation week'**
+  String get mind_dashboard_topic_title_hint;
+
+  /// No description provided for @mind_dashboard_topic_quote_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your weekly focus quote or note'**
+  String get mind_dashboard_topic_quote_hint;
+
+  /// No description provided for @mind_dashboard_topic_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly topic saved to quotes'**
+  String get mind_dashboard_topic_saved;
+
+  /// No description provided for @mind_dashboard_target_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Target skills'**
+  String get mind_dashboard_target_skills;
+
+  /// No description provided for @mind_dashboard_in_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get mind_dashboard_in_progress;
+
+  /// No description provided for @mind_dashboard_focus_week.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus this week'**
+  String get mind_dashboard_focus_week;
+
+  /// No description provided for @mind_dashboard_add_task.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add task'**
+  String get mind_dashboard_add_task;
+
+  /// No description provided for @mind_dashboard_no_linked_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Link target skills to projects to see tasks here.'**
+  String get mind_dashboard_no_linked_projects;
+
+  /// No description provided for @mind_dashboard_status_done.
+  ///
+  /// In en, this message translates to:
+  /// **'DONE'**
+  String get mind_dashboard_status_done;
+
+  /// No description provided for @mind_dashboard_status_waiting.
+  ///
+  /// In en, this message translates to:
+  /// **'WAITING'**
+  String get mind_dashboard_status_waiting;
+
+  /// No description provided for @mind_dashboard_certificates.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill certificates'**
+  String get mind_dashboard_certificates;
+
+  /// No description provided for @mind_dashboard_see_all.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get mind_dashboard_see_all;
+
+  /// No description provided for @mind_dashboard_verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get mind_dashboard_verified;
+
+  /// No description provided for @mind_focus_avg_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg mood this week: {score}'**
+  String mind_focus_avg_mood(String score);
+
+  /// No description provided for @mind_focus_history.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly history'**
+  String get mind_focus_history;
+
+  /// No description provided for @mind_focus_history_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus area history'**
+  String get mind_focus_history_title;
+
+  /// No description provided for @mind_focus_history_week_range.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String mind_focus_history_week_range(String start, String end);
+
+  /// No description provided for @mind_focus_history_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {goal} logs'**
+  String mind_focus_history_logs(int count, int goal);
+
+  /// No description provided for @mind_focus_history_no_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'No logs'**
+  String get mind_focus_history_no_logs;
+
+  /// No description provided for @mind_focus_linked_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked project'**
+  String get mind_focus_linked_project;
+
+  /// No description provided for @mind_focus_linked_project_none.
+  ///
+  /// In en, this message translates to:
+  /// **'None (all projects)'**
+  String get mind_focus_linked_project_none;
+
+  /// No description provided for @mind_focus_linked_project_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Project: {name}'**
+  String mind_focus_linked_project_label(String name);
+
+  /// No description provided for @mind_focus_add_task_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task'**
+  String get mind_focus_add_task_title;
+
+  /// No description provided for @mind_focus_add_task_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Task name'**
+  String get mind_focus_add_task_name;
+
+  /// No description provided for @mind_focus_add_task_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get mind_focus_add_task_desc;
+
+  /// No description provided for @mind_focus_add_task_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get mind_focus_add_task_confirm;
+
+  /// No description provided for @mind_focus_add_task_need_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a project first, then add tasks here.'**
+  String get mind_focus_add_task_need_project;
+
+  /// No description provided for @mind_focus_assign_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Project'**
+  String get mind_focus_assign_project;
+
+  /// No description provided for @mind_focus_all_tasks_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'All tasks done — mood +6 logged.'**
+  String get mind_focus_all_tasks_mood;
+
+  /// No description provided for @mind_focus_daily_cap.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily limit: {max} tasks per focus area.'**
+  String mind_focus_daily_cap(int max);
+
+  /// No description provided for @mind_focus_daily_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{added}/{max} today · {done} done'**
+  String mind_focus_daily_progress(int added, int max, int done);
+
+  /// No description provided for @mind_focus_daily_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 2–5 tasks today. Finish more than 3 for mood +6.'**
+  String get mind_focus_daily_hint;
+
+  /// No description provided for @mind_focus_weekly_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 2–5 tasks this week. Finish more than 3 for mood +6.'**
+  String get mind_focus_weekly_hint;
+
+  /// No description provided for @mind_focus_monthly_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 2–5 tasks this month. Finish more than 3 for mood +6.'**
+  String get mind_focus_monthly_hint;
+
+  /// No description provided for @mind_focus_special_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'More than 3 tasks done — mood +6 logged!'**
+  String get mind_focus_special_mood;
+
+  /// No description provided for @mind_skills_session_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill session'**
+  String get mind_skills_session_title;
+
+  /// No description provided for @mind_skills_session_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick skills, run a focus block, log what you learned.'**
+  String get mind_skills_session_subtitle;
+
+  /// No description provided for @mind_skills_session_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start session'**
+  String get mind_skills_session_start;
+
+  /// No description provided for @mind_skills_session_empty_month.
+  ///
+  /// In en, this message translates to:
+  /// **'No skill sessions this month yet.'**
+  String get mind_skills_session_empty_month;
+
+  /// No description provided for @mind_skills_session_skill_meta.
+  ///
+  /// In en, this message translates to:
+  /// **'{sessions} sessions · {minutes}m'**
+  String mind_skills_session_skill_meta(int sessions, int minutes);
+
+  /// No description provided for @mind_skills_session_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No skill sessions in the last {days} days.'**
+  String mind_skills_session_empty(int days);
+
+  /// No description provided for @mind_skills_session_stats.
+  ///
+  /// In en, this message translates to:
+  /// **'{sessions} sessions · {minutes} min · top: {skill}'**
+  String mind_skills_session_stats(int sessions, int minutes, String skill);
+
+  /// No description provided for @mind_skills_session_live.
+  ///
+  /// In en, this message translates to:
+  /// **'SESSION LIVE'**
+  String get mind_skills_session_live;
+
+  /// No description provided for @mind_skills_session_tap_start.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP CENTER TO START'**
+  String get mind_skills_session_tap_start;
+
+  /// No description provided for @mind_skills_session_tap_finish.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP CENTER TO STOP EARLY'**
+  String get mind_skills_session_tap_finish;
+
+  /// No description provided for @mind_skills_session_listening.
+  ///
+  /// In en, this message translates to:
+  /// **'SESSION LIVE · AUTO-LOG WHEN MUSIC ENDS'**
+  String get mind_skills_session_listening;
+
+  /// No description provided for @mind_skills_session_pick_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one skill before starting.'**
+  String get mind_skills_session_pick_skills;
+
+  /// No description provided for @mind_skills_my_list.
+  ///
+  /// In en, this message translates to:
+  /// **'My skills'**
+  String get mind_skills_my_list;
+
+  /// No description provided for @mind_skills_add_skill.
+  ///
+  /// In en, this message translates to:
+  /// **'Add skill'**
+  String get mind_skills_add_skill;
+
+  /// No description provided for @mind_skills_tap_list.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap skills in the list to select'**
+  String get mind_skills_tap_list;
+
+  /// No description provided for @mind_skills_tap_list_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Select skills · project XP on log'**
+  String get mind_skills_tap_list_project;
+
+  /// No description provided for @mind_skills_status_in_session.
+  ///
+  /// In en, this message translates to:
+  /// **'In session'**
+  String get mind_skills_status_in_session;
+
+  /// No description provided for @mind_skills_status_selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get mind_skills_status_selected;
+
+  /// No description provided for @mind_skills_level_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Lv {level}'**
+  String mind_skills_level_short(int level);
+
+  /// No description provided for @mind_skills_session_logged.
+  ///
+  /// In en, this message translates to:
+  /// **'Session logged · {minutes} min · +{xp} XP'**
+  String mind_skills_session_logged(int minutes, int xp);
+
+  /// No description provided for @mind_skills_celebration_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill proof saved'**
+  String get mind_skills_celebration_title;
+
+  /// No description provided for @mind_skills_celebration_proof.
+  ///
+  /// In en, this message translates to:
+  /// **'You focused {minutes} min and earned +{xp} XP — real practice on your record.'**
+  String mind_skills_celebration_proof(int minutes, int xp);
+
+  /// No description provided for @mind_skills_celebration_level_up.
+  ///
+  /// In en, this message translates to:
+  /// **'Level up: {skills}'**
+  String mind_skills_celebration_level_up(String skills);
+
+  /// No description provided for @mind_skills_celebration_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day streak — keep the chain alive.'**
+  String mind_skills_celebration_streak(int days);
+
+  /// No description provided for @mind_skills_celebration_goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow’s you is built from sessions like this.'**
+  String get mind_skills_celebration_goal;
+
+  /// No description provided for @mind_skill_name_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be 1–24 characters.'**
+  String get mind_skill_name_invalid;
+
+  /// No description provided for @mind_skill_name_duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'That skill already exists.'**
+  String get mind_skill_name_duplicate;
+
+  /// No description provided for @mind_skill_add_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add skill'**
+  String get mind_skill_add_title;
+
+  /// No description provided for @mind_skill_edit_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit skill'**
+  String get mind_skill_edit_title;
+
+  /// No description provided for @mind_skill_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete skill?'**
+  String get mind_skill_delete_title;
+
+  /// No description provided for @mind_skill_delete_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove “{name}” from your library?'**
+  String mind_skill_delete_body(String name);
+
+  /// No description provided for @mind_skill_certificate_header.
+  ///
+  /// In en, this message translates to:
+  /// **'CERTIFICATE OF PRACTICE'**
+  String get mind_skill_certificate_header;
+
+  /// No description provided for @mind_skill_certificate_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital · verified progress'**
+  String get mind_skill_certificate_subtitle;
+
+  /// No description provided for @mind_skill_certificate_awarded_to.
+  ///
+  /// In en, this message translates to:
+  /// **'Awarded for sustained skill practice'**
+  String get mind_skill_certificate_awarded_to;
+
+  /// No description provided for @mind_skill_certificate_level.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank'**
+  String get mind_skill_certificate_level;
+
+  /// No description provided for @mind_skill_certificate_xp.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience'**
+  String get mind_skill_certificate_xp;
+
+  /// No description provided for @mind_skill_certificate_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get mind_skill_certificate_streak;
+
+  /// No description provided for @mind_skill_certificate_proof.
+  ///
+  /// In en, this message translates to:
+  /// **'This record reflects real sessions logged in ice_gate — your proof of growth.'**
+  String get mind_skill_certificate_proof;
+
+  /// No description provided for @mind_skill_certificate_seal.
+  ///
+  /// In en, this message translates to:
+  /// **'ICEGATE SEAL'**
+  String get mind_skill_certificate_seal;
+
+  /// No description provided for @mind_skill_certificate_select_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Select for session'**
+  String get mind_skill_certificate_select_session;
+
+  /// No description provided for @mind_skill_certificate_close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get mind_skill_certificate_close;
+
+  /// No description provided for @mind_skill_certificate_created.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get mind_skill_certificate_created;
+
+  /// No description provided for @mind_skill_certificate_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated'**
+  String get mind_skill_certificate_updated;
+
+  /// No description provided for @mind_skill_certificate_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get mind_skill_certificate_description;
+
+  /// No description provided for @mind_skill_certificate_description_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'What this skill means to you, or how you earned it…'**
+  String get mind_skill_certificate_description_hint;
+
+  /// No description provided for @mind_skill_certificate_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit certificate'**
+  String get mind_skill_certificate_edit;
+
+  /// No description provided for @mind_skill_certificate_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save certificate'**
+  String get mind_skill_certificate_save;
+
+  /// No description provided for @mind_skill_certificates_table_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice certificates'**
+  String get mind_skill_certificates_table_title;
+
+  /// No description provided for @mind_skill_certificates_table_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No skills in your library yet. Open Skills to start earning certificates.'**
+  String get mind_skill_certificates_table_empty;
+
+  /// No description provided for @mind_skill_certificates_col_skill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill'**
+  String get mind_skill_certificates_col_skill;
 
   /// No description provided for @mood_trends_title.
   ///
@@ -2810,6 +5168,258 @@ abstract class AppLocalizations {
   /// **'Sentiment'**
   String get stat_sentiment;
 
+  /// No description provided for @stat_mind_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs (30d)'**
+  String get stat_mind_logs;
+
+  /// No description provided for @stat_active_days.
+  ///
+  /// In en, this message translates to:
+  /// **'Active days'**
+  String get stat_active_days;
+
+  /// No description provided for @stat_avg_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg mood'**
+  String get stat_avg_mood;
+
+  /// No description provided for @journal_hourly_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs by hour (today)'**
+  String get journal_hourly_logs;
+
+  /// No description provided for @mind_insights_skill_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill practice (30d)'**
+  String get mind_insights_skill_title;
+
+  /// No description provided for @mind_insights_skill_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{sessions} sessions · {minutes} min'**
+  String mind_insights_skill_summary(int sessions, int minutes);
+
+  /// No description provided for @mind_insights_top_skill_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'Top streak · {skill} · {days}d'**
+  String mind_insights_top_skill_streak(String skill, int days);
+
+  /// No description provided for @mind_insights_open_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind notes'**
+  String get mind_insights_open_notes;
+
+  /// No description provided for @mind_insights_open_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill certificates'**
+  String get mind_insights_open_skills;
+
+  /// No description provided for @mind_insights_open_gratitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Gratitude'**
+  String get mind_insights_open_gratitude;
+
+  /// No description provided for @gratitude_page_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record the people and things you appreciate each day.'**
+  String get gratitude_page_subtitle;
+
+  /// No description provided for @gratitude_section_people.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get gratitude_section_people;
+
+  /// No description provided for @gratitude_section_things.
+  ///
+  /// In en, this message translates to:
+  /// **'Things'**
+  String get gratitude_section_things;
+
+  /// No description provided for @gratitude_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} entries'**
+  String gratitude_count(int count);
+
+  /// No description provided for @gratitude_quick_entry_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Log who you\'re grateful for today...'**
+  String get gratitude_quick_entry_hint;
+
+  /// No description provided for @gratitude_empty_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your gratitude flag'**
+  String get gratitude_empty_title;
+
+  /// No description provided for @gratitude_empty_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap below to add someone or something you\'re grateful for.'**
+  String get gratitude_empty_subtitle;
+
+  /// No description provided for @gratitude_kind_person.
+  ///
+  /// In en, this message translates to:
+  /// **'Person'**
+  String get gratitude_kind_person;
+
+  /// No description provided for @gratitude_kind_thing.
+  ///
+  /// In en, this message translates to:
+  /// **'Thing'**
+  String get gratitude_kind_thing;
+
+  /// No description provided for @gratitude_add_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add gratitude'**
+  String get gratitude_add_title;
+
+  /// No description provided for @gratitude_name_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get gratitude_name_label;
+
+  /// No description provided for @gratitude_note_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'A note (optional)'**
+  String get gratitude_note_hint;
+
+  /// No description provided for @gratitude_facebook_link_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Facebook link'**
+  String get gratitude_facebook_link_label;
+
+  /// No description provided for @gratitude_facebook_link_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a Facebook profile URL'**
+  String get gratitude_facebook_link_hint;
+
+  /// No description provided for @gratitude_pick_avatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose profile photo'**
+  String get gratitude_pick_avatar;
+
+  /// No description provided for @gratitude_change_photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get gratitude_change_photo;
+
+  /// No description provided for @gratitude_open_facebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Facebook'**
+  String get gratitude_open_facebook;
+
+  /// No description provided for @gratitude_update_flag.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Flag'**
+  String get gratitude_update_flag;
+
+  /// No description provided for @gratitude_edit_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit gratitude'**
+  String get gratitude_edit_title;
+
+  /// No description provided for @gratitude_tags_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get gratitude_tags_label;
+
+  /// No description provided for @gratitude_filter_all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get gratitude_filter_all;
+
+  /// No description provided for @gratitude_filter_things.
+  ///
+  /// In en, this message translates to:
+  /// **'Things'**
+  String get gratitude_filter_things;
+
+  /// No description provided for @gratitude_tag_play.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get gratitude_tag_play;
+
+  /// No description provided for @gratitude_tag_learn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get gratitude_tag_learn;
+
+  /// No description provided for @gratitude_tag_work.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get gratitude_tag_work;
+
+  /// No description provided for @gratitude_tag_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get gratitude_tag_health;
+
+  /// No description provided for @gratitude_tag_social.
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get gratitude_tag_social;
+
+  /// No description provided for @gratitude_tag_family.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get gratitude_tag_family;
+
+  /// No description provided for @gratitude_invalid_facebook_link.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Facebook link'**
+  String get gratitude_invalid_facebook_link;
+
+  /// No description provided for @gratitude_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this gratitude entry?'**
+  String get gratitude_delete_confirm;
+
+  /// No description provided for @gratitude_pick_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Who or what are you grateful for?'**
+  String get gratitude_pick_title;
+
+  /// No description provided for @gratitude_pick_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick someone or something you\'re grateful for.'**
+  String get gratitude_pick_required;
+
   /// No description provided for @weekly_mood_trend.
   ///
   /// In en, this message translates to:
@@ -2936,6 +5546,12 @@ abstract class AppLocalizations {
   /// **'Kindness'**
   String get act_kindness;
 
+  /// No description provided for @act_gratitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Gratitude'**
+  String get act_gratitude;
+
   /// No description provided for @act_gaming.
   ///
   /// In en, this message translates to:
@@ -2959,6 +5575,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Walking'**
   String get act_walking;
+
+  /// No description provided for @act_focus_todos_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'4+ focus tasks done'**
+  String get act_focus_todos_streak;
+
+  /// No description provided for @act_focus_todos_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus tasks complete'**
+  String get act_focus_todos_complete;
 
   /// No description provided for @act_logging.
   ///
@@ -3097,6 +5725,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Projects'**
   String get projects;
+
+  /// No description provided for @projects_page_tagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions, tasks, and notes in one place.'**
+  String get projects_page_tagline;
+
+  /// No description provided for @projects_summary_workspaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces'**
+  String get projects_summary_workspaces;
+
+  /// No description provided for @projects_summary_plugins.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get projects_summary_plugins;
+
+  /// No description provided for @projects_quick_more.
+  ///
+  /// In en, this message translates to:
+  /// **'More shortcuts'**
+  String get projects_quick_more;
 
   /// No description provided for @kcal_consume.
   ///
@@ -3470,11 +6122,863 @@ abstract class AppLocalizations {
   /// **'Goal Evolution'**
   String get canvas_goal_center;
 
+  /// No description provided for @dev_quick_tabs_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Software Dev'**
+  String get dev_quick_tabs_title;
+
+  /// No description provided for @dev_quick_tabs_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved browser tabs — Northflank, Supabase, n8n, and more.'**
+  String get dev_quick_tabs_subtitle;
+
+  /// No description provided for @dev_quick_tabs_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tabs yet. Tap + to add one.'**
+  String get dev_quick_tabs_empty;
+
+  /// No description provided for @dev_quick_tabs_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tab'**
+  String get dev_quick_tabs_add;
+
+  /// No description provided for @dev_quick_tabs_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get dev_quick_tabs_open;
+
+  /// No description provided for @dev_quick_tabs_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit tab'**
+  String get dev_quick_tabs_edit;
+
+  /// No description provided for @dev_quick_tabs_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get dev_quick_tabs_label;
+
+  /// No description provided for @dev_quick_tabs_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Local URL (LAN)'**
+  String get dev_quick_tabs_url;
+
+  /// No description provided for @dev_quick_tabs_remote_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote URL'**
+  String get dev_quick_tabs_remote_url;
+
+  /// No description provided for @dev_quick_tabs_remote_url_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Used when the LAN address is unreachable (VPN, Tailscale, public host).'**
+  String get dev_quick_tabs_remote_url_hint;
+
+  /// No description provided for @dev_quick_tabs_validation_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Title and at least one URL are required'**
+  String get dev_quick_tabs_validation_error;
+
+  /// No description provided for @dev_quick_tabs_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete tab?'**
+  String get dev_quick_tabs_delete_title;
+
+  /// No description provided for @dev_quick_tabs_delete_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{title}\" from quick access.'**
+  String dev_quick_tabs_delete_message(String title);
+
+  /// No description provided for @dev_quick_tabs_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get dev_quick_tabs_delete_confirm;
+
+  /// No description provided for @dev_quick_tabs_credentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved logins'**
+  String get dev_quick_tabs_credentials;
+
+  /// No description provided for @dev_quick_tabs_credentials_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP login and SSL trust per host.'**
+  String get dev_quick_tabs_credentials_subtitle;
+
+  /// No description provided for @dev_quick_tabs_credentials_login.
+  ///
+  /// In en, this message translates to:
+  /// **'Login saved'**
+  String get dev_quick_tabs_credentials_login;
+
+  /// No description provided for @dev_quick_tabs_credentials_ssl.
+  ///
+  /// In en, this message translates to:
+  /// **'SSL trusted'**
+  String get dev_quick_tabs_credentials_ssl;
+
+  /// No description provided for @dev_quick_tabs_credentials_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved data'**
+  String get dev_quick_tabs_credentials_none;
+
+  /// No description provided for @dev_quick_tabs_credentials_set_login.
+  ///
+  /// In en, this message translates to:
+  /// **'Set login'**
+  String get dev_quick_tabs_credentials_set_login;
+
+  /// No description provided for @dev_quick_tabs_credentials_username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get dev_quick_tabs_credentials_username;
+
+  /// No description provided for @dev_quick_tabs_credentials_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get dev_quick_tabs_credentials_password;
+
+  /// No description provided for @dev_quick_tabs_credentials_passkey.
+  ///
+  /// In en, this message translates to:
+  /// **'Passkey / API key'**
+  String get dev_quick_tabs_credentials_passkey;
+
+  /// No description provided for @dev_quick_tabs_credentials_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials saved'**
+  String get dev_quick_tabs_credentials_saved;
+
+  /// No description provided for @dev_quick_tabs_credentials_ssl_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'For self-signed homelab HTTPS (e.g. OPNsense).'**
+  String get dev_quick_tabs_credentials_ssl_hint;
+
+  /// No description provided for @dev_quick_tabs_credentials_clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get dev_quick_tabs_credentials_clear;
+
+  /// No description provided for @dev_quick_tabs_credentials_clear_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear saved data?'**
+  String get dev_quick_tabs_credentials_clear_title;
+
+  /// No description provided for @dev_quick_tabs_credentials_clear_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove login and SSL trust for {host}.'**
+  String dev_quick_tabs_credentials_clear_message(String host);
+
+  /// No description provided for @dev_quick_tabs_credentials_revoke_ssl.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke SSL trust'**
+  String get dev_quick_tabs_credentials_revoke_ssl;
+
+  /// No description provided for @dev_quick_tabs_login_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Login type'**
+  String get dev_quick_tabs_login_type;
+
+  /// No description provided for @dev_quick_tabs_login_type_html_form.
+  ///
+  /// In en, this message translates to:
+  /// **'HTML form (OPNsense, homelab)'**
+  String get dev_quick_tabs_login_type_html_form;
+
+  /// No description provided for @dev_quick_tabs_login_type_email_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Email + password (SPA)'**
+  String get dev_quick_tabs_login_type_email_password;
+
+  /// No description provided for @dev_quick_tabs_login_type_http_basic.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Basic only'**
+  String get dev_quick_tabs_login_type_http_basic;
+
+  /// No description provided for @dev_quick_tabs_login_type_api_key.
+  ///
+  /// In en, this message translates to:
+  /// **'API key / token'**
+  String get dev_quick_tabs_login_type_api_key;
+
+  /// No description provided for @dev_quick_tabs_login_type_bearer_token.
+  ///
+  /// In en, this message translates to:
+  /// **'Bearer token (K8s Dashboard)'**
+  String get dev_quick_tabs_login_type_bearer_token;
+
+  /// No description provided for @dev_quick_tabs_login_type_external_browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Safari / Chrome'**
+  String get dev_quick_tabs_login_type_external_browser;
+
+  /// No description provided for @dev_quick_tabs_login_type_oauth.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth / SSO (manual in WebView)'**
+  String get dev_quick_tabs_login_type_oauth;
+
+  /// No description provided for @dev_quick_tabs_login_type_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No autofill'**
+  String get dev_quick_tabs_login_type_none;
+
+  /// No description provided for @dev_quick_tabs_credentials_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get dev_quick_tabs_credentials_email;
+
+  /// No description provided for @dev_quick_tabs_credentials_bearer_token.
+  ///
+  /// In en, this message translates to:
+  /// **'Bearer token'**
+  String get dev_quick_tabs_credentials_bearer_token;
+
+  /// No description provided for @dev_quick_tabs_login_type_external_browser_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens this site in your system browser — best for GitHub, Google SSO, and passkeys.'**
+  String get dev_quick_tabs_login_type_external_browser_hint;
+
+  /// No description provided for @dev_quick_tabs_login_type_oauth_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub or Google sign-in cannot be auto-filled. Use manual login.'**
+  String get dev_quick_tabs_login_type_oauth_hint;
+
+  /// No description provided for @webview_connection_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Error'**
+  String get webview_connection_error;
+
+  /// No description provided for @webview_retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get webview_retry;
+
+  /// No description provided for @webview_ssl_trust_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust homelab certificate?'**
+  String get webview_ssl_trust_title;
+
+  /// No description provided for @webview_ssl_trust_message.
+  ///
+  /// In en, this message translates to:
+  /// **'The certificate for {host} is not trusted (common for OPNsense and LAN devices). Only continue on networks you trust.'**
+  String webview_ssl_trust_message(String host);
+
+  /// No description provided for @webview_ssl_trust_continue.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust and continue'**
+  String get webview_ssl_trust_continue;
+
+  /// No description provided for @webview_choose_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose URL'**
+  String get webview_choose_url;
+
+  /// No description provided for @webview_ssl_protocol_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'This often means the server uses plain HTTP, not HTTPS. Edit the tab URL to http:// or tap Try HTTP below.'**
+  String get webview_ssl_protocol_hint;
+
+  /// No description provided for @webview_ssl_protocol_tailscale_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale HTTPS is usually on your machine name (https://name.tailnet.ts.net on port 443 via Serve), not https://100.x.x.x:9001. Port 9001 is often HTTP-only behind the proxy — put the Serve URL in Remote URL.'**
+  String get webview_ssl_protocol_tailscale_hint;
+
+  /// No description provided for @webview_try_http.
+  ///
+  /// In en, this message translates to:
+  /// **'Try HTTP'**
+  String get webview_try_http;
+
   /// No description provided for @canvas_goal_desc.
   ///
   /// In en, this message translates to:
   /// **'Adjust tactical goal parameters'**
   String get canvas_goal_desc;
+
+  /// No description provided for @canvas_finance_reports_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance reports'**
+  String get canvas_finance_reports_title;
+
+  /// No description provided for @canvas_finance_reports_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily summary, local reminders, and shortcuts'**
+  String get canvas_finance_reports_desc;
+
+  /// No description provided for @canvas_finance_n8n_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Email report'**
+  String get canvas_finance_n8n_title;
+
+  /// No description provided for @canvas_finance_n8n_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance and health snapshot delivered through n8n'**
+  String get canvas_finance_n8n_desc;
+
+  /// No description provided for @canvas_finance_n8n_send_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent to n8n.'**
+  String get canvas_finance_n8n_send_success;
+
+  /// No description provided for @canvas_finance_n8n_send_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send report. Try again later.'**
+  String get canvas_finance_n8n_send_failed;
+
+  /// No description provided for @canvas_finance_n8n_not_configured.
+  ///
+  /// In en, this message translates to:
+  /// **'n8n webhook is not configured in the app environment.'**
+  String get canvas_finance_n8n_not_configured;
+
+  /// No description provided for @canvas_finance_n8n_no_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an email to your profile before sending a report.'**
+  String get canvas_finance_n8n_no_email;
+
+  /// No description provided for @canvas_finance_n8n_confirm_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Send email report?'**
+  String get canvas_finance_n8n_confirm_title;
+
+  /// No description provided for @canvas_finance_n8n_confirm_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s finance and health summary will be sent to n8n for delivery to {email}.'**
+  String canvas_finance_n8n_confirm_message(String email);
+
+  /// No description provided for @canvas_mail_summary_recipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient'**
+  String get canvas_mail_summary_recipient;
+
+  /// No description provided for @canvas_mail_summary_finance.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance today'**
+  String get canvas_mail_summary_finance;
+
+  /// No description provided for @canvas_mail_summary_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health today'**
+  String get canvas_mail_summary_health;
+
+  /// No description provided for @canvas_mail_summary_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send email report'**
+  String get canvas_mail_summary_send;
+
+  /// No description provided for @canvas_mail_summary_auto_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic daily email'**
+  String get canvas_mail_summary_auto_title;
+
+  /// No description provided for @canvas_mail_summary_auto_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'After this time, send once per day while the app is open'**
+  String get canvas_mail_summary_auto_subtitle;
+
+  /// No description provided for @mail_suggestion_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Report tips'**
+  String get mail_suggestion_title;
+
+  /// No description provided for @mail_suggestion_ai_loading.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is analyzing your day…'**
+  String get mail_suggestion_ai_loading;
+
+  /// No description provided for @mail_suggestion_ai_fallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline tips — connect MAIL_SUGGESTIONS_AGENT_URL for AI.'**
+  String get mail_suggestion_ai_fallback;
+
+  /// No description provided for @mail_suggestion_negative_net.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s spending exceeded income — review recent transactions.'**
+  String get mail_suggestion_negative_net;
+
+  /// No description provided for @mail_suggestion_no_transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions logged today — add expenses to keep reports accurate.'**
+  String get mail_suggestion_no_transactions;
+
+  /// No description provided for @mail_suggestion_budget_high.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used {percent}% of your monthly budget — pace spending.'**
+  String mail_suggestion_budget_high(String percent);
+
+  /// No description provided for @mail_suggestion_monthly_deficit.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly spending exceeds income — consider trimming fixed costs.'**
+  String get mail_suggestion_monthly_deficit;
+
+  /// No description provided for @mail_suggestion_steps_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps at {percent}% of goal — a short walk helps hit your target.'**
+  String mail_suggestion_steps_low(String percent);
+
+  /// No description provided for @mail_suggestion_water_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Water intake is below half your goal — hydrate through the day.'**
+  String get mail_suggestion_water_low;
+
+  /// No description provided for @mail_suggestion_sleep_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep below your goal — try an earlier wind-down tonight.'**
+  String get mail_suggestion_sleep_low;
+
+  /// No description provided for @mail_suggestion_log_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'No mood logged today — a quick check-in improves your trends.'**
+  String get mail_suggestion_log_mood;
+
+  /// No description provided for @mail_suggestion_focus_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus time is low — schedule a short deep-work block.'**
+  String get mail_suggestion_focus_low;
+
+  /// No description provided for @mail_suggestion_tasks_many.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active tasks open — pick one priority for tomorrow.'**
+  String mail_suggestion_tasks_many(String count);
+
+  /// No description provided for @reports_hub_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Report via mail'**
+  String get reports_hub_title;
+
+  /// No description provided for @reports_hub_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily finance on device, email delivery through n8n'**
+  String get reports_hub_subtitle;
+
+  /// No description provided for @system_monitor_title.
+  ///
+  /// In en, this message translates to:
+  /// **'System Monitor'**
+  String get system_monitor_title;
+
+  /// No description provided for @system_monitor_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Homelab launcher, dev accounts, DB & sync telemetry — admin only.'**
+  String get system_monitor_subtitle;
+
+  /// No description provided for @system_monitor_denied_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin access required'**
+  String get system_monitor_denied_title;
+
+  /// No description provided for @system_monitor_denied_body.
+  ///
+  /// In en, this message translates to:
+  /// **'This page is restricted to accounts with the admin role.'**
+  String get system_monitor_denied_body;
+
+  /// No description provided for @system_monitor_denied_roles.
+  ///
+  /// In en, this message translates to:
+  /// **'Local: {local} · Remote: {remote}'**
+  String system_monitor_denied_roles(String local, String remote);
+
+  /// No description provided for @system_monitor_denied_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set role to admin in Supabase → Table Editor → user_accounts (not Auth metadata). Then tap Refresh role.'**
+  String get system_monitor_denied_hint;
+
+  /// No description provided for @system_monitor_retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh role'**
+  String get system_monitor_retry;
+
+  /// No description provided for @system_monitor_overview_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get system_monitor_overview_section;
+
+  /// No description provided for @system_monitor_db_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Local database'**
+  String get system_monitor_db_section;
+
+  /// No description provided for @system_monitor_sync_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync engine'**
+  String get system_monitor_sync_section;
+
+  /// No description provided for @system_monitor_app_version.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get system_monitor_app_version;
+
+  /// No description provided for @system_monitor_platform.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get system_monitor_platform;
+
+  /// No description provided for @system_monitor_role.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get system_monitor_role;
+
+  /// No description provided for @system_monitor_auth_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Auth status'**
+  String get system_monitor_auth_status;
+
+  /// No description provided for @system_monitor_supabase_user.
+  ///
+  /// In en, this message translates to:
+  /// **'Supabase user'**
+  String get system_monitor_supabase_user;
+
+  /// No description provided for @system_monitor_running_checks.
+  ///
+  /// In en, this message translates to:
+  /// **'Running diagnostics…'**
+  String get system_monitor_running_checks;
+
+  /// No description provided for @system_monitor_healthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Database healthy'**
+  String get system_monitor_healthy;
+
+  /// No description provided for @system_monitor_issues.
+  ///
+  /// In en, this message translates to:
+  /// **'Issues detected'**
+  String get system_monitor_issues;
+
+  /// No description provided for @system_monitor_smoke_test.
+  ///
+  /// In en, this message translates to:
+  /// **'Smoke test'**
+  String get system_monitor_smoke_test;
+
+  /// No description provided for @system_monitor_sync_active.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync active'**
+  String get system_monitor_sync_active;
+
+  /// No description provided for @system_monitor_sync_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Last status'**
+  String get system_monitor_sync_status;
+
+  /// No description provided for @system_monitor_uptime.
+  ///
+  /// In en, this message translates to:
+  /// **'Session uptime'**
+  String get system_monitor_uptime;
+
+  /// No description provided for @system_monitor_open_sync_engine.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Sync Engine'**
+  String get system_monitor_open_sync_engine;
+
+  /// No description provided for @dev_launcher_web_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Web apps (homelab)'**
+  String get dev_launcher_web_title;
+
+  /// No description provided for @dev_launcher_accounts_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev & cloud accounts'**
+  String get dev_launcher_accounts_title;
+
+  /// No description provided for @dev_launcher_accounts_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Save OPNsense, Supabase, Northflank, n8n logins here. Secrets stay on device.'**
+  String get dev_launcher_accounts_empty;
+
+  /// No description provided for @dev_launcher_add_web.
+  ///
+  /// In en, this message translates to:
+  /// **'Add web app'**
+  String get dev_launcher_add_web;
+
+  /// No description provided for @dev_launcher_add_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Add dev account'**
+  String get dev_launcher_add_account;
+
+  /// No description provided for @dev_launcher_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get dev_launcher_name;
+
+  /// No description provided for @dev_launcher_url.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get dev_launcher_url;
+
+  /// No description provided for @dev_launcher_service.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get dev_launcher_service;
+
+  /// No description provided for @dev_launcher_username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get dev_launcher_username;
+
+  /// No description provided for @dev_launcher_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password / API key'**
+  String get dev_launcher_password;
+
+  /// No description provided for @dev_launcher_copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get dev_launcher_copied;
+
+  /// No description provided for @dev_launcher_pin_canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to Canvas'**
+  String get dev_launcher_pin_canvas;
+
+  /// No description provided for @dev_launcher_pinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to Canvas widgets'**
+  String get dev_launcher_pinned;
+
+  /// No description provided for @dev_launcher_add_from_catalog.
+  ///
+  /// In en, this message translates to:
+  /// **'From plugin catalog'**
+  String get dev_launcher_add_from_catalog;
+
+  /// No description provided for @dev_launcher_pick_plugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Homelab web plugins'**
+  String get dev_launcher_pick_plugin;
+
+  /// No description provided for @infra_api_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Infra API'**
+  String get infra_api_section_title;
+
+  /// No description provided for @infra_api_section_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Cloudflare, Tailscale, Northflank. API tokens stay on this device.'**
+  String get infra_api_section_subtitle;
+
+  /// No description provided for @infra_api_configure.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure {provider}'**
+  String infra_api_configure(String provider);
+
+  /// No description provided for @infra_api_token_label.
+  ///
+  /// In en, this message translates to:
+  /// **'API token / key'**
+  String get infra_api_token_label;
+
+  /// No description provided for @infra_api_tailnet_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailnet name'**
+  String get infra_api_tailnet_label;
+
+  /// No description provided for @infra_api_tailnet_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use - for default tailnet'**
+  String get infra_api_tailnet_hint;
+
+  /// No description provided for @infra_api_clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get infra_api_clear;
+
+  /// No description provided for @infra_api_test.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get infra_api_test;
+
+  /// No description provided for @infra_api_not_configured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get infra_api_not_configured;
+
+  /// No description provided for @infra_api_connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get infra_api_connected;
+
+  /// No description provided for @infra_api_token_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Token saved — tap Test'**
+  String get infra_api_token_saved;
+
+  /// No description provided for @infra_api_test_ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK · {summary}'**
+  String infra_api_test_ok(String summary);
+
+  /// No description provided for @infra_api_test_fail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed · {message}'**
+  String infra_api_test_fail(String message);
+
+  /// No description provided for @island_system_monitor.
+  ///
+  /// In en, this message translates to:
+  /// **'SYSTEM MONITOR'**
+  String get island_system_monitor;
+
+  /// No description provided for @reports_mail_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Email via n8n'**
+  String get reports_mail_section_title;
+
+  /// No description provided for @reports_mail_section_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance and health snapshot delivered by email'**
+  String get reports_mail_section_subtitle;
+
+  /// No description provided for @reports_finance_section.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device finance report'**
+  String get reports_finance_section;
+
+  /// No description provided for @reports_recipient_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'recipient@example.com'**
+  String get reports_recipient_hint;
+
+  /// No description provided for @reports_recipient_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save recipient'**
+  String get reports_recipient_save;
+
+  /// No description provided for @reports_recipient_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Report recipient saved.'**
+  String get reports_recipient_saved;
+
+  /// No description provided for @reports_recipient_profile_fallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile email default: {email}'**
+  String reports_recipient_profile_fallback(String email);
+
+  /// No description provided for @canvas_finance_n8n_confirm_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get canvas_finance_n8n_confirm_send;
 
   /// No description provided for @gps_permissions_required.
   ///
@@ -4064,6 +7568,84 @@ abstract class AppLocalizations {
   /// **'Notes'**
   String get project_notes_label;
 
+  /// No description provided for @note_type_picker_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose note type'**
+  String get note_type_picker_title;
+
+  /// No description provided for @note_type_markdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown (.md)'**
+  String get note_type_markdown;
+
+  /// No description provided for @note_type_plain_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain text (.txt)'**
+  String get note_type_plain_text;
+
+  /// No description provided for @note_type_word.
+  ///
+  /// In en, this message translates to:
+  /// **'Word (.docx)'**
+  String get note_type_word;
+
+  /// No description provided for @project_journal_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get project_journal_label;
+
+  /// No description provided for @project_no_journal.
+  ///
+  /// In en, this message translates to:
+  /// **'No journal entries yet. Tap + to log mood and progress.'**
+  String get project_no_journal;
+
+  /// No description provided for @project_journal_entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Project log'**
+  String get project_journal_entry;
+
+  /// No description provided for @project_log_context.
+  ///
+  /// In en, this message translates to:
+  /// **'Project: {name}'**
+  String project_log_context(String name);
+
+  /// No description provided for @project_journal_mood_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get project_journal_mood_label;
+
+  /// No description provided for @project_journal_desc_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get project_journal_desc_label;
+
+  /// No description provided for @project_journal_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save log'**
+  String get project_journal_save;
+
+  /// No description provided for @project_journal_composer_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to record how this project session felt.'**
+  String get project_journal_composer_hint;
+
+  /// No description provided for @project_journal_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}'**
+  String project_journal_count(int count);
+
   /// No description provided for @project_no_notes.
   ///
   /// In en, this message translates to:
@@ -4075,6 +7657,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No notes found'**
   String get project_no_notes_list;
+
+  /// No description provided for @project_choose_document_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose document type'**
+  String get project_choose_document_type;
+
+  /// No description provided for @project_doc_blank_note.
+  ///
+  /// In en, this message translates to:
+  /// **'Blank note'**
+  String get project_doc_blank_note;
+
+  /// No description provided for @project_doc_blank_note_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with a clean slate'**
+  String get project_doc_blank_note_desc;
+
+  /// No description provided for @project_doc_tech.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical doc'**
+  String get project_doc_tech;
+
+  /// No description provided for @project_doc_tech_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Architecture and implementation template'**
+  String get project_doc_tech_desc;
+
+  /// No description provided for @project_doc_api.
+  ///
+  /// In en, this message translates to:
+  /// **'API specification'**
+  String get project_doc_api;
+
+  /// No description provided for @project_doc_api_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoints and schema template'**
+  String get project_doc_api_desc;
+
+  /// No description provided for @project_doc_tech_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical Documentation'**
+  String get project_doc_tech_title;
+
+  /// No description provided for @project_doc_api_title.
+  ///
+  /// In en, this message translates to:
+  /// **'API Specification'**
+  String get project_doc_api_title;
 
   /// No description provided for @project_finance_label.
   ///
@@ -4088,17 +7724,371 @@ abstract class AppLocalizations {
   /// **'No financial records linked to this project.'**
   String get project_no_finance;
 
+  /// No description provided for @project_skills_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get project_skills_label;
+
+  /// No description provided for @project_no_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'No skills yet. Tap + to track what you improve on this project.'**
+  String get project_no_skills;
+
+  /// No description provided for @project_add_skill_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add skill'**
+  String get project_add_skill_title;
+
+  /// No description provided for @project_skill_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Flutter, debugging, system design'**
+  String get project_skill_name_hint;
+
+  /// No description provided for @project_skill_streak_days.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day streak'**
+  String project_skill_streak_days(int count);
+
+  /// No description provided for @project_skill_streak_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No streak yet'**
+  String get project_skill_streak_none;
+
+  /// No description provided for @project_skill_xp_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} XP · {remaining} XP to next level'**
+  String project_skill_xp_hint(int total, int remaining);
+
+  /// No description provided for @project_skill_xp_on_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete tasks to earn +15 XP per skill'**
+  String get project_skill_xp_on_complete;
+
+  /// No description provided for @project_skill_log_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a Skill Boost session to level these skills.'**
+  String get project_skill_log_session;
+
+  /// No description provided for @project_skill_practice.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Skill Boost'**
+  String get project_skill_practice;
+
+  /// No description provided for @project_skill_tap_to_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Select one or more skills, then start the session'**
+  String get project_skill_tap_to_start;
+
+  /// No description provided for @project_skill_start_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Start session ({count})'**
+  String project_skill_start_session(int count);
+
+  /// No description provided for @project_skill_catalog_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick from the same skills as Mind → Skills tiles.'**
+  String get project_skill_catalog_hint;
+
+  /// No description provided for @project_auto_add_all_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new skill'**
+  String get project_auto_add_all_skills;
+
+  /// No description provided for @project_auto_add_all_skills_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a brand-new skill to Mind and this project'**
+  String get project_auto_add_all_skills_subtitle;
+
+  /// No description provided for @project_skill_already_exists.
+  ///
+  /// In en, this message translates to:
+  /// **'That skill already exists'**
+  String get project_skill_already_exists;
+
+  /// No description provided for @project_skill_name_too_long.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill name too long (max 24 characters)'**
+  String get project_skill_name_too_long;
+
+  /// No description provided for @project_skills_all_on_project.
+  ///
+  /// In en, this message translates to:
+  /// **'All Mind skills are already on this project'**
+  String get project_skills_all_on_project;
+
+  /// No description provided for @project_skills_added_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 skill added} other{{count} skills added}}'**
+  String project_skills_added_count(int count);
+
+  /// No description provided for @project_skill_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{name}\" from this project?'**
+  String project_skill_delete_confirm(String name);
+
+  /// No description provided for @project_skill_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill added'**
+  String get project_skill_added;
+
+  /// No description provided for @project_skill_xp_granted.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills gained +{xp} XP'**
+  String project_skill_xp_granted(int xp);
+
+  /// No description provided for @project_sub_projects_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-projects'**
+  String get project_sub_projects_label;
+
+  /// No description provided for @project_no_sub_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'No sub-projects yet. Tap + to add a child project.'**
+  String get project_no_sub_projects;
+
+  /// No description provided for @project_add_sub_project_title.
+  ///
+  /// In en, this message translates to:
+  /// **'New sub-project'**
+  String get project_add_sub_project_title;
+
+  /// No description provided for @project_sub_project_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-project name'**
+  String get project_sub_project_name_hint;
+
   /// No description provided for @project_add_task_title.
   ///
   /// In en, this message translates to:
   /// **'New Task'**
   String get project_add_task_title;
 
+  /// No description provided for @project_task_assign_to.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign to project'**
+  String get project_task_assign_to;
+
   /// No description provided for @project_task_title_hint.
   ///
   /// In en, this message translates to:
   /// **'Task title'**
   String get project_task_title_hint;
+
+  /// No description provided for @project_sdlc_board_title.
+  ///
+  /// In en, this message translates to:
+  /// **'SDLC board'**
+  String get project_sdlc_board_title;
+
+  /// No description provided for @project_sdlc_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open SDLC board'**
+  String get project_sdlc_open;
+
+  /// No description provided for @project_sdlc_add_task_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add SDLC task'**
+  String get project_sdlc_add_task_title;
+
+  /// No description provided for @project_sdlc_move_phase.
+  ///
+  /// In en, this message translates to:
+  /// **'SDLC phase'**
+  String get project_sdlc_move_phase;
+
+  /// No description provided for @project_sdlc_due_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get project_sdlc_due_date;
+
+  /// No description provided for @project_sdlc_due_date_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No due date'**
+  String get project_sdlc_due_date_none;
+
+  /// No description provided for @project_sdlc_clear_due_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear due date'**
+  String get project_sdlc_clear_due_date;
+
+  /// No description provided for @project_sdlc_default_purpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Define what this project must deliver and why.'**
+  String get project_sdlc_default_purpose;
+
+  /// No description provided for @project_sdlc_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No active tasks. Tap + to add one to a phase.'**
+  String get project_sdlc_empty;
+
+  /// No description provided for @project_sdlc_column_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks'**
+  String get project_sdlc_column_empty;
+
+  /// No description provided for @project_sdlc_add_to_phase.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task to this phase'**
+  String get project_sdlc_add_to_phase;
+
+  /// No description provided for @project_sdlc_drop_here.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop to move here'**
+  String get project_sdlc_drop_here;
+
+  /// No description provided for @project_sdlc_task_moved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to {phase}'**
+  String project_sdlc_task_moved(String phase);
+
+  /// No description provided for @project_sdlc_phase_stat.
+  ///
+  /// In en, this message translates to:
+  /// **'P{phase}: {count}'**
+  String project_sdlc_phase_stat(int phase, int count);
+
+  /// No description provided for @project_sdlc_phase_planning_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Planning & requirements'**
+  String get project_sdlc_phase_planning_title;
+
+  /// No description provided for @project_sdlc_phase_planning_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'SRS, feasibility'**
+  String get project_sdlc_phase_planning_hint;
+
+  /// No description provided for @project_sdlc_phase_design_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Architecture & design'**
+  String get project_sdlc_phase_design_title;
+
+  /// No description provided for @project_sdlc_phase_design_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tech stack, UI'**
+  String get project_sdlc_phase_design_hint;
+
+  /// No description provided for @project_sdlc_phase_implementation_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Implementation'**
+  String get project_sdlc_phase_implementation_title;
+
+  /// No description provided for @project_sdlc_phase_implementation_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Code, Git, reviews'**
+  String get project_sdlc_phase_implementation_hint;
+
+  /// No description provided for @project_sdlc_phase_testing_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing & QA'**
+  String get project_sdlc_phase_testing_title;
+
+  /// No description provided for @project_sdlc_phase_testing_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit, integration, UAT'**
+  String get project_sdlc_phase_testing_hint;
+
+  /// No description provided for @project_sdlc_phase_deployment_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Deployment'**
+  String get project_sdlc_phase_deployment_title;
+
+  /// No description provided for @project_sdlc_phase_deployment_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'CI/CD, release'**
+  String get project_sdlc_phase_deployment_hint;
+
+  /// No description provided for @project_sdlc_phase_maintenance_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Operations & maintenance'**
+  String get project_sdlc_phase_maintenance_title;
+
+  /// No description provided for @project_sdlc_phase_maintenance_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor, patches, scale'**
+  String get project_sdlc_phase_maintenance_hint;
+
+  /// No description provided for @project_sdlc_no_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a project first to open the SDLC board.'**
+  String get project_sdlc_no_project;
+
+  /// No description provided for @project_sdlc_pick_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose project for SDLC board'**
+  String get project_sdlc_pick_project;
+
+  /// No description provided for @task_delete_tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete task'**
+  String get task_delete_tooltip;
+
+  /// No description provided for @task_delete_confirm_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete task'**
+  String get task_delete_confirm_title;
+
+  /// No description provided for @task_delete_confirm_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"? This cannot be undone.'**
+  String task_delete_confirm_msg(String name);
+
+  /// No description provided for @task_deleted_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'Task deleted'**
+  String get task_deleted_msg;
 
   /// No description provided for @project_add_investment_title.
   ///
@@ -4183,6 +8173,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No content'**
   String get project_note_no_content;
+
+  /// No description provided for @note_editor_write_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start writing your note…'**
+  String get note_editor_write_hint;
+
+  /// No description provided for @note_editor_saved_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {when}'**
+  String note_editor_saved_label(String when);
+
+  /// No description provided for @note_editor_saved_just_now.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get note_editor_saved_just_now;
+
+  /// No description provided for @note_editor_saved_minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String note_editor_saved_minutes(int count);
+
+  /// No description provided for @note_editor_saved_hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String note_editor_saved_hours(int count);
+
+  /// No description provided for @note_editor_unsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved'**
+  String get note_editor_unsaved;
+
+  /// No description provided for @note_editor_saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get note_editor_saving;
 
   /// No description provided for @focus_select_project.
   ///
@@ -4604,6 +8636,18 @@ abstract class AppLocalizations {
   /// **'I understand my account may not be fully erased from the server until backend deletion is enabled.'**
   String get delete_account_acknowledge;
 
+  /// No description provided for @delete_account_type_key_word.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE-ACCOUNT'**
+  String get delete_account_type_key_word;
+
+  /// No description provided for @delete_account_type_key_prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {word} to confirm:'**
+  String delete_account_type_key_prompt(String word);
+
   /// No description provided for @delete_account_confirm.
   ///
   /// In en, this message translates to:
@@ -4694,6 +8738,12 @@ abstract class AppLocalizations {
   /// **'DAILY QUEST'**
   String get notification_daily_quest;
 
+  /// No description provided for @notification_no_active_quests.
+  ///
+  /// In en, this message translates to:
+  /// **'No active quests right now. Complete tasks in Projects to earn daily quests.'**
+  String get notification_no_active_quests;
+
   /// No description provided for @notification_quest_completed_snack.
   ///
   /// In en, this message translates to:
@@ -4723,6 +8773,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System notifications are currently disabled.'**
   String get notification_disabled_desc;
+
+  /// No description provided for @notification_system_preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'SYSTEM PREFERENCES'**
+  String get notification_system_preferences;
+
+  /// No description provided for @notification_pomodoro_reminder_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoros Reminder'**
+  String get notification_pomodoro_reminder_title;
+
+  /// No description provided for @notification_pomodoro_reminder_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive notification after you finish a pomodoro or end a break.'**
+  String get notification_pomodoro_reminder_subtitle;
+
+  /// No description provided for @notification_live_activities_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Activities'**
+  String get notification_live_activities_title;
+
+  /// No description provided for @notification_live_activities_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track focus timer and information on your Lock Screen.'**
+  String get notification_live_activities_subtitle;
+
+  /// No description provided for @notification_morning_briefing_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s schedule, yesterday recap, and motivation when you first open Home (5:00–11:59).'**
+  String get notification_morning_briefing_subtitle;
+
+  /// No description provided for @notification_status_on.
+  ///
+  /// In en, this message translates to:
+  /// **'on'**
+  String get notification_status_on;
+
+  /// No description provided for @notification_status_off.
+  ///
+  /// In en, this message translates to:
+  /// **'off'**
+  String get notification_status_off;
 
   /// No description provided for @notification_wisdom_board.
   ///
@@ -4783,6 +8881,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'FOCUS COMPLETE'**
   String get notification_focus_complete;
+
+  /// No description provided for @notification_task_success.
+  ///
+  /// In en, this message translates to:
+  /// **'TASK SUCCESS'**
+  String get notification_task_success;
 
   /// No description provided for @notification_reminder.
   ///
@@ -4886,6 +8990,228 @@ abstract class AppLocalizations {
   /// **'Description (optional)'**
   String get finance_label_description_optional;
 
+  /// No description provided for @finance_txn_source_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid from'**
+  String get finance_txn_source_account;
+
+  /// No description provided for @finance_txn_source_account_none.
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
+  String get finance_txn_source_account_none;
+
+  /// No description provided for @finance_txn_source_account_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a wallet or account first, then choose it when logging spend.'**
+  String get finance_txn_source_account_empty;
+
+  /// No description provided for @finance_txn_source_account_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get finance_txn_source_account_add;
+
+  /// No description provided for @finance_txn_source_account_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which account this money left.'**
+  String get finance_txn_source_account_required;
+
+  /// No description provided for @finance_recurring_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring income'**
+  String get finance_recurring_income;
+
+  /// No description provided for @finance_recurring_interval.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat every'**
+  String get finance_recurring_interval;
+
+  /// No description provided for @finance_fixed_income_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed income'**
+  String get finance_fixed_income_title;
+
+  /// No description provided for @finance_fixed_income_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital (skills), salary, rent received, and other steady inflows'**
+  String get finance_fixed_income_subtitle;
+
+  /// No description provided for @finance_fixed_income_monthly_total.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly total'**
+  String get finance_fixed_income_monthly_total;
+
+  /// No description provided for @finance_fixed_income_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No fixed income yet'**
+  String get finance_fixed_income_empty;
+
+  /// No description provided for @finance_shortcut_transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction'**
+  String get finance_shortcut_transaction;
+
+  /// No description provided for @finance_shortcut_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get finance_shortcut_account;
+
+  /// No description provided for @finance_shortcut_asset.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset'**
+  String get finance_shortcut_asset;
+
+  /// No description provided for @finance_shortcut_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get finance_shortcut_income;
+
+  /// No description provided for @finance_fixed_income_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add fixed income'**
+  String get finance_fixed_income_add;
+
+  /// No description provided for @finance_fixed_income_new.
+  ///
+  /// In en, this message translates to:
+  /// **'New fixed income'**
+  String get finance_fixed_income_new;
+
+  /// No description provided for @finance_fixed_income_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit fixed income'**
+  String get finance_fixed_income_edit;
+
+  /// No description provided for @finance_fixed_income_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Income name'**
+  String get finance_fixed_income_name;
+
+  /// No description provided for @finance_fixed_income_next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next payout'**
+  String get finance_fixed_income_next;
+
+  /// No description provided for @finance_fixed_income_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this fixed income schedule?'**
+  String get finance_fixed_income_delete_confirm;
+
+  /// No description provided for @finance_insight_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis'**
+  String get finance_insight_title;
+
+  /// No description provided for @finance_insight_suggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get finance_insight_suggestions;
+
+  /// No description provided for @finance_insight_enter_amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount to preview how this affects your month.'**
+  String get finance_insight_enter_amount;
+
+  /// No description provided for @finance_insight_fixed_after.
+  ///
+  /// In en, this message translates to:
+  /// **'After saving: about {amount}/month in fixed income.'**
+  String finance_insight_fixed_after(String amount);
+
+  /// No description provided for @finance_insight_covers_spending.
+  ///
+  /// In en, this message translates to:
+  /// **'Covers about {percent}% of spending logged this month ({spent}).'**
+  String finance_insight_covers_spending(String percent, String spent);
+
+  /// No description provided for @finance_insight_shortfall.
+  ///
+  /// In en, this message translates to:
+  /// **'Still about {amount} short vs monthly spending.'**
+  String finance_insight_shortfall(String amount);
+
+  /// No description provided for @finance_insight_surplus.
+  ///
+  /// In en, this message translates to:
+  /// **'Roughly {amount}/month left after typical spending.'**
+  String finance_insight_surplus(String amount);
+
+  /// No description provided for @finance_insight_duplicate_fixed.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have fixed income in “{name}” — avoid double counting.'**
+  String finance_insight_duplicate_fixed(String name);
+
+  /// No description provided for @finance_insight_expense_share.
+  ///
+  /// In en, this message translates to:
+  /// **'This would be about {percent}% of spending this month.'**
+  String finance_insight_expense_share(String percent);
+
+  /// No description provided for @finance_insight_expense_large.
+  ///
+  /// In en, this message translates to:
+  /// **'Large one-off expense — double-check the category.'**
+  String get finance_insight_expense_large;
+
+  /// No description provided for @finance_insight_income_share.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds about {percent}% to income logged this month.'**
+  String finance_insight_income_share(String percent);
+
+  /// No description provided for @finance_insight_recurring_equiv.
+  ///
+  /// In en, this message translates to:
+  /// **'As recurring: about {amount}/month on top of fixed income.'**
+  String finance_insight_recurring_equiv(String amount);
+
+  /// No description provided for @finance_insight_savings_total.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings balance would reach about {amount}.'**
+  String finance_insight_savings_total(String amount);
+
+  /// No description provided for @finance_interval_weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get finance_interval_weekly;
+
+  /// No description provided for @finance_interval_monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get finance_interval_monthly;
+
+  /// No description provided for @finance_interval_yearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get finance_interval_yearly;
+
   /// No description provided for @finance_btn_add.
   ///
   /// In en, this message translates to:
@@ -4946,6 +9272,72 @@ abstract class AppLocalizations {
   /// **'SEE ALL'**
   String get finance_see_all;
 
+  /// No description provided for @finance_daily_report_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily report'**
+  String get finance_daily_report_title;
+
+  /// No description provided for @finance_daily_report_reminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reminder'**
+  String get finance_daily_report_reminder;
+
+  /// No description provided for @finance_daily_report_reminder_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local notification that opens this report'**
+  String get finance_daily_report_reminder_subtitle;
+
+  /// No description provided for @finance_daily_report_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open daily report'**
+  String get finance_daily_report_open;
+
+  /// No description provided for @finance_daily_report_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get finance_daily_report_income;
+
+  /// No description provided for @finance_daily_report_expense.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get finance_daily_report_expense;
+
+  /// No description provided for @finance_daily_report_net.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get finance_daily_report_net;
+
+  /// No description provided for @finance_daily_report_spending_by_category.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending by category'**
+  String get finance_daily_report_spending_by_category;
+
+  /// No description provided for @finance_daily_report_today_transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s activity'**
+  String get finance_daily_report_today_transactions;
+
+  /// No description provided for @finance_daily_report_empty_day.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions for this day yet.'**
+  String get finance_daily_report_empty_day;
+
+  /// No description provided for @finance_daily_report_notifications_off.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable system notifications in Settings to use daily reminders.'**
+  String get finance_daily_report_notifications_off;
+
   /// No description provided for @finance_cat_food.
   ///
   /// In en, this message translates to:
@@ -4994,6 +9386,78 @@ abstract class AppLocalizations {
   /// **'Subscriptions'**
   String get finance_cat_subscriptions;
 
+  /// No description provided for @finance_subscriptions_active_header.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE SUBSCRIPTIONS'**
+  String get finance_subscriptions_active_header;
+
+  /// No description provided for @finance_subscriptions_monthly_total.
+  ///
+  /// In en, this message translates to:
+  /// **'MONTHLY TOTAL'**
+  String get finance_subscriptions_monthly_total;
+
+  /// No description provided for @finance_subscriptions_next_month_header.
+  ///
+  /// In en, this message translates to:
+  /// **'PLAN NEXT MONTH'**
+  String get finance_subscriptions_next_month_header;
+
+  /// No description provided for @finance_subscriptions_next_month_total.
+  ///
+  /// In en, this message translates to:
+  /// **'PLANNED TOTAL'**
+  String get finance_subscriptions_next_month_total;
+
+  /// No description provided for @finance_subscriptions_next_month_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No subscription charges scheduled for next month.'**
+  String get finance_subscriptions_next_month_empty;
+
+  /// No description provided for @finance_subscriptions_next_month_remove_tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from this month\'s plan'**
+  String get finance_subscriptions_next_month_remove_tooltip;
+
+  /// No description provided for @finance_subscriptions_next_month_remove_title.
+  ///
+  /// In en, this message translates to:
+  /// **'REMOVE FROM PLAN'**
+  String get finance_subscriptions_next_month_remove_title;
+
+  /// No description provided for @finance_subscriptions_next_month_remove_message.
+  ///
+  /// In en, this message translates to:
+  /// **'This only removes the charge from next month\'s plan. Your subscription stays active and will show again when that billing month arrives.'**
+  String get finance_subscriptions_next_month_remove_message;
+
+  /// No description provided for @finance_subscriptions_next_month_remove_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'REMOVE'**
+  String get finance_subscriptions_next_month_remove_confirm;
+
+  /// No description provided for @finance_subscriptions_next_month_remove_action.
+  ///
+  /// In en, this message translates to:
+  /// **'REMOVE FROM PLAN'**
+  String get finance_subscriptions_next_month_remove_action;
+
+  /// No description provided for @finance_subscription_due_today.
+  ///
+  /// In en, this message translates to:
+  /// **'DUE TODAY'**
+  String get finance_subscription_due_today;
+
+  /// No description provided for @finance_subscription_days_left.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} DAYS LEFT'**
+  String finance_subscription_days_left(int days);
+
   /// No description provided for @finance_cat_entertainment.
   ///
   /// In en, this message translates to:
@@ -5023,6 +9487,426 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'General'**
   String get finance_cat_general;
+
+  /// No description provided for @finance_cat_human_capital.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital'**
+  String get finance_cat_human_capital;
+
+  /// No description provided for @finance_inflow_pillar_human_capital.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital'**
+  String get finance_inflow_pillar_human_capital;
+
+  /// No description provided for @finance_inflow_pillar_liquidity.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity'**
+  String get finance_inflow_pillar_liquidity;
+
+  /// No description provided for @finance_inflow_pillar_fixed_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed income'**
+  String get finance_inflow_pillar_fixed_income;
+
+  /// No description provided for @finance_inflow_pillar_investment.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment'**
+  String get finance_inflow_pillar_investment;
+
+  /// No description provided for @finance_inflow_pillar_cashflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashflow'**
+  String get finance_inflow_pillar_cashflow;
+
+  /// No description provided for @finance_inflow_pillars_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Inflow layers'**
+  String get finance_inflow_pillars_title;
+
+  /// No description provided for @finance_inflow_pillars_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills & work, cash buffer, steady yield, growth assets, recurring systems'**
+  String get finance_inflow_pillars_subtitle;
+
+  /// No description provided for @finance_asset_pillars_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset layers'**
+  String get finance_asset_pillars_title;
+
+  /// No description provided for @finance_asset_pillars_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity, fixed income, investment, cashflow'**
+  String get finance_asset_pillars_subtitle;
+
+  /// No description provided for @finance_asset_pillar_liquidity.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity'**
+  String get finance_asset_pillar_liquidity;
+
+  /// No description provided for @finance_asset_pillar_fixed_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed income'**
+  String get finance_asset_pillar_fixed_income;
+
+  /// No description provided for @finance_asset_pillar_investment.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment'**
+  String get finance_asset_pillar_investment;
+
+  /// No description provided for @finance_asset_pillar_cashflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashflow'**
+  String get finance_asset_pillar_cashflow;
+
+  /// No description provided for @finance_record_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get finance_record_section_title;
+
+  /// No description provided for @finance_record_section_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add accounts, assets, human capital, and subscriptions'**
+  String get finance_record_section_subtitle;
+
+  /// No description provided for @finance_record_human_capital.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital'**
+  String get finance_record_human_capital;
+
+  /// No description provided for @finance_record_human_capital_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity (imputed value)'**
+  String get finance_record_human_capital_hint;
+
+  /// No description provided for @finance_record_liquidity_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity account'**
+  String get finance_record_liquidity_account;
+
+  /// No description provided for @finance_record_liquidity_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash, checking'**
+  String get finance_record_liquidity_hint;
+
+  /// No description provided for @finance_record_fixed_income_asset.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed income asset'**
+  String get finance_record_fixed_income_asset;
+
+  /// No description provided for @finance_record_fixed_income_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bond, savings'**
+  String get finance_record_fixed_income_hint;
+
+  /// No description provided for @finance_record_investment_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment account'**
+  String get finance_record_investment_account;
+
+  /// No description provided for @finance_record_investment_account_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Broker, crypto wallet'**
+  String get finance_record_investment_account_hint;
+
+  /// No description provided for @finance_record_investment_holding.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment holding'**
+  String get finance_record_investment_holding;
+
+  /// No description provided for @finance_record_investment_holding_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock, crypto, real estate'**
+  String get finance_record_investment_holding_hint;
+
+  /// No description provided for @finance_account_type_checking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get finance_account_type_checking;
+
+  /// No description provided for @finance_account_type_savings.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get finance_account_type_savings;
+
+  /// No description provided for @finance_account_type_cash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get finance_account_type_cash;
+
+  /// No description provided for @finance_account_type_credit_card.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit card'**
+  String get finance_account_type_credit_card;
+
+  /// No description provided for @finance_account_type_deposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Term deposit'**
+  String get finance_account_type_deposit;
+
+  /// No description provided for @finance_account_type_investment.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment account'**
+  String get finance_account_type_investment;
+
+  /// No description provided for @finance_budget_limit_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget limit'**
+  String get finance_budget_limit_title;
+
+  /// No description provided for @finance_budget_limit_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit amount'**
+  String get finance_budget_limit_label;
+
+  /// No description provided for @finance_budget_limit_per_week.
+  ///
+  /// In en, this message translates to:
+  /// **'Per week'**
+  String get finance_budget_limit_per_week;
+
+  /// No description provided for @finance_budget_limit_per_month.
+  ///
+  /// In en, this message translates to:
+  /// **'Per month'**
+  String get finance_budget_limit_per_month;
+
+  /// No description provided for @finance_add_account_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get finance_add_account_title;
+
+  /// No description provided for @finance_account_type_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Account type'**
+  String get finance_account_type_section;
+
+  /// No description provided for @finance_accounts_liquidity_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity accounts'**
+  String get finance_accounts_liquidity_title;
+
+  /// No description provided for @finance_accounts_investment_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment accounts'**
+  String get finance_accounts_investment_title;
+
+  /// No description provided for @finance_account_investment_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. VNDirect, SSI, Binance'**
+  String get finance_account_investment_name_hint;
+
+  /// No description provided for @finance_record_cashflow_asset.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashflow asset'**
+  String get finance_record_cashflow_asset;
+
+  /// No description provided for @finance_record_cashflow_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'SaaS, recurring system'**
+  String get finance_record_cashflow_hint;
+
+  /// No description provided for @finance_record_subscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get finance_record_subscription;
+
+  /// No description provided for @finance_record_subscription_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring expense'**
+  String get finance_record_subscription_hint;
+
+  /// No description provided for @finance_record_contract_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time project or contract pay'**
+  String get finance_record_contract_hint;
+
+  /// No description provided for @finance_record_bonus_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time bonus payment'**
+  String get finance_record_bonus_hint;
+
+  /// No description provided for @finance_bonus_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus & Contract'**
+  String get finance_bonus_section_title;
+
+  /// No description provided for @finance_bonus_section_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time income from bonuses and contracts'**
+  String get finance_bonus_section_subtitle;
+
+  /// No description provided for @finance_bonus_section_total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get finance_bonus_section_total;
+
+  /// No description provided for @finance_bonus_section_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No bonus or contract income yet'**
+  String get finance_bonus_section_empty;
+
+  /// No description provided for @finance_total_income_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Total income'**
+  String get finance_total_income_title;
+
+  /// No description provided for @finance_total_income_recurring.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring / month'**
+  String get finance_total_income_recurring;
+
+  /// No description provided for @finance_total_income_onetime.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time'**
+  String get finance_total_income_onetime;
+
+  /// No description provided for @finance_hc_capacity_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get finance_hc_capacity_label;
+
+  /// No description provided for @finance_hc_realized_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get finance_hc_realized_label;
+
+  /// No description provided for @finance_hc_gap_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital'**
+  String get finance_hc_gap_title;
+
+  /// No description provided for @finance_hc_gap_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity {capacity} · received {received} · gap {gap}'**
+  String finance_hc_gap_message(String capacity, String received, String gap);
+
+  /// No description provided for @finance_add_asset_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add asset'**
+  String get finance_add_asset_title;
+
+  /// No description provided for @finance_add_asset_category.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset type'**
+  String get finance_add_asset_category;
+
+  /// No description provided for @finance_add_asset_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name / symbol'**
+  String get finance_add_asset_name;
+
+  /// No description provided for @finance_add_asset_value.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated value'**
+  String get finance_add_asset_value;
+
+  /// No description provided for @finance_add_asset_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save asset'**
+  String get finance_add_asset_save;
+
+  /// No description provided for @finance_asset_cat_stock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get finance_asset_cat_stock;
+
+  /// No description provided for @finance_asset_cat_crypto.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get finance_asset_cat_crypto;
+
+  /// No description provided for @finance_asset_cat_bond.
+  ///
+  /// In en, this message translates to:
+  /// **'Bond'**
+  String get finance_asset_cat_bond;
+
+  /// No description provided for @finance_asset_cat_deposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get finance_asset_cat_deposit;
+
+  /// No description provided for @finance_asset_cat_real_estate.
+  ///
+  /// In en, this message translates to:
+  /// **'Real estate'**
+  String get finance_asset_cat_real_estate;
+
+  /// No description provided for @finance_asset_cat_cashflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashflow (SaaS)'**
+  String get finance_asset_cat_cashflow;
+
+  /// No description provided for @finance_cat_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get finance_cat_skills;
 
   /// No description provided for @finance_cat_salary.
   ///
@@ -5492,6 +10376,264 @@ abstract class AppLocalizations {
   /// **'Search...'**
   String get ssh_search_hint;
 
+  /// No description provided for @ssh_connect_host_first.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a host first to manage live sessions.'**
+  String get ssh_connect_host_first;
+
+  /// No description provided for @ssh_cursor_api_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cursor API'**
+  String get ssh_cursor_api_title;
+
+  /// No description provided for @ssh_cursor_api_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your API key to drive cursor-agent on the remote host.'**
+  String get ssh_cursor_api_subtitle;
+
+  /// No description provided for @ssh_cursor_api_key_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'cursor_…'**
+  String get ssh_cursor_api_key_hint;
+
+  /// No description provided for @ssh_cursor_api_key_stored.
+  ///
+  /// In en, this message translates to:
+  /// **'API key saved on this device.'**
+  String get ssh_cursor_api_key_stored;
+
+  /// No description provided for @ssh_cursor_api_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save key'**
+  String get ssh_cursor_api_save;
+
+  /// No description provided for @ssh_cursor_api_test.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get ssh_cursor_api_test;
+
+  /// No description provided for @ssh_cursor_api_open_terminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open SSH (Cursor mode)'**
+  String get ssh_cursor_api_open_terminal;
+
+  /// No description provided for @ssh_cursor_api_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Cursor API key saved.'**
+  String get ssh_cursor_api_saved;
+
+  /// No description provided for @ssh_cursor_api_test_ok.
+  ///
+  /// In en, this message translates to:
+  /// **'Cursor API key is valid.'**
+  String get ssh_cursor_api_test_ok;
+
+  /// No description provided for @ssh_cursor_api_missing_key.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter or save a Cursor API key first.'**
+  String get ssh_cursor_api_missing_key;
+
+  /// No description provided for @cursor_hub_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cursor'**
+  String get cursor_hub_title;
+
+  /// No description provided for @cursor_hub_page_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Control Cursor on your Mac via My Machines and Cloud Agents — no SSH required.'**
+  String get cursor_hub_page_subtitle;
+
+  /// No description provided for @cursor_hub_canvas_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Machines worker, API tasks, and agents dashboard'**
+  String get cursor_hub_canvas_subtitle;
+
+  /// No description provided for @cursor_hub_integration_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'API key, worker setup, send tasks from your phone'**
+  String get cursor_hub_integration_subtitle;
+
+  /// No description provided for @cursor_hub_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'AI & automation'**
+  String get cursor_hub_section_title;
+
+  /// No description provided for @cursor_hub_key_ready.
+  ///
+  /// In en, this message translates to:
+  /// **'API key verified'**
+  String get cursor_hub_key_ready;
+
+  /// No description provided for @cursor_hub_open_full.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Cursor Hub'**
+  String get cursor_hub_open_full;
+
+  /// No description provided for @cursor_hub_open_agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Agents'**
+  String get cursor_hub_open_agents;
+
+  /// No description provided for @cursor_hub_worker_title.
+  ///
+  /// In en, this message translates to:
+  /// **'My Machine worker'**
+  String get cursor_hub_worker_title;
+
+  /// No description provided for @cursor_hub_worker_body.
+  ///
+  /// In en, this message translates to:
+  /// **'On your Mac, run this in Terminal and keep it open. Your machine then appears at cursor.com/agents.'**
+  String get cursor_hub_worker_body;
+
+  /// No description provided for @cursor_hub_copy_worker_cmd.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy command'**
+  String get cursor_hub_copy_worker_cmd;
+
+  /// No description provided for @cursor_hub_worker_copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied: agent worker start'**
+  String get cursor_hub_worker_copied;
+
+  /// No description provided for @cursor_hub_send_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a task'**
+  String get cursor_hub_send_title;
+
+  /// No description provided for @cursor_hub_target_machine.
+  ///
+  /// In en, this message translates to:
+  /// **'My Mac'**
+  String get cursor_hub_target_machine;
+
+  /// No description provided for @cursor_hub_target_cloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud repo'**
+  String get cursor_hub_target_cloud;
+
+  /// No description provided for @cursor_hub_machine_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine name (optional)'**
+  String get cursor_hub_machine_name;
+
+  /// No description provided for @cursor_hub_machine_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'As shown in Agents environment dropdown'**
+  String get cursor_hub_machine_name_hint;
+
+  /// No description provided for @cursor_hub_pick_repo.
+  ///
+  /// In en, this message translates to:
+  /// **'Your repositories'**
+  String get cursor_hub_pick_repo;
+
+  /// No description provided for @cursor_hub_refresh_repos.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh repo list'**
+  String get cursor_hub_refresh_repos;
+
+  /// No description provided for @cursor_hub_repos_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No repos found. Enter a URL below or run on Mac to scan ~/Code.'**
+  String get cursor_hub_repos_empty;
+
+  /// No description provided for @cursor_hub_usage_limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud agent blocked: enable usage-based pricing on cursor.com (need ~\$2 spend limit). Use My Mac mode instead.'**
+  String get cursor_hub_usage_limit;
+
+  /// No description provided for @cursor_hub_repo_url.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub repo URL'**
+  String get cursor_hub_repo_url;
+
+  /// No description provided for @cursor_hub_prompt_label.
+  ///
+  /// In en, this message translates to:
+  /// **'What should the agent do?'**
+  String get cursor_hub_prompt_label;
+
+  /// No description provided for @cursor_hub_send_task.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Cursor'**
+  String get cursor_hub_send_task;
+
+  /// No description provided for @cursor_hub_task_sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Task sent — opening agent…'**
+  String get cursor_hub_task_sent;
+
+  /// No description provided for @cursor_hub_task_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start agent: {reason}'**
+  String cursor_hub_task_failed(String reason);
+
+  /// No description provided for @cursor_hub_recent_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent agents'**
+  String get cursor_hub_recent_title;
+
+  /// No description provided for @island_cursor_ssh_standby.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting SSH link'**
+  String get island_cursor_ssh_standby;
+
+  /// No description provided for @island_cursor_no_api_key.
+  ///
+  /// In en, this message translates to:
+  /// **'No API key'**
+  String get island_cursor_no_api_key;
+
+  /// No description provided for @ssh_cursor_api_test_fail.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed: {reason}'**
+  String ssh_cursor_api_test_fail(String reason);
+
+  /// No description provided for @ssh_go_to_terminal.
+  ///
+  /// In en, this message translates to:
+  /// **'GO TO TERMINAL'**
+  String get ssh_go_to_terminal;
+
+  /// No description provided for @ssh_no_tmux_sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'No active tmux sessions found.'**
+  String get ssh_no_tmux_sessions;
+
   /// No description provided for @journal.
   ///
   /// In en, this message translates to:
@@ -5713,6 +10855,1104 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Done'**
   String get common_done;
+
+  /// No description provided for @island_app_name.
+  ///
+  /// In en, this message translates to:
+  /// **'ICE GATE'**
+  String get island_app_name;
+
+  /// No description provided for @island_app_blocker.
+  ///
+  /// In en, this message translates to:
+  /// **'APP BLOCKER'**
+  String get island_app_blocker;
+
+  /// No description provided for @island_initializing.
+  ///
+  /// In en, this message translates to:
+  /// **'INITIALIZING…'**
+  String get island_initializing;
+
+  /// No description provided for @island_notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'NOTIFICATIONS'**
+  String get island_notifications;
+
+  /// No description provided for @island_inbox.
+  ///
+  /// In en, this message translates to:
+  /// **'INBOX'**
+  String get island_inbox;
+
+  /// No description provided for @island_documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'DOCUMENTATION'**
+  String get island_documentation;
+
+  /// No description provided for @island_canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'CANVAS'**
+  String get island_canvas;
+
+  /// No description provided for @island_mind.
+  ///
+  /// In en, this message translates to:
+  /// **'MIND'**
+  String get island_mind;
+
+  /// No description provided for @island_health_data.
+  ///
+  /// In en, this message translates to:
+  /// **'DATA'**
+  String get island_health_data;
+
+  /// No description provided for @island_nutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'NUTRITION'**
+  String get island_nutrition;
+
+  /// No description provided for @island_activity.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVITY'**
+  String get island_activity;
+
+  /// No description provided for @island_hydration.
+  ///
+  /// In en, this message translates to:
+  /// **'HYDRATION'**
+  String get island_hydration;
+
+  /// No description provided for @island_focus.
+  ///
+  /// In en, this message translates to:
+  /// **'FOCUS'**
+  String get island_focus;
+
+  /// No description provided for @island_steps.
+  ///
+  /// In en, this message translates to:
+  /// **'STEPS'**
+  String get island_steps;
+
+  /// No description provided for @island_vitals.
+  ///
+  /// In en, this message translates to:
+  /// **'VITALS'**
+  String get island_vitals;
+
+  /// No description provided for @island_sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'SLEEP'**
+  String get island_sleep;
+
+  /// No description provided for @island_calories.
+  ///
+  /// In en, this message translates to:
+  /// **'CALORIES'**
+  String get island_calories;
+
+  /// No description provided for @island_spo2.
+  ///
+  /// In en, this message translates to:
+  /// **'SpO₂'**
+  String get island_spo2;
+
+  /// No description provided for @island_biometrics.
+  ///
+  /// In en, this message translates to:
+  /// **'BIOMETRICS'**
+  String get island_biometrics;
+
+  /// No description provided for @finance_tab_overview.
+  ///
+  /// In en, this message translates to:
+  /// **'OVERVIEW'**
+  String get finance_tab_overview;
+
+  /// No description provided for @finance_tab_history.
+  ///
+  /// In en, this message translates to:
+  /// **'HISTORY'**
+  String get finance_tab_history;
+
+  /// No description provided for @finance_tab_daily.
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY'**
+  String get finance_tab_daily;
+
+  /// No description provided for @finance_tab_daily_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily fun spending and income — pick a day on the calendar.'**
+  String get finance_tab_daily_subtitle;
+
+  /// No description provided for @finance_tab_achievements.
+  ///
+  /// In en, this message translates to:
+  /// **'ACHIEVEMENTS'**
+  String get finance_tab_achievements;
+
+  /// No description provided for @finance_tab_career.
+  ///
+  /// In en, this message translates to:
+  /// **'CAREER'**
+  String get finance_tab_career;
+
+  /// No description provided for @finance_job_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Job positions'**
+  String get finance_job_title;
+
+  /// No description provided for @finance_job_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track employers, contracts, and tenure'**
+  String get finance_job_subtitle;
+
+  /// No description provided for @finance_job_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No job positions yet'**
+  String get finance_job_empty;
+
+  /// No description provided for @finance_job_current.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get finance_job_current;
+
+  /// No description provided for @finance_job_ended.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get finance_job_ended;
+
+  /// No description provided for @finance_job_tenure.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} months'**
+  String finance_job_tenure(int months);
+
+  /// No description provided for @finance_job_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add position'**
+  String get finance_job_add;
+
+  /// No description provided for @finance_job_new.
+  ///
+  /// In en, this message translates to:
+  /// **'New position'**
+  String get finance_job_new;
+
+  /// No description provided for @finance_job_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit position'**
+  String get finance_job_edit;
+
+  /// No description provided for @finance_job_employer.
+  ///
+  /// In en, this message translates to:
+  /// **'Employer / company'**
+  String get finance_job_employer;
+
+  /// No description provided for @finance_job_role.
+  ///
+  /// In en, this message translates to:
+  /// **'Job title / role'**
+  String get finance_job_role;
+
+  /// No description provided for @finance_job_contract_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract type'**
+  String get finance_job_contract_type;
+
+  /// No description provided for @finance_job_contract_full_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Full-time'**
+  String get finance_job_contract_full_time;
+
+  /// No description provided for @finance_job_contract_part_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Part-time'**
+  String get finance_job_contract_part_time;
+
+  /// No description provided for @finance_job_contract_freelance.
+  ///
+  /// In en, this message translates to:
+  /// **'Freelance'**
+  String get finance_job_contract_freelance;
+
+  /// No description provided for @finance_job_contract_internship.
+  ///
+  /// In en, this message translates to:
+  /// **'Internship'**
+  String get finance_job_contract_internship;
+
+  /// No description provided for @finance_job_contract_contract.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract'**
+  String get finance_job_contract_contract;
+
+  /// No description provided for @finance_job_start_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get finance_job_start_date;
+
+  /// No description provided for @finance_job_end_date.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get finance_job_end_date;
+
+  /// No description provided for @finance_job_end_date_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty if current'**
+  String get finance_job_end_date_hint;
+
+  /// No description provided for @finance_job_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get finance_job_notes;
+
+  /// No description provided for @finance_job_salary.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly income'**
+  String get finance_job_salary;
+
+  /// No description provided for @finance_job_salary_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Creates a fixed income linked to this job'**
+  String get finance_job_salary_hint;
+
+  /// No description provided for @finance_job_income_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Income type'**
+  String get finance_job_income_type;
+
+  /// No description provided for @finance_job_income_salary.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary'**
+  String get finance_job_income_salary;
+
+  /// No description provided for @finance_job_income_contract.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract income'**
+  String get finance_job_income_contract;
+
+  /// No description provided for @finance_job_income_bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus'**
+  String get finance_job_income_bonus;
+
+  /// No description provided for @finance_job_salary_suffix.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} / mo'**
+  String finance_job_salary_suffix(String amount);
+
+  /// No description provided for @finance_job_on_day.
+  ///
+  /// In en, this message translates to:
+  /// **'Working that day'**
+  String get finance_job_on_day;
+
+  /// No description provided for @finance_job_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this job position?'**
+  String get finance_job_delete_confirm;
+
+  /// No description provided for @finance_job_end_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark this position as ended today?'**
+  String get finance_job_end_confirm;
+
+  /// No description provided for @finance_job_work_days.
+  ///
+  /// In en, this message translates to:
+  /// **'Work days'**
+  String get finance_job_work_days;
+
+  /// No description provided for @finance_job_log_today.
+  ///
+  /// In en, this message translates to:
+  /// **'Log today'**
+  String get finance_job_log_today;
+
+  /// No description provided for @finance_job_work_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day streak'**
+  String finance_job_work_streak(int count);
+
+  /// No description provided for @finance_job_time_sheet_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan your time and start working'**
+  String get finance_job_time_sheet_subtitle;
+
+  /// No description provided for @finance_job_time_plan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan for today'**
+  String get finance_job_time_plan;
+
+  /// No description provided for @finance_job_time_category.
+  ///
+  /// In en, this message translates to:
+  /// **'Work type'**
+  String get finance_job_time_category;
+
+  /// No description provided for @finance_job_time_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get finance_job_time_start;
+
+  /// No description provided for @finance_job_time_log_now.
+  ///
+  /// In en, this message translates to:
+  /// **'Log now'**
+  String get finance_job_time_log_now;
+
+  /// No description provided for @finance_job_time_start_timer.
+  ///
+  /// In en, this message translates to:
+  /// **'Start timer'**
+  String get finance_job_time_start_timer;
+
+  /// No description provided for @finance_job_time_logged.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged {minutes} min'**
+  String finance_job_time_logged(int minutes);
+
+  /// No description provided for @finance_job_time_stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get finance_job_time_stop;
+
+  /// No description provided for @finance_job_time_minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String finance_job_time_minutes(int minutes);
+
+  /// No description provided for @finance_job_time_elapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min elapsed'**
+  String finance_job_time_elapsed(int minutes);
+
+  /// No description provided for @finance_job_time_actual_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual: {actual} min / planned: {planned} min'**
+  String finance_job_time_actual_summary(int actual, int planned);
+
+  /// No description provided for @finance_job_time_category_code_vibe.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibe code'**
+  String get finance_job_time_category_code_vibe;
+
+  /// No description provided for @finance_job_time_category_code_manual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual code'**
+  String get finance_job_time_category_code_manual;
+
+  /// No description provided for @finance_job_time_category_sales_desk.
+  ///
+  /// In en, this message translates to:
+  /// **'Desk sales'**
+  String get finance_job_time_category_sales_desk;
+
+  /// No description provided for @finance_job_time_category_sales_field.
+  ///
+  /// In en, this message translates to:
+  /// **'Field sales'**
+  String get finance_job_time_category_sales_field;
+
+  /// No description provided for @finance_job_time_category_communication.
+  ///
+  /// In en, this message translates to:
+  /// **'Communication'**
+  String get finance_job_time_category_communication;
+
+  /// No description provided for @finance_job_time_category_meditation.
+  ///
+  /// In en, this message translates to:
+  /// **'Meditation'**
+  String get finance_job_time_category_meditation;
+
+  /// No description provided for @finance_job_task_group_code.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get finance_job_task_group_code;
+
+  /// No description provided for @finance_job_task_group_sales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get finance_job_task_group_sales;
+
+  /// No description provided for @finance_job_task_group_speech.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaking'**
+  String get finance_job_task_group_speech;
+
+  /// No description provided for @finance_job_task_group_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get finance_job_task_group_health;
+
+  /// No description provided for @finance_job_task_group_time_log.
+  ///
+  /// In en, this message translates to:
+  /// **'Log time'**
+  String get finance_job_task_group_time_log;
+
+  /// No description provided for @finance_job_task_add_job.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task'**
+  String get finance_job_task_add_job;
+
+  /// No description provided for @finance_job_sub_task_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Task name'**
+  String get finance_job_sub_task_name;
+
+  /// No description provided for @finance_job_time_log.
+  ///
+  /// In en, this message translates to:
+  /// **'Log time'**
+  String get finance_job_time_log;
+
+  /// No description provided for @finance_job_time_log_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Log time'**
+  String get finance_job_time_log_title;
+
+  /// No description provided for @finance_job_task_read_docs.
+  ///
+  /// In en, this message translates to:
+  /// **'Read docs'**
+  String get finance_job_task_read_docs;
+
+  /// No description provided for @finance_job_task_sales_customer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer contact'**
+  String get finance_job_task_sales_customer;
+
+  /// No description provided for @finance_job_task_sales_report.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get finance_job_task_sales_report;
+
+  /// No description provided for @finance_job_task_pick_group.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose work type'**
+  String get finance_job_task_pick_group;
+
+  /// No description provided for @finance_job_task_full_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Full-time'**
+  String get finance_job_task_full_time;
+
+  /// No description provided for @finance_job_task_part_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Part-time'**
+  String get finance_job_task_part_time;
+
+  /// No description provided for @finance_job_task_part_time_hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours worked'**
+  String get finance_job_task_part_time_hours;
+
+  /// No description provided for @finance_job_task_part_time_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Log hours'**
+  String get finance_job_task_part_time_save;
+
+  /// No description provided for @finance_job_task_pick_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose detail'**
+  String get finance_job_task_pick_detail;
+
+  /// No description provided for @finance_job_history.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get finance_job_history;
+
+  /// No description provided for @finance_job_history_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Work history'**
+  String get finance_job_history_title;
+
+  /// No description provided for @finance_job_history_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced from your job time logs'**
+  String get finance_job_history_subtitle;
+
+  /// No description provided for @finance_job_history_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No time logged yet'**
+  String get finance_job_history_empty;
+
+  /// No description provided for @finance_job_present.
+  ///
+  /// In en, this message translates to:
+  /// **'present'**
+  String get finance_job_present;
+
+  /// No description provided for @finance_job_time_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get finance_job_time_notes;
+
+  /// No description provided for @finance_job_time_notes_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you work on?'**
+  String get finance_job_time_notes_hint;
+
+  /// No description provided for @finance_job_customer_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get finance_job_customer_title;
+
+  /// No description provided for @finance_job_customer_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer name'**
+  String get finance_job_customer_name;
+
+  /// No description provided for @finance_job_customer_company.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get finance_job_customer_company;
+
+  /// No description provided for @finance_job_customer_phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get finance_job_customer_phone;
+
+  /// No description provided for @finance_job_customer_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save customer'**
+  String get finance_job_customer_save;
+
+  /// No description provided for @finance_job_customer_existing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} customers saved'**
+  String finance_job_customer_existing(int count);
+
+  /// No description provided for @finance_job_customer_open_form.
+  ///
+  /// In en, this message translates to:
+  /// **'Open customer form'**
+  String get finance_job_customer_open_form;
+
+  /// No description provided for @finance_achievements_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Major financial wins by month and year.'**
+  String get finance_achievements_subtitle;
+
+  /// No description provided for @finance_period_month.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get finance_period_month;
+
+  /// No description provided for @finance_period_year.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get finance_period_year;
+
+  /// No description provided for @finance_daily_in.
+  ///
+  /// In en, this message translates to:
+  /// **'Money in'**
+  String get finance_daily_in;
+
+  /// No description provided for @finance_daily_out.
+  ///
+  /// In en, this message translates to:
+  /// **'Money out'**
+  String get finance_daily_out;
+
+  /// No description provided for @finance_daily_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged this day'**
+  String get finance_daily_empty;
+
+  /// No description provided for @finance_achievements_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No major achievements in this period yet'**
+  String get finance_achievements_empty;
+
+  /// No description provided for @finance_achievements_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Record achievement'**
+  String get finance_achievements_add;
+
+  /// No description provided for @finance_milestone_month_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly income recorded'**
+  String get finance_milestone_month_income;
+
+  /// No description provided for @finance_milestone_month_savings.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly savings added'**
+  String get finance_milestone_month_savings;
+
+  /// No description provided for @finance_milestone_year_total.
+  ///
+  /// In en, this message translates to:
+  /// **'Year total income'**
+  String get finance_milestone_year_total;
+
+  /// No description provided for @finance_tab_billing.
+  ///
+  /// In en, this message translates to:
+  /// **'BILLING'**
+  String get finance_tab_billing;
+
+  /// No description provided for @finance_tab_saving.
+  ///
+  /// In en, this message translates to:
+  /// **'SAVINGS'**
+  String get finance_tab_saving;
+
+  /// No description provided for @island_documents.
+  ///
+  /// In en, this message translates to:
+  /// **'DOCUMENTS'**
+  String get island_documents;
+
+  /// No description provided for @island_editor.
+  ///
+  /// In en, this message translates to:
+  /// **'EDITOR'**
+  String get island_editor;
+
+  /// No description provided for @island_identity.
+  ///
+  /// In en, this message translates to:
+  /// **'IDENTITY'**
+  String get island_identity;
+
+  /// No description provided for @island_id_update.
+  ///
+  /// In en, this message translates to:
+  /// **'ID UPDATE'**
+  String get island_id_update;
+
+  /// No description provided for @island_protocols.
+  ///
+  /// In en, this message translates to:
+  /// **'PROTOCOLS'**
+  String get island_protocols;
+
+  /// No description provided for @island_sync_core.
+  ///
+  /// In en, this message translates to:
+  /// **'SYNC CORE'**
+  String get island_sync_core;
+
+  /// No description provided for @island_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'SETTINGS'**
+  String get island_settings;
+
+  /// No description provided for @island_remote_ssh.
+  ///
+  /// In en, this message translates to:
+  /// **'REMOTE SSH'**
+  String get island_remote_ssh;
+
+  /// No description provided for @island_connected.
+  ///
+  /// In en, this message translates to:
+  /// **'CONNECTED'**
+  String get island_connected;
+
+  /// No description provided for @island_not_active.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT ACTIVE'**
+  String get island_not_active;
+
+  /// No description provided for @island_connect.
+  ///
+  /// In en, this message translates to:
+  /// **'CONNECT'**
+  String get island_connect;
+
+  /// No description provided for @island_tmux_active.
+  ///
+  /// In en, this message translates to:
+  /// **'TMUX ACTIVE'**
+  String get island_tmux_active;
+
+  /// No description provided for @daily_loop_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s loop'**
+  String get daily_loop_title;
+
+  /// No description provided for @daily_loop_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all 4 pillars to extend your streak'**
+  String get daily_loop_subtitle;
+
+  /// No description provided for @daily_loop_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Loop complete — you\'re on fire!'**
+  String get daily_loop_complete;
+
+  /// No description provided for @daily_loop_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String daily_loop_streak(int count);
+
+  /// No description provided for @daily_loop_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} / {total} done'**
+  String daily_loop_progress(int done, int total);
+
+  /// No description provided for @daily_loop_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health pulse'**
+  String get daily_loop_health;
+
+  /// No description provided for @daily_loop_finance.
+  ///
+  /// In en, this message translates to:
+  /// **'Money check'**
+  String get daily_loop_finance;
+
+  /// No description provided for @daily_loop_mind.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood log'**
+  String get daily_loop_mind;
+
+  /// No description provided for @daily_loop_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Project touch'**
+  String get daily_loop_projects;
+
+  /// No description provided for @morning_loop_reminder_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning push reminder'**
+  String get morning_loop_reminder_title;
+
+  /// No description provided for @morning_loop_reminder_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional phone notification — your in-app summary on Home works without this'**
+  String get morning_loop_reminder_subtitle;
+
+  /// No description provided for @morning_briefing_toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning summary on Home'**
+  String get morning_briefing_toggle;
+
+  /// No description provided for @morning_briefing_today_schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s schedule'**
+  String get morning_briefing_today_schedule;
+
+  /// No description provided for @morning_briefing_today_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No events today — a clear day to plan.'**
+  String get morning_briefing_today_empty;
+
+  /// No description provided for @morning_briefing_today_connect_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Google or device calendar to see today\'s events here.'**
+  String get morning_briefing_today_connect_hint;
+
+  /// No description provided for @morning_briefing_today_more.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more in calendar'**
+  String morning_briefing_today_more(int count);
+
+  /// No description provided for @morning_briefing_all_day.
+  ///
+  /// In en, this message translates to:
+  /// **'All day'**
+  String get morning_briefing_all_day;
+
+  /// No description provided for @morning_briefing_open_calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Open calendar'**
+  String get morning_briefing_open_calendar;
+
+  /// No description provided for @morning_briefing_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get morning_briefing_title;
+
+  /// No description provided for @morning_briefing_title_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning, {name}'**
+  String morning_briefing_title_name(String name);
+
+  /// No description provided for @morning_briefing_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Care for body and mind — then finish your 4-pillar loop today.'**
+  String get morning_briefing_subtitle;
+
+  /// No description provided for @morning_briefing_yesterday_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get morning_briefing_yesterday_title;
+
+  /// No description provided for @morning_briefing_yesterday_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'A quiet day — today is a fresh start.'**
+  String get morning_briefing_yesterday_empty;
+
+  /// No description provided for @morning_briefing_yesterday_steps.
+  ///
+  /// In en, this message translates to:
+  /// **'{steps} steps'**
+  String morning_briefing_yesterday_steps(int steps);
+
+  /// No description provided for @morning_briefing_yesterday_water.
+  ///
+  /// In en, this message translates to:
+  /// **'{ml} ml water'**
+  String morning_briefing_yesterday_water(int ml);
+
+  /// No description provided for @morning_briefing_yesterday_sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h sleep'**
+  String morning_briefing_yesterday_sleep(String hours);
+
+  /// No description provided for @morning_briefing_yesterday_loop.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total} pillars completed'**
+  String morning_briefing_yesterday_loop(int done, int total);
+
+  /// No description provided for @morning_briefing_motivation_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s motivation'**
+  String get morning_briefing_motivation_title;
+
+  /// No description provided for @morning_briefing_motivation_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday was light — one small win today resets your rhythm.'**
+  String get morning_briefing_motivation_empty;
+
+  /// No description provided for @morning_briefing_motivation_all_done.
+  ///
+  /// In en, this message translates to:
+  /// **'You closed yesterday strong — ride that momentum into today.'**
+  String get morning_briefing_motivation_all_done;
+
+  /// No description provided for @morning_briefing_motivation_strong.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid progress yesterday — one more pillar today keeps the streak alive.'**
+  String get morning_briefing_motivation_strong;
+
+  /// No description provided for @morning_briefing_motivation_mid.
+  ///
+  /// In en, this message translates to:
+  /// **'You moved forward yesterday — stack another small win this morning.'**
+  String get morning_briefing_motivation_mid;
+
+  /// No description provided for @morning_briefing_motivation_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday was a rest day — water, a walk, or a mood log is enough to begin.'**
+  String get morning_briefing_motivation_low;
+
+  /// No description provided for @morning_briefing_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} pillars done today'**
+  String morning_briefing_progress(int done, int total);
+
+  /// No description provided for @morning_briefing_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start my day'**
+  String get morning_briefing_start;
+
+  /// No description provided for @morning_briefing_log_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Log mood first'**
+  String get morning_briefing_log_mood;
+
+  /// No description provided for @aiMemoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen Memory'**
+  String get aiMemoryTitle;
+
+  /// No description provided for @aiMemoryDraftsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for review'**
+  String get aiMemoryDraftsTitle;
+
+  /// No description provided for @aiMemoryConfirmedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed memories'**
+  String get aiMemoryConfirmedTitle;
+
+  /// No description provided for @aiMemoryNoDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'No memories waiting for review.'**
+  String get aiMemoryNoDrafts;
+
+  /// No description provided for @aiMemoryNoConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'No confirmed memories yet.'**
+  String get aiMemoryNoConfirmed;
+
+  /// No description provided for @aiMemoryAutoCaptureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic capture'**
+  String get aiMemoryAutoCaptureTitle;
+
+  /// No description provided for @aiMemoryAutoCaptureSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture important screens automatically. Up to {cap} per day.'**
+  String aiMemoryAutoCaptureSubtitle(int cap);
+
+  /// No description provided for @aiMemoryDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic capture is off by default. When on, the app records screens you use and extracts text from them on this device or by upload. Nothing is added to AI prompts until you confirm it. You can delete all captures at any time.'**
+  String get aiMemoryDisclosure;
+
+  /// No description provided for @aiMemoryDailyCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily capture limit'**
+  String get aiMemoryDailyCap;
+
+  /// No description provided for @aiMemorySyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get aiMemorySyncNow;
+
+  /// No description provided for @aiMemoryDeleteAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all'**
+  String get aiMemoryDeleteAll;
+
+  /// No description provided for @aiMemoryDeleteAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all captured screens and their memories? This cannot be undone.'**
+  String get aiMemoryDeleteAllConfirm;
+
+  /// No description provided for @aiMemoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get aiMemoryConfirm;
+
+  /// No description provided for @aiMemoryDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get aiMemoryDiscard;
 }
 
 class _AppLocalizationsDelegate

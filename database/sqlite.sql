@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS skills (
     skillName TEXT NOT NULL,
     skillCategory TEXT,
     proficiencyLevel TEXT DEFAULT 'beginner',
-    yearsOfExperience INTEGER DEFAULT 0,
+    point INTEGER DEFAULT 0,
     description TEXT,
     isFeatured BOOLEAN DEFAULT 0,
     createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -356,7 +356,7 @@ INSERT INTO assets (personID, assetName, assetCategory, currentEstimatedValue, c
 VALUES (1, 'MacBook Pro', 'electronics', 2000.00, 'USD');
 
 -- Insert Skills
-INSERT INTO skills (personID, skillName, proficiencyLevel, yearsOfExperience, isFeatured) 
+INSERT INTO skills (personID, skillName, proficiencyLevel, point, isFeatured) 
 VALUES (1, 'Flutter', 'expert', 4, 1);
 
 -- Insert Blog Posts

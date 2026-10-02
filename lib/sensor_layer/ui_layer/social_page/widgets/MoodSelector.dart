@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 
 class MoodSelector extends StatelessWidget {
   final int selectedMood;
@@ -16,11 +17,11 @@ class MoodSelector extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildMoodItem(context, 1, AppLocalizations.of(context)!.mood_awful, Icons.sentiment_very_dissatisfied_rounded, const Color(0xFF8000FF)),
-        _buildMoodItem(context, 2, AppLocalizations.of(context)!.mood_bad, Icons.sentiment_dissatisfied_rounded, const Color(0xFF2C3E50)),
-        _buildMoodItem(context, 3, AppLocalizations.of(context)!.mood_meh, Icons.sentiment_neutral_rounded, const Color(0xFFE0E0E0)),
-        _buildMoodItem(context, 4, AppLocalizations.of(context)!.mood_good, Icons.sentiment_satisfied_alt_rounded, const Color(0xFF00FF88)),
-        _buildMoodItem(context, 5, AppLocalizations.of(context)!.mood_rad, Icons.sentiment_very_satisfied_rounded, const Color(0xFF00FFFF)),
+        _buildMoodItem(context, 1, AppLocalizations.of(context)!.mood_awful, Icons.sentiment_very_dissatisfied_rounded, mindMoodAccent(1)),
+        _buildMoodItem(context, 2, AppLocalizations.of(context)!.mood_bad, Icons.sentiment_dissatisfied_rounded, mindMoodAccent(2)),
+        _buildMoodItem(context, 3, AppLocalizations.of(context)!.mood_meh, Icons.sentiment_neutral_rounded, mindMoodAccent(3)),
+        _buildMoodItem(context, 4, AppLocalizations.of(context)!.mood_good, Icons.sentiment_satisfied_alt_rounded, mindMoodAccent(4)),
+        _buildMoodItem(context, 5, AppLocalizations.of(context)!.mood_rad, Icons.sentiment_very_satisfied_rounded, mindMoodAccent(5)),
       ],
     );
   }

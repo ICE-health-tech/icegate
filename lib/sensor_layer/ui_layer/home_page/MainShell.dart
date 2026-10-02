@@ -23,6 +23,8 @@ import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/CanvasDynamicIsland.d
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightInputPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/HubLoader.dart';
 import 'package:provider/provider.dart';
 
 class MainShell extends StatefulWidget {
@@ -148,6 +150,13 @@ class _MainShellState extends State<MainShell> {
 
     final bool wideLayout = _wideChromeLayout(context);
     final width = MediaQuery.sizeOf(context).width;
+    // When the workspace rails are visible, shift the DynamicIsland to avoid
+    // overlapping the left sidebar UI.
+    final bool useWorkspaceRails = WorkspaceSidebarLayout.useWorkspace(width);
+    const double analysisRailWidth = 40;
+    const double pluginRailWidth = 56;
+    final double leftRailInset =
+        useWorkspaceRails ? (analysisRailWidth + pluginRailWidth) : 0.0;
     final double responsiveSize = wideLayout
         ? (width * 0.035).clamp(40.0, 50.0)
         : (width * 0.5).clamp(40.0, 68.0);
@@ -182,25 +191,26 @@ class _MainShellState extends State<MainShell> {
         key: _captureBoundaryKey,
         child: Stack(
           children: [
-            widget.child,
+            HubRouteGate(child: widget.child),
           if (!shouldHideAppBar)
             Positioned(
               top: 0,
-              left: 0,
+              left: leftRailInset,
               right: 0,
               child: SafeArea(
+                bottom: false,
                 child: SizedBox(
-                  height: 50,
+                  height: 54,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: currentRoute.startsWith('/finance')
-                          ? 0.0
+                    padding: EdgeInsets.only(
+                      left: wideLayout && currentRoute == '/projects'
+                          ? 12.0
                           : 20.0,
+                      right: 20,
+                      bottom: 2,
                     ),
                     child: Align(
-                      alignment: currentRoute.startsWith('/finance')
-                          ? Alignment.center
-                          : Alignment.centerLeft,
+                      alignment: Alignment.centerLeft,
                       child: CanvasDynamicIsland(
                         personBlock: context.watch<PersonBlock>(),
                       ),

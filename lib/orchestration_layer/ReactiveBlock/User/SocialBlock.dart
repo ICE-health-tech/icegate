@@ -1,9 +1,46 @@
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 
 class SocialBlock {
   final activeTab = signal(0);
   final totalTabs = 4;
+  /// Bumped when mind focus trends are saved (reload Focus tab).
+  final focusTrendsRevision = signal(0);
+  /// Selected focus area — tints the whole Mind/Social page.
+  final activeFocusTrend = signal<MindFocusTrend?>(null);
+
+  void notifyFocusTrendsChanged() {
+    focusTrendsRevision.value++;
+  }
+
+  Future<void> setActiveFocusTrend(
+    MindFocusTrend? trend, {
+    required String personId,
+  }) async {
+    activeFocusTrend.value = trend;
+    await MindFocusTrendPrefs.saveActiveFocusId(personId, trend?.id);
+  }
+
+  Future<void> restoreActiveFocus(String personId) async {
+    final id = await MindFocusTrendPrefs.loadActiveFocusId(personId);
+    if (id == null || id.isEmpty) {
+      untracked(() => activeFocusTrend.value = null);
+      return;
+    }
+    final trends = await MindFocusTrendPrefs.load(personId);
+    MindFocusTrend? match;
+    for (final t in trends) {
+      if (t.id == id) {
+        match = t;
+        break;
+      }
+    }
+    untracked(() => activeFocusTrend.value = match);
+    if (match == null) {
+      await MindFocusTrendPrefs.saveActiveFocusId(personId, null);
+    }
+  }
 
   SocialBlock();
 

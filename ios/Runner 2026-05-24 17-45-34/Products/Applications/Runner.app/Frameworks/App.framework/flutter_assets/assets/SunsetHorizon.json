@@ -1,0 +1,57 @@
+{
+    "theme_name": "Sunset Horizon",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFFFF7E5F",
+    "color_scheme": {
+        "primary": "0xFFFF7E5F",
+        "onPrimary": "0xFF3E1F18",
+        "secondary": "0xFFFEB47B",
+        "onSecondary": "0xFF3E2D1E",
+        "tertiary": "0xFF6A82FB",
+        "surface": "0xFF2D2436",
+        "onSurface": "0xFFFFEAD0",
+        "background": "0xFF18151F",
+        "onBackground": "0xFFFFEAD0"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF18151F",
+            "foregroundColor": "0xFFFFEAD0",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFFFF7E5F",
+            "foregroundColor": "0xFF3E1F18",
+            "borderRadius": 12.0,
+            "elevation": 4.0
+        },
+        "card": {
+            "backgroundColor": "0xFF352B40",
+            "elevation": 2.0,
+            "borderRadius": 20.0
+        },
+        "icon": {
+            "color": "0xFFFEB47B",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Poppins",
+        "headlineLarge": {
+            "size": 30.0,
+            "weight": "bold",
+            "color": "0xFFFF7E5F"
+        },
+        "bodyMedium": {
+            "size": 15.0,
+            "weight": "normal",
+            "color": "0xFFFFEAD0"
+        },
+        "labelLarge": {
+            "size": 15.0,
+            "weight": "bold",
+            "color": "0xFFFFFFFF"
+        }
+    }
+}

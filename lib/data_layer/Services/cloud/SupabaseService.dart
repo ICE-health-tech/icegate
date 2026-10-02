@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:math' show min;
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
-import 'package:ice_gate/data_layer/Services/cloud/supabase_payload_codec.dart';
+import 'package:ice_gate/data_layer/Services/cloud/SupabasePayloadCodec.dart';
 
 /// SupabaseService handles data synchronization between the local Drift database
 /// and the Supabase cloud backend. It replaces direct database-to-cloud calls
@@ -35,6 +35,7 @@ class SupabaseService {
     'project_notes': {'extension'},
     // Local Drift has tenant_id; public.subscriptions on Supabase does not (see migrations).
     'subscriptions': {'tenant_id'},
+    'gratitude_entries': {'avatar_local_path'},
   };
 
   Map<String, dynamic> _encodeTransformedRow(
@@ -147,9 +148,12 @@ class SupabaseService {
     debugPrint("🔄 [SupabaseService] Starting full sync down for $personId...");
 
     final tablesToSync = [
+      'achievements',
       'journal_activity_options',
       'mind_logs',
       'projects',
+      'goals',
+      'skills',
       'focus_sessions',
       'health_metrics',
       'meals',
@@ -170,10 +174,23 @@ class SupabaseService {
       'external_widgets',
       'person_widgets',
       'achievements',
+      'quotes',
       'heart_rate_logs',
       'oxygen_saturation_logs',
-      'ai_memories',
+'ai_memories',
       'capture_queue',
+      'integration_accounts',
+      'dev_quick_tabs',
+      'recurring_incomes',
+      'job_positions',
+      'bonuses',
+      'job_work_days',
+      'job_work_day_plans',
+      'job_time_logs',
+      'job_sub_tasks',
+      'gratitude_entries',
+      'events',
+      'project_notes'
     ];
 
     for (final table in tablesToSync) {
@@ -184,14 +201,25 @@ class SupabaseService {
   }
 
   /// Syncs a single table from Supabase to local DB.
-  Future<void> syncTableDown(String table, String personId) async {
+  Future<void> syncTableDown(
+    String table,
+    String personId, {
+    DateTime? occurredAfter,
+    DateTime? occurredBefore,
+  }) async {
     try {
       debugPrint("📥 [SupabaseService] Syncing $table down...");
 
-      final response = await client
-          .from(table)
-          .select()
-          .eq('person_id', personId);
+      var query = client.from(table).select().eq('person_id', personId);
+      if (table == 'events' &&
+          occurredAfter != null &&
+          occurredBefore != null) {
+        query = query
+            .gte('occurred_at', occurredAfter.toUtc().toIso8601String())
+            .lte('occurred_at', occurredBefore.toUtc().toIso8601String());
+      }
+
+      final response = await query;
 
       debugPrint(
         "📦 [SupabaseSync] Received ${response.length} records for $table",
@@ -241,6 +269,16 @@ class SupabaseService {
       case 'projects':
         for (final r in records) {
           await database.projectsDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'goals':
+        for (final r in records) {
+          await database.growthDAO.upsertFromSupabaseGoal(r);
+        }
+        break;
+      case 'skills':
+        for (final r in records) {
+          await database.growthDAO.upsertFromSupabaseSkill(r);
         }
         break;
       case 'focus_sessions':
@@ -358,9 +396,73 @@ class SupabaseService {
           await database.achievementsDAO.upsertFromSupabase(r);
         }
         break;
+      case 'quotes':
+        for (final r in records) {
+          await database.quoteDAO.upsertFromSupabase(r);
+        }
+        break;
       case 'meals':
         for (final r in records) {
           await database.healthMealDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'integration_accounts':
+        for (final r in records) {
+          await database.integrationAccountDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'dev_quick_tabs':
+        for (final r in records) {
+          await database.devQuickTabsDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'recurring_incomes':
+        for (final r in records) {
+          await database.financeDAO.upsertFromSupabaseRecurringIncome(r);
+        }
+        await database.financeDAO.reconcileRecurringIncomes(
+          records.map((r) => r['id'] as String).toSet(),
+          records.isNotEmpty ? records.first['person_id'] as String : '',
+        );
+        break;
+      case 'job_positions':
+        for (final r in records) {
+          await database.financeDAO.upsertFromSupabaseJobPosition(r);
+        }
+        break;
+      case 'bonuses':
+        for (final r in records) {
+          await database.financeDAO.upsertFromSupabaseBonus(r);
+        }
+        break;
+      case 'job_work_days':
+        for (final r in records) {
+          await database.jobWorkTrackingDAO.upsertWorkDayFromSupabase(r);
+        }
+        break;
+      case 'job_work_day_plans':
+        for (final r in records) {
+          await database.jobWorkTrackingDAO.upsertPlanFromSupabase(r);
+        }
+        break;
+      case 'job_time_logs':
+        for (final r in records) {
+          await database.jobWorkTrackingDAO.upsertTimeLogFromSupabase(r);
+        }
+        break;
+      case 'job_sub_tasks':
+        for (final r in records) {
+          await database.jobWorkTrackingDAO.upsertSubTaskFromSupabase(r);
+        }
+        break;
+      case 'gratitude_entries':
+        for (final r in records) {
+          await database.gratitudeDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'events':
+        for (final r in records) {
+          await database.eventsDAO.upsertFromSupabase(r);
         }
         break;
       default:
@@ -377,6 +479,8 @@ class SupabaseService {
     var result = Map<String, dynamic>.from(data);
     if (table == 'project_notes') {
       result = _projectNotesToRemoteColumns(result);
+    } else if (table == 'projects') {
+      result = _projectsToRemoteColumns(result);
     }
     result.removeWhere((key, _) => _globalLocalOnlyColumns.contains(key));
     final tableSpecific = _tableLocalOnlyColumns[table];
@@ -387,12 +491,33 @@ class SupabaseService {
   }
 
   /// PostgREST expects snake_case; Drift [toJson] / some maps use Dart names.
+  Map<String, dynamic> _projectsToRemoteColumns(Map<String, dynamic> row) {
+    const dartToSql = <String, String>{
+      'tenantID': 'tenant_id',
+      'projectID': 'project_id',
+      'parentProjectId': 'parent_project_id',
+      'personID': 'person_id',
+      'sshHostId': 'ssh_host_id',
+      'remotePath': 'remote_path',
+      'aiModel': 'ai_model',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at',
+    };
+    final out = <String, dynamic>{};
+    row.forEach((key, value) {
+      out[dartToSql[key] ?? key] = value;
+    });
+    return out;
+  }
+
   Map<String, dynamic> _projectNotesToRemoteColumns(Map<String, dynamic> row) {
     const dartToSql = <String, String>{
       'tenantID': 'tenant_id',
       'noteID': 'note_id',
       'personID': 'person_id',
       'projectID': 'project_id',
+      'localPath': 'local_path',
+      'remotePath': 'remote_path',
       'createdAt': 'created_at',
       'updatedAt': 'updated_at',
     };

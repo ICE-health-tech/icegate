@@ -1,32 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/Constraint/HealthConstraint.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/HealthSourceService.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/health_page/models/HealthMetric.dart';
+import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricsProtocol.dart';
 // import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:provider/provider.dart' show ReadContext;
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
-/// Protocol for managing health metrics data
-abstract class HealthMetricsProtocol {
-  /// Get the current health metrics
-  HealthMetrics? getHealthMetrics();
-
-  /// Update health metrics
-  Future<bool> updateHealthMetrics(HealthMetrics metrics);
-
-  /// Update specific metric value
-  Future<bool> updateMetric(String metricId, dynamic value);
-
-  /// Get metric by ID
-  dynamic getMetric(String metricId);
-
-  /// Validate health metrics
-  Map<String, String?> validateHealthMetrics(HealthMetrics metrics);
-}
-
-/// Default implementation of HealthMetricsProtocol
+/// Default implementation of [HealthMetricsProtocol] (profile aggregate).
 class HealthMetricsService implements HealthMetricsProtocol {
   HealthMetrics? _currentMetrics;
 
@@ -155,13 +139,22 @@ class HealthMetricsService implements HealthMetricsProtocol {
   }
 }
 
-/// Utility class for health metrics data and default values
-class HealthMetricsData {
+/// Loads dashboard tiles and implements [HealthDisplayMetricsProtocol].
+class HealthMetricsData implements HealthDisplayMetricsProtocol {
+  const HealthMetricsData();
+
+  static const HealthDisplayMetricsProtocol shared = HealthMetricsData();
+
   /// Get default health metrics for display
-  static List<HealthMetric> getDefaultMetrics(BuildContext context) {
+  @override
+  List<HealthMetricProtocol> getDefaultMetrics(BuildContext context) {
+    return _defaultMetrics(context);
+  }
+
+  static List<HealthMetricProtocol> _defaultMetrics(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return [
-      HealthMetric(
+      HealthMetricProtocol(
         id: 'steps',
         name: 'steps',
         value: '8,432',
@@ -174,7 +167,7 @@ class HealthMetricsData {
         trendPositive: true,
         detailPage: '/health/steps',
       ),
-      HealthMetric(
+      HealthMetricProtocol(
         id: 'heart_rate',
         name: 'heart_rate',
         value: '72',
@@ -188,7 +181,7 @@ class HealthMetricsData {
         isFuture: true,
         availabilityMessage: 'Apple Watch Required',
       ),
-      HealthMetric(
+      HealthMetricProtocol(
         id: 'sleep',
         name: 'sleep',
         value: '7.5',
@@ -205,7 +198,7 @@ class HealthMetricsData {
         isFuture: true,
         availabilityMessage: 'Coming Soon',
       ),
-      HealthMetric(
+      HealthMetricProtocol(
         id: 'water',
         name: 'water',
         value: '6',
@@ -217,7 +210,7 @@ class HealthMetricsData {
         trend: '0%',
         trendPositive: null,
       ),
-      HealthMetric(
+      HealthMetricProtocol(
         id: 'exercise',
         name: 'exercise',
         value: '45',
@@ -230,7 +223,7 @@ class HealthMetricsData {
         trendPositive: true,
         detailPage: '/health/steps',
       ),
-      HealthMetric(
+      HealthMetricProtocol(
         id: 'food',
         name: 'food',
         value: '0',
@@ -242,7 +235,7 @@ class HealthMetricsData {
         trendPositive: null,
         detailPage: '/health/food/dashboard',
       ),
-      HealthMetric(
+      HealthMetricProtocol(
         id: 'focus',
         name: 'focus',
         value: '0',
@@ -255,7 +248,7 @@ class HealthMetricsData {
         trendPositive: true,
         detailPage: '/health/focus',
       ),
-      HealthMetric(
+      HealthMetricProtocol(
         id: 'oxygen_saturation',
         name: 'oxygen_saturation',
         value: '0',
@@ -270,7 +263,16 @@ class HealthMetricsData {
     ];
   }
 
-  static Future<Map<String, HealthMetric>> getMetricsByDay(
+  @override
+  Future<Map<String, HealthMetricProtocol>> getMetricsByDay(
+    String personId,
+    DateTime day,
+    BuildContext context,
+  ) async {
+    return _loadMetricsByDay(personId, day, context);
+  }
+
+  static Future<Map<String, HealthMetricProtocol>> _loadMetricsByDay(
     String personId,
     DateTime day,
     BuildContext context,
@@ -285,7 +287,7 @@ class HealthMetricsData {
       day,
     );
     double calories = 0;
-    print("Day that get fetch calories for: $day");
+    appLog("Day that get fetch calories for: $day");
     try {
       calories = await healthMealDAO.getCaloriesByDate(day);
     } catch (e) {
@@ -364,7 +366,7 @@ class HealthMetricsData {
 
     // 7. Build metric map
     return {
-      'food': HealthMetric(
+      'food': HealthMetricProtocol(
         id: 'food',
         name: 'food',
         value: calories.round().toString(),
@@ -378,7 +380,7 @@ class HealthMetricsData {
         source: 'Manual',
         sourceIcon: Icons.edit_note_rounded,
       ),
-      'steps': HealthMetric(
+      'steps': HealthMetricProtocol(
         id: 'steps',
         name: 'steps',
         value: currentSteps.toString(),
@@ -397,7 +399,7 @@ class HealthMetricsData {
           rawSource ?? HealthSourceService.sourceAppleHealth,
         ),
       ),
-      'weight': HealthMetric(
+      'weight': HealthMetricProtocol(
         id: 'weight',
         name: 'weight',
         value: (metricsLocal?.weightKg ?? 0.0).toStringAsFixed(1),
@@ -416,7 +418,7 @@ class HealthMetricsData {
           fallback: Icons.monitor_weight_rounded,
         ),
       ),
-      'water': HealthMetric(
+      'water': HealthMetricProtocol(
         id: 'water',
         name: 'water',
         value: waterMl.toString(),
@@ -431,7 +433,7 @@ class HealthMetricsData {
         source: 'Manual',
         sourceIcon: Icons.edit_note_rounded,
       ),
-      'exercise': HealthMetric(
+      'exercise': HealthMetricProtocol(
         id: 'exercise',
         name: 'exercise',
         value: exerciseMin.toString(),
@@ -450,7 +452,7 @@ class HealthMetricsData {
           rawSource ?? HealthSourceService.sourceGT6,
         ),
       ),
-      'heart_rate': HealthMetric(
+      'heart_rate': HealthMetricProtocol(
         id: 'heart_rate',
         name: 'heart_rate',
         value: heartRate > 0 ? heartRate.toString() : '--',
@@ -474,7 +476,7 @@ class HealthMetricsData {
           rawSource ?? HealthSourceService.sourceGT6,
         ),
       ),
-      'sleep': HealthMetric(
+      'sleep': HealthMetricProtocol(
         id: 'sleep',
         name: 'sleep',
         value: sleepHrs > 0 ? sleepHrs.toStringAsFixed(1) : '--',
@@ -495,7 +497,7 @@ class HealthMetricsData {
           rawSource ?? HealthSourceService.sourceGT6,
         ),
       ),
-      'focus': HealthMetric(
+      'focus': HealthMetricProtocol(
         id: 'focus',
         name: 'focus',
         value: focusMin.toString(),
@@ -513,7 +515,7 @@ class HealthMetricsData {
         source: 'App',
         sourceIcon: Icons.apps_rounded,
       ),
-      'oxygen_saturation': HealthMetric(
+      'oxygen_saturation': HealthMetricProtocol(
         id: 'oxygen_saturation',
         name: 'oxygen_saturation',
         value: oxygenSaturation > 0

@@ -4,12 +4,13 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/link_layer/capture/capture_provider.dart';
 import 'package:ice_gate/link_layer/capture/media_projection_capture_provider.dart';
 import 'package:ice_gate/link_layer/capture/portal_capture_provider.dart';
 import 'package:ice_gate/link_layer/capture/repaint_capture_provider.dart';
-import 'package:ice_gate/link_layer/storage_services/minio_service.dart';
+import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/Services/ScreenshotMemoryService.dart';
 import 'package:path/path.dart' as p;
@@ -300,8 +301,8 @@ class AutoCaptureJob {
       final effective = signal ??
           BehaviourSignal(route: _currentRoute, dwellSeconds: 60);
 
-      final score = score(effective);
-      if (score.score < _scoring.threshold) return;
+      final captureScore = score(effective);
+      if (captureScore.score < _scoring.threshold) return;
 
       if (!await hasBudgetRemaining()) {
         debugPrint(
@@ -318,7 +319,7 @@ class AutoCaptureJob {
           await _captureInApp(boundaryKey, effective);
       if (result == null) return;
 
-      await _persistCapture(db, personId, result, score);
+      await _persistCapture(db, personId, result, captureScore);
     } catch (e) {
       debugPrint('📷 [AutoCapture] tick failed — $e');
     } finally {

@@ -4,18 +4,32 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+// Preview removed.
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as p;
+import 'package:ice_gate/link_layer/note_export/NoteExportPreferences.dart';
+import 'package:ice_gate/link_layer/note_export/NoteExportService.dart';
+import 'package:ice_gate/link_layer/note_export/NoteExportSettingsSheet.dart';
+import 'package:ice_gate/link_layer/note_export/DocxUtils.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindGratitudePanel.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
+import 'package:ice_gate/utils/app_log.dart';
+import 'package:ice_gate/utils/journal_media.dart';
+import 'package:ice_gate/utils/sync_device.dart';
 
 class TextEditorPage extends StatefulWidget {
   final ProjectNoteData? note;
@@ -49,10 +63,15 @@ class _TextEditorPageState extends State<TextEditorPage>
   bool _hasUnsavedChanges = false;
   bool _isSaving = false;
   bool _focusMode = false;
-  bool _isPreview = false;
+  ProjectNoteData? _activeNote;
+  // Preview mode removed (always editor).
   Timer? _autoSaveTimer;
   DateTime? _lastSaved;
   File? _openedFile; // Track the currently opened local file
+
+  /// Image paths parsed out of markdown — shown as previews above the editor body.
+  List<String> _inlineImagePaths = [];
+  bool _editorImagesSynced = false;
 
   // Mood selection
   String? _selectedMood;
@@ -63,6 +82,121 @@ class _TextEditorPageState extends State<TextEditorPage>
     'Bad',
     'Awful',
   ];
+
+  IconData _moodIconData(String mood) {
+    return switch (mood.toLowerCase()) {
+      'awesome' => Icons.sentiment_very_satisfied_rounded,
+      'good' => Icons.sentiment_satisfied_alt_rounded,
+      'meh' => Icons.sentiment_neutral_rounded,
+      'bad' => Icons.sentiment_dissatisfied_rounded,
+      'awful' => Icons.sentiment_very_dissatisfied_rounded,
+      _ => Icons.sentiment_neutral_rounded,
+    };
+  }
+
+  String _moodLabel(AppLocalizations l10n, String mood) {
+    return switch (mood) {
+      'Awesome' => l10n.mood_rad,
+      'Good' => l10n.mood_good,
+      'Meh' => l10n.mood_meh,
+      'Bad' => l10n.mood_bad,
+      'Awful' => l10n.mood_awful,
+      _ => mood,
+    };
+  }
+
+  String? _resolveTenantId(PersonBlock personBlock) {
+    final profile = personBlock.information.value.profiles;
+    final user = Supabase.instance.client.auth.currentUser;
+    final Object? raw = (profile.tenantId != null &&
+            profile.tenantId!.isNotEmpty)
+        ? profile.tenantId
+        : (user?.appMetadata['tenant_id'] ??
+            user?.userMetadata?['tenant_id']);
+    if (raw == null) return null;
+    final s = raw.toString().trim();
+    return s.isEmpty ? null : s;
+  }
+
+  Widget _buildMoodIconBubble({
+    required ColorScheme colorScheme,
+    required String mood,
+    required bool selected,
+    double size = 52,
+  }) {
+    final color = mindMoodAccent(_moodScore(mood));
+    final icon = _moodIconData(mood);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: selected
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(color, Colors.white, 0.18) ?? color,
+                  color.withValues(alpha: 0.62),
+                ],
+              )
+            : null,
+        color: selected ? null : colorScheme.surface.withValues(alpha: 0.48),
+        border: Border.all(
+          color: selected
+              ? color.withValues(alpha: 0.95)
+              : color.withValues(alpha: 0.28),
+          width: selected ? 2.4 : 1.2,
+        ),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.42),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+      ),
+      child: Icon(
+        icon,
+        size: size * 0.5,
+        color: selected ? Colors.white : color,
+      ),
+    );
+  }
+
+  bool get _isJournalNote {
+    final category = _activeNote?.category ?? widget.initialCategory;
+    return category == 'social';
+  }
+
+  int _moodScore(String? mood) {
+    return switch (mood?.toLowerCase()) {
+      'awful' => 1,
+      'bad' => 2,
+      'meh' => 3,
+      'good' => 4,
+      'awesome' => 5,
+      _ => 3,
+    };
+  }
+
+  Color _journalAccent() => mindMoodAccent(_moodScore(_selectedMood));
 
   /// Maps legacy DB values (emoji / old labels) to current [_moodOptions].
   static String? _normalizeMoodForDropdown(String? stored) {
@@ -114,24 +248,35 @@ class _TextEditorPageState extends State<TextEditorPage>
       try {
         initialContent = widget.initialFile!.readAsStringSync();
         _lastSaved = widget.initialFile!.lastModifiedSync();
+        final parsed = _parseInitialContent(initialContent);
+        _inlineImagePaths = parsed.images;
+        initialContent = parsed.body;
       } catch (e) {
-        print("Error reading initial file: $e");
+        appLog("Error reading initial file: $e");
       }
     } else if (widget.note != null) {
       _lastSaved = widget.note?.updatedAt;
       if (widget.note!.content.isNotEmpty) {
-        initialContent = _extractContent(widget.note!.content);
+        final parsed = _parseInitialContent(widget.note!.content);
+        _inlineImagePaths = parsed.images;
+        initialContent = parsed.body;
       }
     }
 
     _titleController = TextEditingController(text: title);
 
-    // If initialImage is provided for a new note, insert it into the content
     if (widget.initialImage != null && initialContent.isEmpty) {
-      initialContent = "![Image](${widget.initialImage})\n\n";
+      _inlineImagePaths = [widget.initialImage!];
+    } else if (widget.initialImage != null) {
+      _inlineImagePaths = [
+        widget.initialImage!,
+        ..._inlineImagePaths,
+      ];
     }
 
     _contentController = TextEditingController(text: initialContent);
+    _undoStack.add(initialContent);
+    _activeNote = widget.note;
     _editorFocusNode = FocusNode();
     _titleFocusNode = FocusNode();
 
@@ -165,33 +310,68 @@ class _TextEditorPageState extends State<TextEditorPage>
       }
       _scheduleAutoSave();
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _pullEditorImages());
   }
 
-  /// Extract content — if JSON (old Quill Delta), convert to plain text.
-  /// Otherwise return as-is (markdown).
-  String _extractContent(String raw) {
+  String _fullNoteContent() {
+    return JournalMedia.composeContent(
+      imagePaths: _inlineImagePaths,
+      body: _contentController.text,
+    );
+  }
+
+  ({List<String> images, String body}) _parseInitialContent(String raw) {
+    final images = JournalMedia.extractAllImagePaths(raw);
+    final body = JournalMedia.extractPlainBody(raw);
+    return (images: images, body: body);
+  }
+
+  Future<void> _pullEditorImages() async {
+    if (_editorImagesSynced || !mounted || _inlineImagePaths.isEmpty) return;
+
+    final personId =
+        context.read<PersonBlock>().currentPersonID.value ??
+        Supabase.instance.client.auth.currentUser?.id;
+    if (personId == null || personId.isEmpty) return;
+
+    _editorImagesSynced = true;
     try {
-      final decoded = jsonDecode(raw);
-      if (decoded is List) {
-        // Quill Delta format — extract plain text
-        final buffer = StringBuffer();
-        for (final op in decoded) {
-          if (op is Map && op.containsKey('insert')) {
-            buffer.write(op['insert']);
-          }
-        }
-        return buffer.toString().trim();
+      final storage = context.read<StorageBlock>();
+      final dao = context.read<ProjectNoteDAO>();
+      await storage.backfillProjectNoteMediaFromContent(
+        personId: personId,
+        notesDao: dao,
+        category: _activeNote?.category,
+      );
+      if (_activeNote != null) {
+        final fresh = await dao.getNoteById(_activeNote!.id);
+        if (fresh != null) _activeNote = fresh;
+        await storage.pullProjectNoteImagesFromCloud(
+          personId: personId,
+          notes: [if (_activeNote != null) _activeNote!],
+        );
+      } else {
+        await storage.pullJournalImagePaths(
+          personId: personId,
+          imagePaths: _inlineImagePaths,
+        );
       }
-    } catch (_) {}
-    // Already plain text / markdown
-    return raw;
+      if (mounted) setState(() {});
+    } catch (e) {
+      appLog('TextEditorPage: image pull failed: $e');
+    }
   }
 
   void _scheduleAutoSave() {
     _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(const Duration(seconds: 5), () {
-      if (_hasUnsavedChanges && mounted) {
-        _saveNote(showSnackbar: false);
+    _autoSaveTimer = Timer(const Duration(seconds: 1), () {
+      if (!_hasUnsavedChanges || !mounted) return;
+      if (_openedFile != null) {
+        // Never trigger a "Save As" picker from autosave.
+        _saveToLocalFile();
+      } else {
+        _saveNote(showConfirmation: false);
       }
     });
   }
@@ -255,8 +435,18 @@ class _TextEditorPageState extends State<TextEditorPage>
         final destination = File('${vaultDir.path}/$fileName');
         await imageFile.copy(destination.path);
 
-        // Insert markdown link at cursor
-        _insertMarkdown('![Image]($fileName)');
+        final personId =
+            context.read<PersonBlock>().currentPersonID.value ??
+            Supabase.instance.client.auth.currentUser?.id;
+        final relativePath = personId != null && personId.isNotEmpty
+            ? p.join(personId, 'user_markdown_documentation', fileName)
+                .replaceAll('\\', '/')
+            : fileName;
+
+        setState(() {
+          _inlineImagePaths = [..._inlineImagePaths, relativePath];
+          _hasUnsavedChanges = true;
+        });
         HapticFeedback.mediumImpact();
       }
     } catch (e) {
@@ -269,6 +459,24 @@ class _TextEditorPageState extends State<TextEditorPage>
     }
   }
 
+  void _dismissKeyboard() {
+    _editorFocusNode.unfocus();
+    _titleFocusNode.unfocus();
+   
+    FocusManager.instance.primaryFocus?.unfocus();
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  }
+
+  Future<void> _goToMindDashboard() async {
+    _dismissKeyboard();
+    if (_hasUnsavedChanges) {
+      await _saveNote(showConfirmation: false);
+    }
+    if (!mounted) return;
+    context.read<SocialBlock>().activeTab.value = 0;
+    context.go('/social');
+  }
+
   void _toggleFocusMode() {
     setState(() => _focusMode = !_focusMode);
     if (_focusMode) {
@@ -277,6 +485,7 @@ class _TextEditorPageState extends State<TextEditorPage>
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       _headerAnimController.reverse();
+      _dismissKeyboard();
     }
   }
 
@@ -332,16 +541,26 @@ class _TextEditorPageState extends State<TextEditorPage>
   Future<void> _pickLocalFile() async {
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['md', 'txt'],
+      allowedExtensions: ['md', 'txt', 'docx'],
     );
 
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
-      final content = await file.readAsString();
-      final title = result.files.single.name.replaceFirst(RegExp(r'\.md$'), '');
+      final ext = p.extension(file.path).toLowerCase();
+      final title =
+          result.files.single.name.replaceFirst(RegExp(r'\.(md|txt|docx)$'), '');
+      String content;
+      if (ext == '.docx') {
+        final bytes = await file.readAsBytes();
+        content = DocxUtils.extractPlainText(bytes);
+      } else {
+        content = await file.readAsString();
+      }
 
       setState(() {
-        _contentController.text = content;
+        final parsed = _parseInitialContent(content);
+        _inlineImagePaths = parsed.images;
+        _contentController.text = parsed.body;
         _titleController.text = title;
         _openedFile = file;
         _hasUnsavedChanges = false;
@@ -350,9 +569,153 @@ class _TextEditorPageState extends State<TextEditorPage>
     }
   }
 
+  Future<bool> _saveNote({bool showConfirmation = true}) async {
+    if (_isSaving) return false;
+    setState(() => _isSaving = true);
+    try {
+      final dao = context.read<ProjectNoteDAO>();
+      final personBlock = context.read<PersonBlock>();
+      final personId =
+          personBlock.currentPersonID.value ??
+          Supabase.instance.client.auth.currentUser?.id;
+      final tenantId =
+          _resolveTenantId(personBlock) ?? DEFAULT_TENANT_ID;
+      if (personId == null || personId.isEmpty) {
+        if (!mounted) return false;
+        if (showConfirmation) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sign in to save notes'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return false;
+      }
+
+      final title = _titleController.text.trim().isEmpty
+          ? 'Untitled'
+          : _titleController.text.trim();
+      final content = _fullNoteContent();
+      final category =
+          _activeNote?.category ?? widget.initialCategory ?? 'projects';
+      final extension =
+          _activeNote?.extension ?? widget.initialExtension ?? '.md';
+
+      final imageLocal =
+          _inlineImagePaths.isNotEmpty ? _inlineImagePaths.first : null;
+      final imageRemote = JournalMedia.canonicalRemotePath(
+        imageLocal,
+        personId: personId,
+      );
+      final imageDevice = imageLocal != null ? SyncDevice.current() : null;
+
+      if (_activeNote != null) {
+        final updated = _activeNote!.copyWith(
+          title: title,
+          content: content,
+          mood: Value(_selectedMood),
+          localPath: Value(imageLocal),
+          remotePath: Value(imageRemote),
+          device: Value(imageDevice),
+          updatedAt: DateTime.now(),
+        );
+        await dao.updateNote(updated);
+        if (!mounted) return false;
+        setState(() {
+          _activeNote = updated;
+          _hasUnsavedChanges = false;
+          _lastSaved = DateTime.now();
+        });
+      } else {
+        final id = await dao.insertNote(
+          title: title,
+          content: content,
+          personID: personId,
+          tenantID: tenantId,
+          category: category,
+          mood: _selectedMood,
+          extension: extension,
+          localPath: imageLocal,
+          remotePath: imageRemote,
+          device: imageDevice,
+        );
+        final saved = await dao.getNoteById(id);
+        if (!mounted) return false;
+        setState(() {
+          _activeNote = saved;
+          _hasUnsavedChanges = false;
+          _lastSaved = DateTime.now();
+        });
+      }
+
+      if (showConfirmation && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Note saved'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save note: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _confirmDeleteNote() async {
+    final note = _activeNote;
+    if (note == null) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.project_delete_note_title),
+        content: Text(l10n.project_delete_note_msg),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    await context.read<ProjectNoteDAO>().deleteNote(note.id);
+    if (!mounted) return;
+    Navigator.pop(context);
+  }
+
   Future<void> _saveToLocalFile() async {
     if (_openedFile != null) {
-      await _openedFile!.writeAsString(_contentController.text);
+      final ext = p.extension(_openedFile!.path).toLowerCase();
+      if (ext == '.docx') {
+        final bytes =
+            DocxUtils.createDocxBytesFromPlainText(_fullNoteContent());
+        await _openedFile!.writeAsBytes(bytes, flush: true);
+      } else {
+        await _openedFile!.writeAsString(_fullNoteContent(), flush: true);
+      }
       if (mounted) {
         setState(() {
           _hasUnsavedChanges = false;
@@ -361,19 +724,42 @@ class _TextEditorPageState extends State<TextEditorPage>
       }
     } else {
       // Prompt user to save as a new file if no file is currently opened
+      final ext = widget.initialExtension ?? '.md';
+      final fileName = '${_titleController.text}$ext';
+      final bytes =
+          ext.toLowerCase() == '.docx'
+              ? DocxUtils.createDocxBytesFromPlainText(_fullNoteContent())
+              : Uint8List.fromList(utf8.encode(_fullNoteContent()));
       final path = await FilePicker.saveFile(
-        dialogTitle: 'Save as Markdown',
-        fileName: '${_titleController.text}.md',
+        dialogTitle: 'Save file',
+        fileName: fileName,
         type: FileType.custom,
-        allowedExtensions: ['md'],
+        allowedExtensions: ['md', 'txt', 'docx'],
+        bytes: bytes,
       );
 
       if (path != null) {
         final file = File(path);
-        await file.writeAsString(_contentController.text);
+        final ext = p.extension(file.path).toLowerCase();
+        if (ext == '.docx') {
+          final bytes =
+              DocxUtils.createDocxBytesFromPlainText(_fullNoteContent());
+          await file.writeAsBytes(bytes, flush: true);
+        } else {
+          await file.writeAsString(_fullNoteContent(), flush: true);
+        }
         if (mounted) {
           setState(() {
             _openedFile = file;
+            _hasUnsavedChanges = false;
+            _lastSaved = DateTime.now();
+          });
+        }
+      } else {
+        // On iOS/Android, saveFile can succeed without returning a filesystem path
+        // when [bytes] is provided. In that case, consider the content saved.
+        if (mounted) {
+          setState(() {
             _hasUnsavedChanges = false;
             _lastSaved = DateTime.now();
           });
@@ -382,125 +768,103 @@ class _TextEditorPageState extends State<TextEditorPage>
     }
   }
 
-  Future<void> _saveNote({bool showSnackbar = true}) async {
-    final title = _titleController.text;
-    final content = _contentController.text; // Store as plain markdown
+  Future<void> _runPostSaveExportsIfNeeded(String title, String content) async {
+    try {
+      final prefs = await NoteExportPreferences.load();
+      await NoteExportService.runPostSaveExports(
+        prefs: prefs,
+        title: title,
+        body: content,
+      );
+    } catch (e, st) {
+      debugPrint('Note export after save: $e\n$st');
+    }
+  }
 
+  Future<void> _exportToNotionFromEditor() async {
+    final title = _titleController.text;
+    final content = _fullNoteContent();
     if (title.isEmpty) {
-      if (showSnackbar) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please enter a title'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a title'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
-
-    setState(() => _isSaving = true);
-
-    try {
-      print("📝 [Editor] Starting save process for title: '$title'");
-      final String? userAlias = Supabase.instance.client.auth.currentUser?.id;
-      final fileName = title.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
-      
-      // 1. Automatic Save to user_markdown_documentation
-      final appDir = await getApplicationDocumentsDirectory();
-      print("📂 [Editor] App documents directory: ${appDir.path}");
-
-      late final Directory docDir;
-      if (widget.initialDirectory != null) {
-        docDir = widget.initialDirectory!;
-        print("📁 [Editor] Using initialDirectory: ${docDir.path}");
-      } else {
-        docDir = Directory(
-          '${appDir.path}/${userAlias ?? "unknown_user"}/user_markdown_documentation',
-        );
-        print("📁 [Editor] No initialDirectory, using default vault: ${docDir.path}");
-      }
-
-      if (!await docDir.exists()) {
-        print("🔨 [Editor] Creating directory: ${docDir.path}");
-        await docDir.create(recursive: true);
-      }
-
-      final extension = widget.note?.extension ?? widget.initialExtension ?? '.md';
-      final String savingPath = p.join(docDir.path, "$fileName$extension");
-      print("💾 [Editor] Saving file to: $savingPath");
-      final localFile = File(savingPath);
-      await localFile.writeAsString(content);
-      print("✅ [Editor] File written successfully");
-
-      // If we didn't have a file opened manually, track this auto-saved one
-      _openedFile ??= localFile;
-
-      // 2. Database Sync
-      if (widget.note != null) {
-        await context.read<ProjectNoteDAO>().updateNote(
-          widget.note!.copyWith(
-            title: title,
-            content: content,
-            mood: Value(_selectedMood),
+    final prefs = await NoteExportPreferences.load();
+    if (!prefs.hasNotionConfig) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Open Note export settings and add your Notion token and database ID.',
           ),
-        );
-      } else {
-        // Only insert to DB if it's a new database note
-        final personBlock = context.read<PersonBlock>();
-        await context.read<ProjectNoteDAO>().insertNote(
-          title: title,
-          content: content,
-          personID: personBlock.currentPersonID.value,
-          tenantID: personBlock.currentTenantID.value,
-          category: widget.initialCategory,
-          mood: _selectedMood,
-          extension: extension,
-        );
-      }
-
-      if (mounted) {
-        setState(() {
-          _hasUnsavedChanges = false;
-          _isSaving = false;
-          _lastSaved = DateTime.now();
-        });
-        if (showSnackbar) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  SizedBox(width: 8),
-                  Text('Saved'),
-                ],
-              ),
-              duration: const Duration(seconds: 1),
-              behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                bottom: MediaQuery.of(context).padding.bottom + 16,
-              ),
-            ),
-          );
-        }
-      }
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    try {
+      await NoteExportService.exportNotionIfConfigured(
+        prefs,
+        title: title,
+        body: content,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Exported to Notion'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        if (showSnackbar) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Notion export failed: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _exportToGoogleDocFromEditor() async {
+    final title = _titleController.text;
+    final content = _fullNoteContent();
+    if (title.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a title'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    try {
+      await NoteExportService.exportToGoogleDoc(
+        title: title,
+        body: content,
+        interactive: true,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Created Google Doc'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Google Doc export failed: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -676,20 +1040,10 @@ class _TextEditorPageState extends State<TextEditorPage>
                           ctx,
                           icon: Icons.save_rounded,
                           label: 'Save Note',
-                          color: Colors.green,
+                          color: colorScheme.primary,
                           onTap: () {
                             Navigator.pop(ctx);
                             _saveNote();
-                          },
-                        ),
-                        _optionTile(
-                          ctx,
-                          icon: Icons.file_open_rounded,
-                          label: 'Open Local File',
-                          color: Colors.amber,
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            _pickLocalFile();
                           },
                         ),
                         _optionTile(
@@ -704,13 +1058,24 @@ class _TextEditorPageState extends State<TextEditorPage>
                         ),
                         _optionTile(
                           ctx,
+                          icon: Icons.file_open_rounded,
+                          label: 'Open Local File',
+                          color: Colors.amber,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _pickLocalFile();
+                          },
+                        ),
+                     
+                        _optionTile(
+                          ctx,
                           icon: Icons.share_rounded,
                           label: 'Share Markdown',
                           color: Colors.orange,
                           onTap: () {
                             Navigator.pop(ctx);
                             Share.share(
-                              _contentController.text,
+                              _fullNoteContent(),
                               subject: _titleController.text,
                             );
                           },
@@ -745,7 +1110,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                           onTap: () async {
                             Navigator.pop(ctx);
                             await Clipboard.setData(
-                              ClipboardData(text: _contentController.text),
+                              ClipboardData(text: _fullNoteContent()),
                             );
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -768,9 +1133,48 @@ class _TextEditorPageState extends State<TextEditorPage>
                             context.go('/widgets/ssh', extra: plainText);
                           },
                         ),
+                        _optionTile(
+                          ctx,
+                          icon: Icons.book_outlined,
+                          label: 'Export to Notion',
+                          color: Colors.teal,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _exportToNotionFromEditor();
+                          },
+                        ),
+                        _optionTile(
+                          ctx,
+                          icon: Icons.description_outlined,
+                          label: 'Export to Google Doc',
+                          color: Colors.deepPurple,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _exportToGoogleDocFromEditor();
+                          },
+                        ),
+                        _optionTile(
+                          ctx,
+                          icon: Icons.flag_rounded,
+                          label: AppLocalizations.of(context)!.gratitude_update_flag,
+                          color: const Color(0xFFE8A317),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            MindGratitudePanel.showUpdateFlagPicker(context);
+                          },
+                        ),
+                        _optionTile(
+                          ctx,
+                          icon: Icons.settings_suggest_outlined,
+                          label: 'Note export settings',
+                          color: colorScheme.primary,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            showNoteExportSettingsSheet(context);
+                          },
+                        ),
 
-                        // ── Destructive actions ──────────────────────────────
-                        if (widget.note != null) ...[
+                        if (_activeNote != null) ...[
                           Divider(
                             height: 8,
                             thickness: 0.5,
@@ -783,38 +1187,9 @@ class _TextEditorPageState extends State<TextEditorPage>
                             icon: Icons.delete_outline_rounded,
                             label: 'Delete Note',
                             color: Colors.red,
-                            onTap: () async {
+                            onTap: () {
                               Navigator.pop(ctx);
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (dCtx) => AlertDialog(
-                                  title: const Text('Delete Note?'),
-                                  content: const Text(
-                                    'This action cannot be undone.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(dCtx, false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(dCtx, true),
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true && context.mounted) {
-                                await context.read<ProjectNoteDAO>().deleteNote(
-                                  widget.note!.id,
-                                );
-                                if (context.mounted) Navigator.pop(context);
-                              }
+                              _confirmDeleteNote();
                             },
                           ),
                         ],
@@ -879,6 +1254,9 @@ class _TextEditorPageState extends State<TextEditorPage>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final keyboardOpen = viewInsets.bottom > 0;
 
     return PopScope(
         canPop: !_hasUnsavedChanges,
@@ -902,16 +1280,16 @@ class _TextEditorPageState extends State<TextEditorPage>
             ),
           );
           if (shouldSave == true) {
-            await _saveNote(showSnackbar: false);
+            await _saveNote(showConfirmation: false);
           }
           if (context.mounted) Navigator.pop(context);
         },
         child: CallbackShortcuts(
           bindings: {
             const SingleActivator(LogicalKeyboardKey.keyS, control: true): () =>
-                _saveNote(),
+                _saveToLocalFile(),
             const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () =>
-                _saveNote(),
+                _saveToLocalFile(),
             const SingleActivator(LogicalKeyboardKey.keyB, control: true): () =>
                 _insertMarkdown('**', suffix: '**'),
             const SingleActivator(LogicalKeyboardKey.keyB, meta: true): () =>
@@ -920,10 +1298,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                 _insertMarkdown('*', suffix: '*'),
             const SingleActivator(LogicalKeyboardKey.keyI, meta: true): () =>
                 _insertMarkdown('*', suffix: '*'),
-            const SingleActivator(LogicalKeyboardKey.keyP, control: true): () =>
-                setState(() => _isPreview = !_isPreview),
-            const SingleActivator(LogicalKeyboardKey.keyP, meta: true): () =>
-                setState(() => _isPreview = !_isPreview),
+            // Preview shortcut removed.
             const SingleActivator(LogicalKeyboardKey.keyZ, control: true):
                 _undo,
             const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): _undo,
@@ -941,22 +1316,26 @@ class _TextEditorPageState extends State<TextEditorPage>
           child: Scaffold(
             backgroundColor: colorScheme.surface,
             extendBodyBehindAppBar: true,
+            resizeToAvoidBottomInset: true,
             body: Stack(
               children: [
-                // Background gradient
+                // Background
                 Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          colorScheme.surface,
-                          colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        ],
-                      ),
-                    ),
-                  ),
+                  child: _isJournalNote
+                      ? _buildJournalBackground(colorScheme)
+                      : Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                colorScheme.surface,
+                                colorScheme.surfaceContainerHighest
+                                    .withValues(alpha: 0.3),
+                              ],
+                            ),
+                          ),
+                        ),
                 ),
 
                 Positioned.fill(
@@ -984,202 +1363,24 @@ class _TextEditorPageState extends State<TextEditorPage>
                       // Editor / Preview
                       Expanded(
                         child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: _dismissKeyboard,
                           onDoubleTap: _toggleFocusMode,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: _isJournalNote ? 20.0 : 16.0,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Title
-                                TextField(
-                                  controller: _titleController,
-                                  focusNode: _titleFocusNode,
-                                  style: TextStyle(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.w900,
-                                    color: colorScheme.onSurface,
-                                    letterSpacing: -0.8,
-                                    height: 1.2,
+                            child: _isJournalNote
+                                ? _buildJournalEditorBody(
+                                    colorScheme,
+                                    l10n,
+                                    keyboardOpen: keyboardOpen,
+                                  )
+                                : _buildProjectEditorBody(
+                                    colorScheme,
+                                    l10n,
+                                    keyboardOpen: keyboardOpen,
                                   ),
-                                  decoration: InputDecoration(
-                                    hintText: 'Untitled',
-                                    hintStyle: TextStyle(
-                                      color: colorScheme.onSurface.withOpacity(
-                                        0.2,
-                                      ),
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  onSubmitted: (_) =>
-                                      _editorFocusNode.requestFocus(),
-                                ),
-
-                                // Metadata row
-                                if (!_focusMode) ...[
-                                  const SizedBox(height: 4),
-                                  ValueListenableBuilder(
-                                    valueListenable: syncStatus,
-                                    builder: (context, status, child) {
-                                      return LayoutBuilder(
-                                        builder: (context, constraints) {
-                                          return SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            physics:
-                                                const BouncingScrollPhysics(),
-                                            child: Row(
-                                              children: [
-                                                  if (_lastSaved != null) ...[
-                                                    Icon(
-                                                      Icons.access_time_rounded,
-                                                      size: 12,
-                                                      color: colorScheme
-                                                          .onSurface
-                                                          .withValues(
-                                                              alpha: 0.3),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      'Saved ${_formatRelativeTime(_lastSaved!)}',
-                                                      style: TextStyle(
-                                                        color: colorScheme
-                                                            .onSurface
-                                                            .withValues(
-                                                                alpha: 0.3),
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                  if (_openedFile !=
-                                                      null) ...[
-                                                    const SizedBox(width: 8),
-                                                    Icon(
-                                                      Icons.folder_open_rounded,
-                                                      size: 12,
-                                                      color: colorScheme.primary
-                                                          .withValues(
-                                                              alpha: 0.5),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    ConstrainedBox(
-                                                      constraints:
-                                                          BoxConstraints(
-                                                        maxWidth: constraints
-                                                                .maxWidth *
-                                                            0.45,
-                                                      ),
-                                                      child: Text(
-                                                        _openedFile!.path,
-                                                        style: TextStyle(
-                                                          color: colorScheme
-                                                              .primary
-                                                              .withValues(
-                                                                  alpha: 0.5),
-                                                          fontSize: 10,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        maxLines: 1,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                  if (_hasUnsavedChanges) ...[
-                                                    const SizedBox(width: 8),
-                                                    Container(
-                                                      width: 6,
-                                                      height: 6,
-                                                      decoration:
-                                                          const BoxDecoration(
-                                                        color: Colors.orange,
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      'Unsaved',
-                                                      style: TextStyle(
-                                                        color: Colors.orange
-                                                            .withValues(
-                                                                alpha: 0.7),
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                  if (_isSaving) ...[
-                                                    const SizedBox(width: 8),
-                                                    SizedBox(
-                                                      width: 10,
-                                                      height: 10,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 1.5,
-                                                        color: colorScheme
-                                                            .primary,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      'Saving...',
-                                                      style: TextStyle(
-                                                        color: colorScheme
-                                                            .primary
-                                                            .withValues(
-                                                                alpha: 0.7),
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                  if (status != null) ...[
-                                                    const SizedBox(width: 8),
-                                                    const Icon(
-                                                      Icons.auto_awesome_rounded,
-                                                      size: 12,
-                                                      color: Colors.amber,
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      status,
-                                                      style: const TextStyle(
-                                                        color: Colors.amber,
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow
-                                                          .ellipsis,
-                                                    ),
-                                                  ],
-                                                ],
-                                              ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                ] else
-                                  const SizedBox(height: 12),
-
-                                // Toggle Edit / Preview
-                                Expanded(
-                                  child: _isPreview
-                                      ? _buildMarkdownPreview(colorScheme)
-                                      : _buildMarkdownEditor(colorScheme),
-                                ),
-                              ],
-                            ),
                           ),
                         ),
                       ),
@@ -1187,60 +1388,18 @@ class _TextEditorPageState extends State<TextEditorPage>
                   ),
                 ),
                 // Floating Markdown Toolbar
-                if (!_focusMode && !_isPreview)
-                  _buildMarkdownToolbar(colorScheme),
-
-                Positioned(
-                  bottom: 64,
-                  // left: 24,
-                  right: 24,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    constraints: const BoxConstraints(minWidth: 100),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _isPreview
-                          ? colorScheme.primary.withValues(alpha: 0.15)
-                          : colorScheme.surfaceContainerHighest.withOpacity(
-                              0.5,
-                            ),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: InkWell(
-                      onTap: () => setState(() => _isPreview = !_isPreview),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _isPreview
-                                ? Icons.edit_rounded
-                                : Icons.preview_rounded,
-                            size: 16,
-                            color: _isPreview
-                                ? colorScheme.primary
-                                : colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _isPreview ? 'EDIT' : 'PREVIEW',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              color: _isPreview
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                if (!_focusMode)
+                  _isJournalNote
+                      ? _buildJournalToolbar(colorScheme)
+                      : _buildMarkdownToolbar(colorScheme),
+                if (_focusMode)
+                  Positioned(
+                    right: 20,
+                    bottom: 24,
+                    child: _buildKeyboardDismissButton(colorScheme),
                   ),
-                ),
+
+                // Preview button removed.
               ],
             ),
           ),
@@ -1248,7 +1407,742 @@ class _TextEditorPageState extends State<TextEditorPage>
     );
   }
 
-  Widget _buildMarkdownEditor(ColorScheme colorScheme) {
+  Widget _buildProjectEditorBody(
+    ColorScheme colorScheme,
+    AppLocalizations l10n, {
+    required bool keyboardOpen,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _titleController,
+          focusNode: _titleFocusNode,
+          maxLines: 2,
+          minLines: 1,
+          textInputAction: TextInputAction.next,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: colorScheme.onSurface,
+            letterSpacing: -0.6,
+            height: 1.25,
+          ),
+          decoration: InputDecoration(
+            hintText: l10n.project_note_untitled,
+            hintStyle: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.25),
+              fontWeight: FontWeight.w800,
+            ),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
+          onSubmitted: (_) => _editorFocusNode.requestFocus(),
+        ),
+        if (!_focusMode) ...[
+          const SizedBox(height: 10),
+          ValueListenableBuilder<String?>(
+            valueListenable: syncStatus,
+            builder: (context, aiStatus, _) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSaveStatusRow(colorScheme, l10n),
+                  if (aiStatus != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 14,
+                          color: Colors.amber,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            aiStatus,
+                            style: TextStyle(
+                              color: Colors.amber.shade800,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (_openedFile != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.folder_open_rounded,
+                          size: 14,
+                          color: colorScheme.primary.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            p.basename(_openedFile!.path),
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+        ] else
+          const SizedBox(height: 12),
+        if (!_focusMode && _inlineImagePaths.isNotEmpty) ...[
+          _buildInlineImagePreviews(colorScheme),
+          const SizedBox(height: 8),
+        ],
+        Expanded(
+          child: _buildMarkdownEditor(
+            colorScheme,
+            l10n,
+            reserveToolbarSpace: keyboardOpen,
+            showTopHint: _inlineImagePaths.isEmpty,
+          ),
+        ),
+      ],
+    );
+  }
+
+  DateTime get _journalLogTime =>
+      _activeNote?.createdAt.toLocal() ?? DateTime.now();
+
+  Widget _buildJournalEditorBody(
+    ColorScheme colorScheme,
+    AppLocalizations l10n, {
+    required bool keyboardOpen,
+  }) {
+    final accent = _journalAccent();
+    final when = _journalLogTime;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!_focusMode) ...[
+          const SizedBox(height: 2),
+          _buildJournalMoodSection(colorScheme, l10n, when),
+          const SizedBox(height: 14),
+        ],
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? colorScheme.surface.withValues(alpha: 0.88)
+                  : colorScheme.surface.withValues(alpha: 0.96),
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : accent.withValues(alpha: 0.12),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.08),
+                  blurRadius: 32,
+                  offset: const Offset(0, 12),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: _titleController,
+                  focusNode: _titleFocusNode,
+                  maxLines: 1,
+                  textInputAction: TextInputAction.next,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface.withValues(alpha: 0.92),
+                    letterSpacing: -0.2,
+                    height: 1.35,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: l10n.project_note_untitled,
+                    hintStyle: TextStyle(
+                      color: colorScheme.onSurface.withValues(alpha: 0.38),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _editorFocusNode.requestFocus(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Divider(
+                    height: 1,
+                    color: colorScheme.onSurface.withValues(alpha: 0.08),
+                  ),
+                ),
+                if (_inlineImagePaths.isNotEmpty) ...[
+                  _buildInlineImagePreviews(
+                    colorScheme,
+                    journalStyle: true,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Expanded(
+                  child: _buildMarkdownEditor(
+                    colorScheme,
+                    l10n,
+                    reserveToolbarSpace: keyboardOpen,
+                    showTopHint: _inlineImagePaths.isEmpty,
+                    hintText: l10n.mind_quick_entry_hint,
+                    fontSize: 15.5,
+                    lineHeight: 1.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJournalMoodSection(
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+    DateTime when,
+  ) {
+    return Column(
+      children: [
+        _buildDaylioMoodPicker(colorScheme, l10n),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.calendar_today_rounded,
+              size: 12,
+              color: colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              DateFormat('EEEE, MMM d').format(when),
+              style: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.62),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colorScheme.onSurface.withValues(alpha: 0.25),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 12),
+            _buildJournalSaveChip(colorScheme, l10n),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJournalSaveChip(ColorScheme colorScheme, AppLocalizations l10n) {
+    if (_isSaving) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: _journalAccent(),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l10n.note_editor_saving,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface.withValues(alpha: 0.55),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_hasUnsavedChanges) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.orange,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l10n.note_editor_unsaved,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.orange.shade700,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_lastSaved == null) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.cloud_done_rounded,
+          size: 13,
+          color: _journalAccent().withValues(alpha: 0.85),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          l10n.note_editor_saved_label(_formatRelativeTime(_lastSaved!, l10n)),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface.withValues(alpha: 0.55),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJournalBackground(ColorScheme colorScheme) {
+    final accent = _journalAccent();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? const Color(0xFF0E1419) : colorScheme.surface;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ColoredBox(color: base),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0, -0.72),
+              radius: 1.1,
+              colors: [
+                accent.withValues(alpha: isDark ? 0.32 : 0.22),
+                accent.withValues(alpha: isDark ? 0.1 : 0.06),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.42, 1.0],
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                accent.withValues(alpha: 0.06),
+                Colors.transparent,
+                base,
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDaylioMoodPicker(ColorScheme colorScheme, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: _moodOptions.map((mood) {
+          final selected = _selectedMood == mood;
+          final color = mindMoodAccent(_moodScore(mood));
+          final label = _moodLabel(l10n, mood);
+
+          return Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() {
+                  _selectedMood = mood;
+                  _hasUnsavedChanges = true;
+                });
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedScale(
+                    scale: selected ? 1.08 : 1.0,
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutBack,
+                    child: _buildMoodIconBubble(
+                      colorScheme: colorScheme,
+                      mood: mood,
+                      selected: selected,
+                      size: selected ? 56 : 46,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: TextStyle(
+                      fontSize: selected ? 10.5 : 9.5,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                      color: selected
+                          ? color
+                          : colorScheme.onSurface.withValues(alpha: 0.45),
+                      letterSpacing: 0.1,
+                    ),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildJournalToolbar(ColorScheme colorScheme) {
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    // Body already shrinks for the keyboard — do not add viewInsets again.
+    final keyboardOpen = viewInsets.bottom > 0;
+    final bottom = keyboardOpen ? 8.0 : safeBottom + 14;
+    final accent = _journalAccent();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Positioned(
+      bottom: bottom,
+      left: 20,
+      right: 20,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark
+              ? colorScheme.surface.withValues(alpha: 0.92)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+            color: colorScheme.onSurface.withValues(alpha: 0.06),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
+              blurRadius: 28,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Material(
+              color: accent,
+              shape: const CircleBorder(),
+              elevation: 2,
+              shadowColor: accent.withValues(alpha: 0.5),
+              child: InkWell(
+                onTap: _pickAndInsertImage,
+                customBorder: const CircleBorder(),
+                child: const SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Icon(
+                    Icons.add_a_photo_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ),
+            const Spacer(),
+          
+            TextButton.icon(
+              onPressed: _goToMindDashboard,
+              icon: Icon(
+                Icons.check_rounded,
+                size: 18,
+                color: accent,
+              ),
+              label: Text(
+                'Done',
+                style: TextStyle(
+                  color: accent,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: _showMoreOptions,
+              icon: Icon(
+                Icons.more_horiz_rounded,
+                color: colorScheme.onSurface.withValues(alpha: 0.65),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSaveStatusRow(ColorScheme colorScheme, AppLocalizations l10n) {
+    if (_isSaving) {
+      return Row(
+        children: [
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            l10n.note_editor_saving,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_hasUnsavedChanges) {
+      return Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: Colors.orange,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            l10n.note_editor_unsaved,
+            style: TextStyle(
+              color: Colors.orange.shade800,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_lastSaved == null) return const SizedBox.shrink();
+
+    final when = _formatRelativeTime(_lastSaved!, l10n);
+    return Row(
+      children: [
+        Icon(
+          Icons.cloud_done_outlined,
+          size: 15,
+          color: colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          l10n.note_editor_saved_label(when),
+          style: TextStyle(
+            color: colorScheme.onSurfaceVariant,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openInlineImageGallery(int initialIndex) async {
+    if (!mounted || _inlineImagePaths.isEmpty) return;
+    final personId =
+        context.read<PersonBlock>().currentPersonID.value ??
+        Supabase.instance.client.auth.currentUser?.id ??
+        '';
+    final paths = List<String>.from(_inlineImagePaths);
+    final index = initialIndex.clamp(0, paths.length - 1);
+    await Navigator.of(context, rootNavigator: true).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (ctx) => _JournalImageGalleryScreen(
+          imagePaths: paths,
+          initialIndex: index,
+          personId: personId,
+          remoteUrlForPath: (path) => _editorImageRemoteUrl(path, personId),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInlineImagePreviews(
+    ColorScheme colorScheme, {
+    bool journalStyle = false,
+  }) {
+    final personId =
+        context.read<PersonBlock>().currentPersonID.value ??
+        Supabase.instance.client.auth.currentUser?.id ??
+        '';
+    final width = MediaQuery.sizeOf(context).width;
+    final imageHeight = journalStyle
+        ? (width >= 600 ? 148.0 : 128.0)
+        : (width >= 900 ? 200.0 : width >= 600 ? 180.0 : 150.0);
+    final radius = journalStyle ? 20.0 : 14.0;
+    final total = _inlineImagePaths.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < _inlineImagePaths.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () => _openInlineImageGallery(i),
+            child: Container(
+              decoration: journalStyle
+                  ? BoxDecoration(
+                      borderRadius: BorderRadius.circular(radius),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.22),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    )
+                  : null,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(radius),
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    SizedBox(
+                      height: imageHeight,
+                      width: double.infinity,
+                      child: LocalFirstImage(
+                        ownerId: personId,
+                        localPath: _inlineImagePaths[i],
+                        remoteUrl: _editorImageRemoteUrl(
+                          _inlineImagePaths[i],
+                          personId,
+                        ),
+                        subFolder: 'user_markdown_documentation',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    if (total > 1)
+                      Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.collections_rounded,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  '${i + 1}/$total',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _editorImageRemoteUrl(String path, String personId) {
+    final remoteKey = JournalMedia.canonicalRemotePath(
+      path,
+      personId: personId.isEmpty ? null : personId,
+    );
+    if (remoteKey == null || remoteKey.isEmpty) return '';
+    if (remoteKey.startsWith('http://') || remoteKey.startsWith('https://')) {
+      return remoteKey;
+    }
+    return MinioService().publicUrlForKey(remoteKey);
+  }
+
+  Widget _buildMarkdownEditor(
+    ColorScheme colorScheme,
+    AppLocalizations l10n, {
+    required bool reserveToolbarSpace,
+    bool showTopHint = true,
+    String? hintText,
+    double fontSize = 17,
+    double lineHeight = 1.65,
+  }) {
+    final bottomPad = reserveToolbarSpace ? 72.0 : 24.0;
     return TextField(
       controller: _contentController,
       focusNode: _editorFocusNode,
@@ -1257,92 +2151,29 @@ class _TextEditorPageState extends State<TextEditorPage>
       textAlignVertical: TextAlignVertical.top,
       keyboardType: TextInputType.multiline,
       style: TextStyle(
-        fontSize: 15,
-        height: 1.8,
-        color: colorScheme.onSurface.withValues(alpha: 0.85),
-        fontFamily: 'monospace',
+        fontSize: fontSize,
+        height: lineHeight,
+        color: colorScheme.onSurface.withValues(alpha: 0.88),
+        letterSpacing: 0.1,
+        fontWeight: FontWeight.w400,
       ),
       decoration: InputDecoration(
-        hintText:
-            'Write in markdown...\n\n# Heading\n## Subheading\n**bold** *italic* ~~strikethrough~~\n- bullet list\n1. numbered list\n> blockquote\n`inline code`',
+        hintText: showTopHint
+            ? (hintText ?? l10n.note_editor_write_hint)
+            : hintText,
         hintStyle: TextStyle(
-          color: colorScheme.onSurface.withValues(alpha: 0.15),
-          fontSize: 14,
-          height: 1.8,
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          fontSize: fontSize,
+          height: lineHeight,
+          fontWeight: FontWeight.w400,
         ),
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.only(bottom: 120),
+        contentPadding: EdgeInsets.only(top: showTopHint ? 0 : 4, bottom: bottomPad),
       ),
     );
   }
 
-  Widget _buildMarkdownPreview(ColorScheme colorScheme) {
-    return Markdown(
-      data: _contentController.text,
-      imageDirectory: _vaultPath,
-      padding: const EdgeInsets.only(bottom: 120),
-      selectable: true,
-      styleSheet: MarkdownStyleSheet(
-        h1: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w900,
-          height: 1.3,
-          color: colorScheme.onSurface,
-        ),
-        h2: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          height: 1.3,
-          color: colorScheme.onSurface,
-        ),
-        h3: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          height: 1.4,
-          color: colorScheme.onSurface.withValues(alpha: 0.9),
-        ),
-        p: TextStyle(
-          fontSize: 16,
-          height: 1.7,
-          color: colorScheme.onSurface.withValues(alpha: 0.85),
-        ),
-        code: TextStyle(
-          fontSize: 14,
-          backgroundColor: colorScheme.primary.withValues(alpha: 0.08),
-          color: colorScheme.primary,
-          fontFamily: 'monospace',
-        ),
-        codeblockDecoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.2),
-          ),
-        ),
-        blockquoteDecoration: BoxDecoration(
-          border: Border(
-            left: BorderSide(
-              color: colorScheme.primary.withValues(alpha: 0.4),
-              width: 3,
-            ),
-          ),
-        ),
-        blockquotePadding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
-        listBullet: TextStyle(
-          color: colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
-        horizontalRuleDecoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // Preview renderer removed.
 
   Widget _buildMoodSelector(ColorScheme colorScheme) {
     final validValue =
@@ -1390,10 +2221,15 @@ class _TextEditorPageState extends State<TextEditorPage>
   }
 
   Widget _buildMarkdownToolbar(ColorScheme colorScheme) {
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    final keyboardOpen = viewInsets.bottom > 0;
+    final bottom = keyboardOpen ? 8.0 : safeBottom + 16;
+
     return Positioned(
-      bottom: 24,
-      left: 24,
-      right: 24,
+      bottom: bottom,
+      left: 16,
+      right: 16,
       child: Center(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
@@ -1422,20 +2258,20 @@ class _TextEditorPageState extends State<TextEditorPage>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _toolbarBtn(
+                      Icons.keyboard_hide_rounded,
+                      'Hide keyboard',
+                      _dismissKeyboard,
+                    ),
+                    _toolbarDivider(colorScheme),
+                    _toolbarBtn(
                       Icons.undo_rounded,
                       'Undo',
-                      _undo,
-                      color: _undoStack.length > 1
-                          ? null
-                          : colorScheme.onSurface.withValues(alpha: 0.2),
+                      _undoStack.length > 1 ? _undo : null,
                     ),
                     _toolbarBtn(
                       Icons.redo_rounded,
                       'Redo',
-                      _redo,
-                      color: _redoStack.isNotEmpty
-                          ? null
-                          : colorScheme.onSurface.withValues(alpha: 0.2),
+                      _redoStack.isNotEmpty ? _redo : null,
                     ),
                     _toolbarDivider(colorScheme),
                     _toolbarBtn(
@@ -1505,30 +2341,47 @@ class _TextEditorPageState extends State<TextEditorPage>
     );
   }
 
+  Widget _buildKeyboardDismissButton(ColorScheme colorScheme) {
+    return Material(
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.9),
+      elevation: 4,
+      shape: const CircleBorder(),
+      child: IconButton(
+        tooltip: 'Hide keyboard',
+        icon: const Icon(Icons.keyboard_hide_rounded),
+        onPressed: _dismissKeyboard,
+      ),
+    );
+  }
+
   Widget _toolbarBtn(
     IconData icon,
     String tooltip,
-    VoidCallback onTap, {
+    VoidCallback? onTap, {
     Color? color,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final enabled = onTap != null;
+    final iconColor = color ??
+        (enabled
+            ? colorScheme.onSurface.withValues(alpha: 0.75)
+            : colorScheme.onSurface.withValues(alpha: 0.22));
+
     return Tooltip(
       message: tooltip,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
+          onTap: enabled
+              ? () {
+                  HapticFeedback.lightImpact();
+                  onTap();
+                }
+              : null,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Icon(
-              icon,
-              size: 20,
-              color: color ?? colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
+            child: Icon(icon, size: 20, color: iconColor),
           ),
         ),
       ),
@@ -1555,11 +2408,14 @@ class _TextEditorPageState extends State<TextEditorPage>
   }
 
   Widget _buildCustomHeader(BuildContext context, ColorScheme colorScheme) {
+    final journal = _isJournalNote;
     return ClipRRect(
       child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ui.ImageFilter.blur(sigmaX: journal ? 6 : 10, sigmaY: journal ? 6 : 10),
         child: Container(
-          color: colorScheme.surface.withValues(alpha: 0.5),
+          color: journal
+              ? Colors.transparent
+              : colorScheme.surface.withValues(alpha: 0.5),
           child: SafeArea(
             bottom: false,
             child: Padding(
@@ -1569,14 +2425,15 @@ class _TextEditorPageState extends State<TextEditorPage>
               ),
               child: Row(
                 children: [
-                  // Back button
                   Container(
                     height: 44,
                     width: 44,
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withOpacity(
-                        0.3,
-                      ),
+                      color: journal
+                          ? colorScheme.surface.withValues(alpha: 0.55)
+                          : colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.3,
+                            ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: colorScheme.outline.withValues(alpha: 0.05),
@@ -1589,8 +2446,9 @@ class _TextEditorPageState extends State<TextEditorPage>
                         color: colorScheme.onSurface,
                       ),
                       onPressed: () {
+                        _dismissKeyboard();
                         if (_hasUnsavedChanges) {
-                          _saveNote(showSnackbar: false).then((_) {
+                          _saveNote(showConfirmation: false).then((_) {
                             if (context.mounted) Navigator.pop(context);
                           });
                         } else {
@@ -1600,54 +2458,16 @@ class _TextEditorPageState extends State<TextEditorPage>
                     ),
                   ),
                   const Spacer(),
-
-                  // Preview / Edit toggle chip
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withOpacity(
-                        0.5,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: colorScheme.outline.withValues(alpha: 0.05),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _headerToggleItem(
-                          icon: Icons.edit_note_rounded,
-                          label: 'EDIT',
-                          active: !_isPreview,
-                          onTap: () => setState(() => _isPreview = false),
-                          colorScheme: colorScheme,
-                        ),
-                        _headerToggleItem(
-                          icon: Icons.auto_awesome_mosaic_rounded,
-                          label: 'PREVIEW',
-                          active: _isPreview,
-                          onTap: () => setState(() => _isPreview = true),
-                          colorScheme: colorScheme,
-                        ),
-                      ],
-                    ),
-                  ),
-
                   const SizedBox(width: 12),
-
-                  // More options button
                   Container(
                     height: 44,
                     width: 44,
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withOpacity(
-                        0.5,
-                      ),
+                      color: journal
+                          ? colorScheme.surface.withValues(alpha: 0.55)
+                          : colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.5,
+                            ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: colorScheme.outline.withValues(alpha: 0.05),
@@ -1671,66 +2491,103 @@ class _TextEditorPageState extends State<TextEditorPage>
     );
   }
 
-  Widget _headerToggleItem({
-    required IconData icon,
-    required String label,
-    required bool active,
-    required VoidCallback onTap,
-    required ColorScheme colorScheme,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: active ? colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: active
-                  ? colorScheme.onPrimary
-                  : colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
-                color: active
-                    ? colorScheme.onPrimary
-                    : colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  // Preview toggle UI removed.
+
+  String _formatRelativeTime(DateTime time, AppLocalizations l10n) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inSeconds < 60) return l10n.note_editor_saved_just_now;
+    if (diff.inMinutes < 60) {
+      return l10n.note_editor_saved_minutes(diff.inMinutes);
+    }
+    if (diff.inHours < 24) {
+      return l10n.note_editor_saved_hours(diff.inHours);
+    }
+    return DateFormat.MMMd().format(time);
+  }
+}
+
+/// Full-screen swipe gallery for journal inline images.
+class _JournalImageGalleryScreen extends StatefulWidget {
+  const _JournalImageGalleryScreen({
+    required this.imagePaths,
+    required this.initialIndex,
+    required this.personId,
+    required this.remoteUrlForPath,
+  });
+
+  final List<String> imagePaths;
+  final int initialIndex;
+  final String personId;
+  final String Function(String path) remoteUrlForPath;
+
+  @override
+  State<_JournalImageGalleryScreen> createState() =>
+      _JournalImageGalleryScreenState();
+}
+
+class _JournalImageGalleryScreenState extends State<_JournalImageGalleryScreen> {
+  late final PageController _pageController;
+  late int _index;
+
+  @override
+  void initState() {
+    super.initState();
+    _index = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
   }
 
-  String _formatRelativeTime(DateTime time) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inSeconds < 60) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return DateFormat.MMMd().format(time);
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final total = widget.imagePaths.length;
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(total > 1 ? '${_index + 1} / $total' : ''),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: total,
+        onPageChanged: (i) => setState(() => _index = i),
+        itemBuilder: (context, i) {
+          final path = widget.imagePaths[i];
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return InteractiveViewer(
+                minScale: 0.85,
+                maxScale: 4,
+                child: Center(
+                  child: LocalFirstImage(
+                    ownerId: widget.personId,
+                    localPath: path,
+                    remoteUrl: widget.remoteUrlForPath(path),
+                    subFolder: 'user_markdown_documentation',
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    fit: BoxFit.contain,
+                    placeholder: const Center(
+                      child: CircularProgressIndicator(color: Colors.white54),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }

@@ -1,24 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
+import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_activity_tokens.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/ProjectJournalArchive.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/GratitudeLogPicker.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodSelector.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ActivitySelector.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ice_gate/utils/app_log.dart';
+import 'package:ice_gate/utils/journal_media.dart';
+import 'package:ice_gate/utils/sync_device.dart';
 
 class MindLogEntryDialog extends StatefulWidget {
-  const MindLogEntryDialog({super.key});
+  const MindLogEntryDialog({
+    super.key,
+    this.initialMood,
+    this.initialActivities,
+    this.focusAreaName,
+    this.projectId,
+    this.projectName,
+  });
 
-  static Future<void> show(BuildContext context) {
-    return showModalBottomSheet(
+  final int? initialMood;
+  final List<String>? initialActivities;
+  final String? focusAreaName;
+  final String? projectId;
+  final String? projectName;
+
+  static Future<void> show(
+    BuildContext context, {
+    int? initialMood,
+    List<String>? initialActivities,
+    String? focusAreaName,
+    String? projectId,
+    String? projectName,
+  }) async {
+    final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const MindLogEntryDialog(),
+      builder: (context) => MindLogEntryDialog(
+        initialMood: initialMood,
+        initialActivities: initialActivities == null
+            ? null
+            : List<String>.from(initialActivities),
+        focusAreaName: focusAreaName,
+        projectId: projectId,
+        projectName: projectName,
+      ),
+    );
+    if (saved != true || !context.mounted) return;
+
+    context.read<SocialBlock>().activeTab.value = 0;
+    router.go('/social');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.mind_save_success)),
     );
   }
 
@@ -27,19 +75,67 @@ class MindLogEntryDialog extends StatefulWidget {
 }
 
 class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
-  int _selectedMood = 3; // Meh
-  final List<String> _selectedActivities = [];
+  late int _selectedMood;
+  late final List<String> _selectedActivities;
   final _noteController = TextEditingController();
+  String? _attachedImagePath;
+  bool _isPickingImage = false;
+  String? _selectedGratitudeEntryId;
+  final _scrollController = ScrollController();
+  final _gratitudePickerKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMood = widget.initialMood ?? 3;
+    _selectedActivities = List<String>.from(widget.initialActivities ?? []);
+    final projectId = widget.projectId?.trim();
+    if (projectId != null && projectId.isNotEmpty) {
+      final token = 'project:$projectId';
+      if (!_selectedActivities.contains(token)) {
+        _selectedActivities.add(token);
+      }
+      if (!_selectedActivities.any((a) => a.startsWith('act_'))) {
+        _selectedActivities.add('act_deep_work');
+      }
+    }
+    if (_gratitudeSelected) {
+      _scrollToGratitudePicker();
+    }
+  }
+
+  void _scrollToGratitudePicker() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = _gratitudePickerKey.currentContext;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+        alignment: 0.2,
+      );
+    });
+  }
 
   void _onActivityToggled(String name) {
     setState(() {
       if (_selectedActivities.contains(name)) {
         _selectedActivities.remove(name);
+        if (name == MindActivityTokens.gratitudeToken) {
+          _selectedGratitudeEntryId = null;
+        }
       } else {
         _selectedActivities.add(name);
+        if (name == MindActivityTokens.gratitudeToken) {
+          _scrollToGratitudePicker();
+        }
       }
     });
   }
+
+  bool get _gratitudeSelected =>
+      _selectedActivities.contains(MindActivityTokens.gratitudeToken);
 
   Future<void> _onAddCustomOption(
     String categoryKey,
@@ -111,20 +207,82 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
     }
   }
 
+  String? _resolveTenantId(
+    PersonBlock personBlock,
+    User? currentUser,
+  ) {
+    final profile = personBlock.information.value.profiles;
+    final Object? raw = (profile.tenantId != null &&
+            profile.tenantId!.isNotEmpty)
+        ? profile.tenantId
+        : (currentUser?.appMetadata['tenant_id'] ??
+            currentUser?.userMetadata?['tenant_id']);
+    if (raw == null) return null;
+    final s = raw.toString().trim();
+    return s.isEmpty ? null : s;
+  }
+
   bool _isSaving = false;
 
+  String _journalContent(String emoji) {
+    final note = _noteController.text.trim();
+    final body = note.isEmpty
+        ? AppLocalizations.of(context)!.mind_feeling_format(emoji)
+        : note;
+    var out = (_attachedImagePath == null || _attachedImagePath!.isEmpty)
+        ? body
+        : '![Image]($_attachedImagePath)\n\n$body';
+    if (_gratitudeSelected &&
+        !out.contains(MindActivityTokens.journalGratitudeMark)) {
+      out = '$out\n\n${MindActivityTokens.journalGratitudeMark}';
+    }
+    return out;
+  }
+
+  Future<void> _pickAndAttachImage(String personId) async {
+    if (_isPickingImage || _isSaving) return;
+
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (image == null || !mounted) return;
+
+    setState(() => _isPickingImage = true);
+    try {
+      final savedPath = await context.read<ObjectDatabaseBlock>().saveAnyLocalImage(
+        image,
+        subFolder: 'user_markdown_documentation',
+        personId: personId,
+        awaitCloudSync: true,
+      );
+      if (!mounted) return;
+      setState(() => _attachedImagePath = savedPath);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.achievement_story_save_failed),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPickingImage = false);
+    }
+  }
+
   Future<void> _saveLog() async {
+ 
+    if (_isSaving) return;
+
     final personBlock = context.read<PersonBlock>();
     final profile = personBlock.information.value.profiles;
     final currentUser = Supabase.instance.client.auth.currentUser;
     final personId = profile.id ?? currentUser?.id;
-    
-    // Robust tenantId capture from multiple potential sources
-    final tenantId = (profile.tenantId != null && profile.tenantId!.isNotEmpty)
-        ? profile.tenantId
-        : (currentUser?.appMetadata['tenant_id'] ?? currentUser?.userMetadata?['tenant_id']);
+    final tenantId = _resolveTenantId(personBlock, currentUser);
 
-    if (personId == null) {
+    if (personId == null || personId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.auth_error_session_not_found),
@@ -134,49 +292,116 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
     }
 
     setState(() => _isSaving = true);
+    var didClose = false;
 
     try {
       final db = context.read<AppDatabase>();
+      final l10n = AppLocalizations.of(context)!;
+
+      if (_gratitudeSelected) {
+        final entryId = _selectedGratitudeEntryId;
+        if (entryId == null || entryId.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.gratitude_pick_required)),
+          );
+          return;
+        }
+        final entry = await db.gratitudeDAO.entryById(entryId);
+        if (entry == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.gratitude_pick_required)),
+          );
+          return;
+        }
+      }
+
+      String? mindNote;
+
+      if (_gratitudeSelected) {
+        final entry = await db.gratitudeDAO.entryById(_selectedGratitudeEntryId!);
+        final extra = _noteController.text.trim();
+        mindNote = MindActivityTokens.encodeGratitudeNote(
+          entryId: entry!.id,
+          name: entry.name,
+          kind: entry.kind,
+          text: extra.isEmpty ? null : extra,
+        );
+      } else {
+        final trimmed = _noteController.text.trim();
+        mindNote = trimmed.isEmpty ? null : trimmed;
+      }
+
       await context.read<MindBlock>().addMindLog(
         moodScore: _selectedMood,
         activities: _selectedActivities,
-        note: _noteController.text.trim(),
+        note: mindNote,
         personId: personId,
         tenantId: tenantId,
       );
+     
       if (!mounted) return;
 
-      // Double insert into project_notes for Journal visibility
-      final l10n = AppLocalizations.of(context)!;
-      final optionLabels = await db.journalActivityOptionsDAO.labelMapForPerson(
-        personId,
-      );
-      if (!mounted) return;
-      final activitiesStr = _selectedActivities.isNotEmpty
-          ? _selectedActivities
-                .map(
-                  (t) => MindActivityTokens.displayLabel(l10n, t, optionLabels),
-                )
-                .join(', ')
-          : l10n.mind_logged_mood;
-      final emoji = _getMoodEmoji(_selectedMood);
-      
-      await context.read<ProjectNoteDAO>().insertNote(
-        title: "$emoji $activitiesStr",
-        content: _noteController.text.trim().isEmpty 
-            ? AppLocalizations.of(context)!.mind_feeling_format(emoji)
-            : _noteController.text.trim(),
-        personID: personId,
-        tenantID: tenantId,
-        category: 'social',
-        mood: emoji,
-      );
+      // Mirror to project_notes for Journal cards (best-effort; mood log is source of truth).
+      try {
+        final optionLabels = await db.journalActivityOptionsDAO.labelMapForPerson(
+          personId,
+        );
+        if (!mounted) return;
+        final activitiesStr = _selectedActivities.isNotEmpty
+            ? _selectedActivities
+                  .map(
+                    (t) => MindActivityTokens.displayLabel(l10n, t, optionLabels),
+                  )
+                  .join(', ')
+            : l10n.mind_logged_mood;
+        final emoji = _getMoodEmoji(_selectedMood);
+        final localPath = _attachedImagePath;
+        final remotePath = JournalMedia.canonicalRemotePath(
+          localPath,
+          personId: personId,
+        );
+        final projectId = widget.projectId?.trim();
+        final isProjectLog = projectId != null && projectId.isNotEmpty;
+        final projectName = widget.projectName?.trim();
+
+        await context.read<ProjectNoteDAO>().insertNote(
+          title: isProjectLog
+              ? '$emoji ${projectName?.isNotEmpty == true ? projectName! : l10n.project_journal_entry}'
+              : '$emoji $activitiesStr',
+          content: _journalContent(emoji),
+          personID: personId,
+          tenantID: tenantId,
+          projectID: isProjectLog ? projectId : null,
+          category: isProjectLog ? 'project_log' : 'social',
+          mood: emoji,
+          localPath: localPath,
+          remotePath: remotePath,
+          device: localPath != null ? SyncDevice.current() : null,
+        );
+
+        if (isProjectLog && context.mounted) {
+          await ProjectJournalArchive.syncFromProjectLog(
+            context: context,
+            personId: personId,
+            projectName: projectName?.isNotEmpty == true
+                ? projectName!
+                : l10n.project_journal_entry,
+            projectId: projectId,
+            moodScore: _selectedMood,
+            description: _noteController.text.trim().isEmpty
+                ? null
+                : _noteController.text.trim(),
+            imagePath: localPath,
+          );
+        }
+      } catch (e) {
+        appLog('MindLogEntryDialog: journal mirror failed: $e');
+      }
+
 
       if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.mind_save_success)),
-        );
+        didClose = true;
+        Navigator.of(context, rootNavigator: true).pop(true);
       }
     } catch (e) {
       if (mounted) {
@@ -185,8 +410,9 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
         ).showSnackBar(SnackBar(content: Text("Failed to save log: $e")));
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      if (mounted && !didClose) setState(() => _isSaving = false);
     }
+
   }
 
   String _getMoodEmoji(int score) {
@@ -203,43 +429,70 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
   @override
   void dispose() {
     _noteController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  Widget? _buildGratitudePicker(String? personId) {
+    if (personId == null ||
+        personId.isEmpty ||
+        !_gratitudeSelected) {
+      return null;
+    }
+    return KeyedSubtree(
+      key: _gratitudePickerKey,
+      child: GratitudeLogPicker(
+        personId: personId,
+        selectedEntryId: _selectedGratitudeEntryId,
+        onSelected: (id) => setState(() => _selectedGratitudeEntryId = id),
+      ),
+    );
+  }
+
+  Widget _buildActivitySelector({
+    required String? personId,
+    required String? tenantId,
+    required List<JournalActivityOptionData> customOptions,
+  }) {
+    return ActivitySelector(
+      selectedActivities: _selectedActivities,
+      onActivityToggled: _onActivityToggled,
+      customOptions: customOptions,
+      onAddCustomOption: personId == null || personId.isEmpty
+          ? (_) {}
+          : (cat) => _onAddCustomOption(cat, personId, tenantId),
+      gratitudePicker: _buildGratitudePicker(personId),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final sheetHeight = MediaQuery.sizeOf(context).height * 0.85;
     final personBlock = context.read<PersonBlock>();
     final profile = personBlock.information.value.profiles;
     final currentUser = Supabase.instance.client.auth.currentUser;
     final personId = profile.id ?? currentUser?.id;
-    final Object? rawTenant = (profile.tenantId != null &&
-            profile.tenantId!.isNotEmpty)
-        ? profile.tenantId
-        : (currentUser?.appMetadata['tenant_id'] ??
-            currentUser?.userMetadata?['tenant_id']);
-    final String? tenantId =
-        rawTenant is String ? rawTenant : rawTenant?.toString();
+    final tenantId = _resolveTenantId(personBlock, currentUser);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          height: constraints.maxHeight * 0.85,
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-          ),
-          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    return Container(
+      height: sheetHeight,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
                 Center(
                   child: Container(
                     width: 40,
@@ -259,6 +512,34 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                     color: colorScheme.onSurface,
                   ),
                 ),
+                if (widget.projectName != null &&
+                    widget.projectName!.trim().isNotEmpty &&
+                    widget.projectId != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!.project_log_context(
+                      widget.projectName!.trim(),
+                    ),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.primary.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ] else if (widget.focusAreaName != null &&
+                    widget.focusAreaName!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!.mind_focus_log_for_area(
+                      widget.focusAreaName!.trim(),
+                    ),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.primary.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 MoodSelector(
                   selectedMood: _selectedMood,
@@ -281,24 +562,18 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                         .journalActivityOptionsDAO
                         .watchForPerson(personId),
                     builder: (context, snap) {
-                      return ActivitySelector(
-                        selectedActivities: _selectedActivities,
-                        onActivityToggled: _onActivityToggled,
+                      return _buildActivitySelector(
+                        personId: personId,
+                        tenantId: tenantId,
                         customOptions: snap.data ?? const [],
-                        onAddCustomOption: (cat) => _onAddCustomOption(
-                          cat,
-                          personId,
-                          tenantId,
-                        ),
                       );
                     },
                   )
                 else
-                  ActivitySelector(
-                    selectedActivities: _selectedActivities,
-                    onActivityToggled: _onActivityToggled,
+                  _buildActivitySelector(
+                    personId: personId,
+                    tenantId: tenantId,
                     customOptions: const [],
-                    onAddCustomOption: (_) {},
                   ),
                 const SizedBox(height: 24),
                 TextField(
@@ -318,12 +593,84 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
+                if (_isPickingImage)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: LinearProgressIndicator(
+                      borderRadius: BorderRadius.circular(4),
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                if (_attachedImagePath != null) ...[
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: LocalFirstImage(
+                          localPath: _attachedImagePath!,
+                          remoteUrl: _remoteImageUrl(_attachedImagePath!, personId),
+                          subFolder: 'user_markdown_documentation',
+                          ownerId: personId,
+                          height: 140,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          borderRadius: BorderRadius.circular(14),
+                          placeholder: Container(
+                            height: 140,
+                            color: colorScheme.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.image_outlined,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Material(
+                          color: Colors.black54,
+                          shape: const CircleBorder(),
+                          child: IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.close_rounded, color: Colors.white),
+                            onPressed: _isSaving
+                                ? null
+                                : () => setState(() => _attachedImagePath = null),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (personId != null && personId.isNotEmpty)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: (_isSaving || _isPickingImage)
+                          ? null
+                          : () => _pickAndAttachImage(personId),
+                      icon: Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: colorScheme.secondary,
+                      ),
+                      label: Text(
+                        AppLocalizations.of(context)!.stat_images,
+                        style: TextStyle(
+                          color: colorScheme.secondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _saveLog,
+                    onPressed: _isSaving ? null : _saveLog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
@@ -355,7 +702,18 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
             ),
           ),
         );
-      },
-    );
+  }
+
+  static String _remoteImageUrl(String localPath, String? personId) {
+    if (localPath.startsWith('http://') || localPath.startsWith('https://')) {
+      return localPath;
+    }
+    final normalized = localPath.replaceAll('\\', '/');
+    final key = normalized.contains('/')
+        ? normalized
+        : (personId != null && personId.isNotEmpty
+            ? '$personId/user_markdown_documentation/${p.basename(normalized)}'
+            : normalized);
+    return MinioService().publicUrlForKey(key);
   }
 }

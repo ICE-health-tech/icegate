@@ -27,6 +27,658 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recent_notes_label => 'Recent Notes';
 
   @override
+  String get projects_tile_reminders => 'Reminders';
+
+  @override
+  String get projects_tile_calendar => 'Calendar';
+
+  @override
+  String get projects_tile_sdlc => 'SDLC';
+
+  @override
+  String get projects_calendar_projects_created => 'Projects created';
+
+  @override
+  String get projects_calendar_day_empty =>
+      'No tasks or project starts on this day.';
+
+  @override
+  String get projects_calendar_day_empty_not_connected =>
+      'No calendar connected. Use “Connect calendar” above, then sync.';
+
+  @override
+  String projects_calendar_day_empty_other_days(int count) {
+    return 'No events on this day. $count events elsewhere this month — try dates highlighted on the grid.';
+  }
+
+  @override
+  String get projects_calendar_google_events => 'Google Calendar';
+
+  @override
+  String get projects_calendar_reminders => 'Reminders';
+
+  @override
+  String get projects_calendar_connect_google => 'Connect Google Calendar';
+
+  @override
+  String get projects_calendar_disconnect_google =>
+      'Disconnect Google Calendar';
+
+  @override
+  String get projects_calendar_google_connected => 'Google Calendar connected';
+
+  @override
+  String get projects_calendar_sign_in_failed =>
+      'Could not connect Google Calendar';
+
+  @override
+  String get projects_calendar_sign_in_cancelled =>
+      'Google sign-in was cancelled';
+
+  @override
+  String get projects_calendar_scope_denied =>
+      'Calendar permission was not granted. Allow access in your Google account settings.';
+
+  @override
+  String projects_calendar_api_not_enabled(String projectId) {
+    return 'Google Calendar API is disabled for the macOS app (GCP project $projectId). In Google Cloud Console, enable \"Google Calendar API\" for that project, wait a few minutes, then retry.';
+  }
+
+  @override
+  String get projects_calendar_insufficient_scopes =>
+      'Calendar access was not granted. Disconnect Google, connect again, and accept all permissions.';
+
+  @override
+  String get projects_calendar_connect_hint =>
+      'Sign in with Google to sync all your Google calendars to the Calendar screen.';
+
+  @override
+  String get projects_calendar_add_reminder => 'Add reminder';
+
+  @override
+  String get projects_calendar_add_event => 'Add event';
+
+  @override
+  String get projects_calendar_event_title => 'Event title';
+
+  @override
+  String get projects_calendar_event_title_required => 'Enter an event title';
+
+  @override
+  String get projects_calendar_event_start => 'Start';
+
+  @override
+  String get projects_calendar_event_end => 'End';
+
+  @override
+  String get projects_calendar_event_saved => 'Event saved to calendar';
+
+  @override
+  String projects_calendar_event_moved(String time) {
+    return 'Moved to $time';
+  }
+
+  @override
+  String get projects_calendar_event_deleted => 'Event removed';
+
+  @override
+  String get projects_calendar_event_failed => 'Could not save event';
+
+  @override
+  String get projects_calendar_edit_event => 'Edit event';
+
+  @override
+  String get projects_calendar_delete_event => 'Delete event';
+
+  @override
+  String get projects_calendar_env_title => 'Environment check';
+
+  @override
+  String get projects_calendar_env_ready =>
+      'Good fit — you can likely complete this now.';
+
+  @override
+  String get projects_calendar_env_caution =>
+      'Possible, but a few factors may get in the way.';
+
+  @override
+  String get projects_calendar_env_not_ready =>
+      'Tough right now — consider rescheduling.';
+
+  @override
+  String projects_calendar_env_score(int score) {
+    return '$score% ready';
+  }
+
+  @override
+  String get projects_calendar_env_start_focus => 'Start focus session';
+
+  @override
+  String get projects_calendar_env_past => 'This block is already over';
+
+  @override
+  String get projects_calendar_env_too_early => 'Still more than 2 hours away';
+
+  @override
+  String get projects_calendar_env_starting_soon =>
+      'Starting within 15 minutes';
+
+  @override
+  String get projects_calendar_env_low_mood => 'Recent mood is low';
+
+  @override
+  String get projects_calendar_env_neutral_mood => 'Mood is neutral';
+
+  @override
+  String get projects_calendar_env_good_mood => 'Mood supports focus';
+
+  @override
+  String get projects_calendar_env_no_mood => 'No mood logged today';
+
+  @override
+  String get projects_calendar_env_heavy_overlap => 'Heavy schedule overlap';
+
+  @override
+  String get projects_calendar_env_some_overlap => 'Another event overlaps';
+
+  @override
+  String get projects_calendar_env_focus_fatigue =>
+      'Already focused 2+ hours today';
+
+  @override
+  String get projects_calendar_env_low_sleep => 'Low sleep last night';
+
+  @override
+  String get projects_calendar_env_good_sleep => 'Well rested';
+
+  @override
+  String get projects_calendar_edit_reminder => 'Edit reminder';
+
+  @override
+  String get projects_calendar_save => 'Save';
+
+  @override
+  String get projects_calendar_select_calendar => 'Calendar';
+
+  @override
+  String get projects_calendar_tap_day_add_hint =>
+      'Tap the selected day again to add an event';
+
+  @override
+  String get projects_calendar_hold_day_add_hint =>
+      'Hold a day to add an event';
+
+  @override
+  String get projects_calendar_timeline_empty => 'No timed events this day';
+
+  @override
+  String get projects_calendar_timeline_tap_slot =>
+      'Tap hour to add · tap event to edit · drag to move (↑↓ + Enter on desktop, hold on mobile)';
+
+  @override
+  String get projects_calendar_scroll_for_more => 'Scroll for tasks';
+
+  @override
+  String get projects_calendar_drag_hint_desktop =>
+      'Drag to reschedule. Arrow keys adjust time, Enter confirms, Escape cancels.';
+
+  @override
+  String get projects_calendar_drag_hint_mobile =>
+      'Long press, then drag to another time slot.';
+
+  @override
+  String projects_calendar_drag_move_to(String time) {
+    return 'Move to $time';
+  }
+
+  @override
+  String get projects_calendar_timeline_remove => 'Remove from timeline';
+
+  @override
+  String projects_calendar_timeline_remove_confirm(String title) {
+    return 'Remove \"$title\" from this day\'s timeline?';
+  }
+
+  @override
+  String get projects_calendar_day_timeline => 'Daily timeline';
+
+  @override
+  String get projects_calendar_reminder_title => 'Reminder title';
+
+  @override
+  String get projects_calendar_sync_google => 'Sync events';
+
+  @override
+  String get projects_calendar_all_day => 'All day';
+
+  @override
+  String get projects_calendar_integrations => 'Calendar connections';
+
+  @override
+  String get projects_calendar_connect_device => 'Connect device calendar';
+
+  @override
+  String get projects_calendar_connect_apple => 'Connect Apple Calendar';
+
+  @override
+  String get projects_calendar_disconnect_device =>
+      'Disconnect device calendar';
+
+  @override
+  String get projects_calendar_disconnect_apple => 'Disconnect Apple Calendar';
+
+  @override
+  String get projects_calendar_device_connected => 'Device calendar connected';
+
+  @override
+  String get projects_calendar_apple_connected => 'Apple Calendar connected';
+
+  @override
+  String get projects_calendar_device_events => 'Device calendar';
+
+  @override
+  String get projects_calendar_apple_events => 'Apple Calendar';
+
+  @override
+  String get projects_calendar_device_hint =>
+      'Allow calendar access to show events from calendars on this device.';
+
+  @override
+  String get projects_calendar_sync_device => 'Sync device events';
+
+  @override
+  String get projects_calendar_device_denied =>
+      'Calendar access was denied. Enable it in Settings.';
+
+  @override
+  String get integration_hub_title => 'Integration Hub';
+
+  @override
+  String get integration_hub_subtitle =>
+      'Calendars, health platforms, and device sensors — one connection center.';
+
+  @override
+  String get integration_hub_google_fit => 'Google Fit';
+
+  @override
+  String get integration_hub_google_fit_hint =>
+      'Uses the same Google sign-in as Calendar and Drive.';
+
+  @override
+  String get integration_hub_sensors_section => 'Devices & sensors';
+
+  @override
+  String get integration_hub_open_sensor_hub => 'Open Sensor Hub';
+
+  @override
+  String get integration_hub_sensor_hub_hint =>
+      'Wearables, IoT pipelines, SSH streams, and Huawei setup.';
+
+  @override
+  String get integration_hub_huawei_sensor_hint =>
+      'Set up Huawei credentials in Sensor Hub first.';
+
+  @override
+  String get projects_calendar_all_calendars_events => 'All calendars';
+
+  @override
+  String projects_calendar_synced_count(int count) {
+    return 'Loaded $count events this month';
+  }
+
+  @override
+  String get projects_calendar_sync_empty_month =>
+      'Connected — no events this month. Try another month or check Google Calendar.';
+
+  @override
+  String get integration_hub_calendars_section => 'Calendars';
+
+  @override
+  String get integration_hub_health_section => 'Health';
+
+  @override
+  String get integration_hub_notes_section => 'Notes & documents';
+
+  @override
+  String get integration_hub_google_drive_hint =>
+      'Sync project notes and vault files from Google Drive.';
+
+  @override
+  String get integration_hub_notion_hint =>
+      'Import shared Notion pages and databases into your vault.';
+
+  @override
+  String get integration_hub_connect => 'Connect';
+
+  @override
+  String get integration_hub_status_connected => 'Connected';
+
+  @override
+  String get integration_hub_apple_health => 'Apple Health';
+
+  @override
+  String get integration_hub_apple_health_hint =>
+      'Steps, sleep, heart rate, and more from HealthKit.';
+
+  @override
+  String get integration_hub_huawei_health => 'Huawei Health';
+
+  @override
+  String get integration_hub_huawei_health_hint =>
+      'Sync from Huawei cloud credentials.';
+
+  @override
+  String get integration_hub_phase2_notice =>
+      'Calendar and Google sign-in work here. Huawei credentials: use Sensor Hub below.';
+
+  @override
+  String get integration_hub_sign_in_required =>
+      'Sign in to your icegate account first, then connect integrations.';
+
+  @override
+  String get integration_hub_health_coming_soon =>
+      'This health source is not available yet.';
+
+  @override
+  String get integration_hub_open => 'Open Integration Hub';
+
+  @override
+  String get projects_tile_focus => 'Focus';
+
+  @override
+  String get projects_tile_pomodoro => 'Pomodoro';
+
+  @override
+  String get projects_tile_canvas => 'Canvas';
+
+  @override
+  String get projects_tile_whiteboard => 'Whiteboard';
+
+  @override
+  String get projects_whiteboard_clear_title => 'Clear whiteboard?';
+
+  @override
+  String get projects_whiteboard_clear_message =>
+      'All strokes will be removed. This cannot be undone.';
+
+  @override
+  String get projects_whiteboard_clear_confirm => 'Clear';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get projects_plan_section_title => 'Schedule planner';
+
+  @override
+  String get projects_diagrams_title => 'Project diagrams';
+
+  @override
+  String get projects_diagrams_empty =>
+      'No flowcharts yet. Tap + to pick a project and start drawing.';
+
+  @override
+  String get projects_diagrams_new => 'New diagram';
+
+  @override
+  String get projects_diagrams_pick_project => 'Choose a project';
+
+  @override
+  String get projects_diagrams_no_projects => 'Create a project first.';
+
+  @override
+  String get projects_diagrams_steps => 'steps';
+
+  @override
+  String get plan_workspace_breadcrumb => 'WORKSPACE • PROJECTS';
+
+  @override
+  String get plan_schedule_card_title => 'Schedule';
+
+  @override
+  String get plan_schedule_empty => 'No steps yet.';
+
+  @override
+  String get plan_focus_notes_title => 'Focus Notes';
+
+  @override
+  String get plan_notes_hint => 'Type notes here…';
+
+  @override
+  String get plan_add_step => 'Add step';
+
+  @override
+  String get plan_drop_steps => 'Drop steps here';
+
+  @override
+  String get plan_add_first_step => 'Add first step';
+
+  @override
+  String get plan_add_block_schedule => 'Schedule block';
+
+  @override
+  String get plan_add_block_notes => 'Focus notes block';
+
+  @override
+  String get plan_add_block_goals => 'Goals block';
+
+  @override
+  String get plan_add_block_flow => 'Process block';
+
+  @override
+  String get plan_connect_hint =>
+      'Tap a source block, then tap a target block to connect.';
+
+  @override
+  String get plan_link_added => 'Blocks connected';
+
+  @override
+  String get plan_goals_empty => 'No goals yet.';
+
+  @override
+  String get plan_add_goal => 'Add goal';
+
+  @override
+  String get plan_manage_blocks => 'Manage blocks';
+
+  @override
+  String get projects_tile_social_blocker => 'Social Blocker';
+
+  @override
+  String get social_shield_turn_on => 'Turn on Shield';
+
+  @override
+  String get social_shield_subtitle_no_auth =>
+      'Tap row to grant Screen Time (for rules)';
+
+  @override
+  String get social_shield_subtitle_pick_apps =>
+      'Tap row to choose apps — blocking follows rules';
+
+  @override
+  String get social_shield_subtitle_ready =>
+      'On — blocking runs when your rules are active';
+
+  @override
+  String get social_shield_subtitle_off =>
+      'Off — schedules and focus rules are paused';
+
+  @override
+  String get social_shield_choose_apps => 'Choose apps to block';
+
+  @override
+  String get social_shield_choose_apps_done => 'Tap to change blocked apps';
+
+  @override
+  String get social_shield_pick_apps_required =>
+      'Choose at least one app to block (or turn Shield off).';
+
+  @override
+  String get social_shield_apps_saved => 'Blocked apps updated.';
+
+  @override
+  String get social_shield_unsupported_platform =>
+      'App blocking is only on iOS and macOS.';
+
+  @override
+  String get projects_plugin_open => 'Open';
+
+  @override
+  String get projects_plugin_location_tracker => 'Location Tracker';
+
+  @override
+  String get projects_plugin_live_map => 'Live Map';
+
+  @override
+  String get projects_remove_plugin_title => 'Remove shortcut?';
+
+  @override
+  String projects_remove_plugin_body(String name) {
+    return 'Remove \"$name\" from quick actions?';
+  }
+
+  @override
+  String get projects_remove_plugin_confirm => 'Remove';
+
+  @override
+  String get integrations_title => 'Integrations';
+
+  @override
+  String get integrations_subtitle => 'Manage your document sources';
+
+  @override
+  String get integrations_active_services => 'Active Services';
+
+  @override
+  String get integrations_total_notes => 'Total Notes';
+
+  @override
+  String get integrations_search_hint => 'Search sources...';
+
+  @override
+  String get integrations_enabled_connections => 'ENABLED CONNECTIONS';
+
+  @override
+  String get integrations_filters => 'Filters';
+
+  @override
+  String get integrations_internal_notes => 'Internal Notes';
+
+  @override
+  String get integrations_primary_vault => 'Primary Vault (Local)';
+
+  @override
+  String get integrations_explore => 'Explore';
+
+  @override
+  String get integrations_google_drive => 'Google Drive';
+
+  @override
+  String get integrations_synced_cloud => 'Synced with Cloud';
+
+  @override
+  String get integrations_cloud_storage => 'Cloud Storage';
+
+  @override
+  String get integrations_sync_now => 'Sync Now';
+
+  @override
+  String get integrations_connect => 'Connect';
+
+  @override
+  String get integrations_notion_sync => 'Notion Sync';
+
+  @override
+  String get integrations_database_pipeline => 'Database Pipeline';
+
+  @override
+  String get integrations_fetch => 'Fetch';
+
+  @override
+  String get integrations_setup => 'Setup';
+
+  @override
+  String get integrations_slack_docs => 'Slack Docs';
+
+  @override
+  String get integrations_shared_channels => 'Shared Channels';
+
+  @override
+  String get integrations_notify_me => 'Notify Me';
+
+  @override
+  String get integrations_notion_config_title => 'Notion Configuration';
+
+  @override
+  String get integrations_notion_secret_label => 'Internal Integration Secret';
+
+  @override
+  String get integrations_save_fetch => 'Save & Fetch';
+
+  @override
+  String get integrations_marketplace_soon => 'Source Marketplace coming soon!';
+
+  @override
+  String get vault_breadcrumb_root => 'Vault';
+
+  @override
+  String get vault_section_folders => 'Folders';
+
+  @override
+  String get vault_section_notes => 'Notes';
+
+  @override
+  String get vault_section_media => 'Media';
+
+  @override
+  String get vault_section_other => 'Other files';
+
+  @override
+  String get vault_search_files => 'Search in this folder…';
+
+  @override
+  String get vault_empty_folder => 'This folder is empty';
+
+  @override
+  String vault_stats_folders(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count folders',
+      one: '1 folder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String vault_stats_notes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes',
+      one: '1 note',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String vault_stats_media(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get projects_workspace_empty => 'No workspace has been set up yet.';
+
+  @override
+  String get projects_workspace_start => 'Get started';
+
+  @override
   String get project_drive_sync => 'Cloud Sync';
 
   @override
@@ -133,7 +785,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get health_sync_failed => 'Sync failed. Please try again.';
 
   @override
+  String get health_motivation_engine_title => 'Motivation Engine';
+
+  @override
+  String get health_notification_engine_title => 'Notification Engine';
+
+  @override
+  String health_notification_engine_desc(int count) {
+    return '$count active reminders';
+  }
+
+  @override
+  String get health_motivation_all_done =>
+      'All daily targets hit—momentum is yours today.';
+
+  @override
+  String get health_motivation_strong => 'Strong day—keep your streak alive.';
+
+  @override
+  String get health_motivation_mid =>
+      'Steady progress—stack one more small win.';
+
+  @override
+  String get health_motivation_low =>
+      'Start with water or a short walk—small steps count.';
+
+  @override
+  String get health_motivation_empty =>
+      'Set your goals and we\'ll coach you through the day.';
+
+  @override
   String get health_update_weight => 'Update Weight';
+
+  @override
+  String get health_smart_scale_title => 'Smart scale';
+
+  @override
+  String get health_smart_scale_desc =>
+      'Sync from Apple Health or Health Connect (Withings, Eufy, Xiaomi, etc.)';
+
+  @override
+  String get health_smart_scale_sync => 'Sync smart scale';
+
+  @override
+  String get health_smart_scale_syncing => 'Syncing…';
+
+  @override
+  String get health_smart_scale_sync_ok => 'Weight synced from smart scale';
+
+  @override
+  String get health_smart_scale_sync_empty =>
+      'No weight found. Weigh in on your scale first, then sync.';
+
+  @override
+  String get health_smart_scale_sync_denied =>
+      'Health access denied. Enable in Settings.';
+
+  @override
+  String get health_smart_scale_desktop =>
+      'Smart scale sync is available on iPhone and Android only.';
+
+  @override
+  String get health_smart_scale_import => 'Import from smart scale';
 
   @override
   String get health_log_water => 'Log Water';
@@ -681,6 +1394,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get health_at_a_glance => 'Your health at a glance.';
+
+  @override
+  String get health_analyzing_meal => 'Analyzing meal…';
+
+  @override
   String get health_subtitle_health_first => 'Health First';
 
   @override
@@ -842,6 +1561,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get err_passkey_canceled => 'Passkey login was canceled.';
+
+  @override
+  String get err_google_canceled => 'Google sign-in was canceled.';
+
+  @override
+  String get err_google_failed =>
+      'Google sign-in failed. Enable Google in Supabase and add the web client ID.';
 
   @override
   String get err_passkey_failed => 'Security check failed. Please try again.';
@@ -1316,6 +2042,177 @@ class AppLocalizationsEn extends AppLocalizations {
   String get social_no_achievements_msg => 'No achievements logged yet.';
 
   @override
+  String get achievement_story_section => 'Snapshots';
+
+  @override
+  String get achievement_story_empty_hint =>
+      'Tap + to freeze a moment in time.';
+
+  @override
+  String get achievement_story_add => 'Add';
+
+  @override
+  String get achievement_feats_section => 'Memory lane';
+
+  @override
+  String get achievement_insights_title => 'Looking back';
+
+  @override
+  String achievement_insights_summary(
+    int count,
+    String meaning,
+    String impact,
+  ) {
+    return 'Monthly Reflection: $count feats recorded. Average Meaningfulness: $meaning, Average Impact: $impact';
+  }
+
+  @override
+  String get achievement_story_title_dialog => 'Name this win';
+
+  @override
+  String get achievement_story_title_hint => 'What did you achieve?';
+
+  @override
+  String get achievement_story_added => 'Story saved to your achievements.';
+
+  @override
+  String get achievement_story_save_failed => 'Could not save photo.';
+
+  @override
+  String get achievement_filter_label => 'Filter';
+
+  @override
+  String get achievement_filter_all_months => 'All months';
+
+  @override
+  String get achievement_filter_all_projects => 'All projects';
+
+  @override
+  String get plan_action_tab => 'PLAN';
+
+  @override
+  String get plan_action_empty =>
+      'Plan an action with expected points, then log real points after you do it.';
+
+  @override
+  String get plan_action_timeline => 'Timeline';
+
+  @override
+  String get plan_action_scoreboard => 'Scoreboard';
+
+  @override
+  String get plan_action_pending => 'Pending';
+
+  @override
+  String get plan_action_no_pending => 'All actions logged for this view.';
+
+  @override
+  String get plan_action_add => 'Plan action';
+
+  @override
+  String get plan_action_edit => 'Edit action';
+
+  @override
+  String get plan_action_log_real => 'Log real';
+
+  @override
+  String get plan_action_title_label => 'What will you do?';
+
+  @override
+  String get plan_action_title_required => 'Add a title for this action.';
+
+  @override
+  String get plan_action_expected_label => 'Expected points (0–100)';
+
+  @override
+  String get plan_action_real_label => 'Real points (0–100)';
+
+  @override
+  String get plan_action_real_hint => 'Leave empty until done';
+
+  @override
+  String get plan_action_points_invalid => 'Points must be 0–100.';
+
+  @override
+  String get plan_action_expected_short => 'Exp';
+
+  @override
+  String get plan_action_real_short => 'Real';
+
+  @override
+  String plan_action_expected_value(int points) {
+    return 'Expected: $points pts';
+  }
+
+  @override
+  String plan_action_delta_value(int delta) {
+    String _temp0 = intl.Intl.pluralLogic(
+      delta,
+      locale: localeName,
+      other: '$delta',
+      zero: 'even',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plan_action_month_summary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count actions in this view',
+      one: '1 action in this view',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get plan_action_total_expected => 'Total expected';
+
+  @override
+  String get plan_action_total_real => 'Total real';
+
+  @override
+  String get plan_action_delta => 'Net delta';
+
+  @override
+  String get achievement_on_this_day_title => 'On this day';
+
+  @override
+  String achievement_on_this_day_subtitle(String date) {
+    return 'Memories from $date';
+  }
+
+  @override
+  String achievement_years_ago(int years) {
+    String _temp0 = intl.Intl.pluralLogic(
+      years,
+      locale: localeName,
+      other: '$years years ago',
+      one: '1 year ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievement_archive_empty =>
+      'No memories yet. Journal entries and notes will appear here.';
+
+  @override
+  String achievement_archive_month_summary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count memories in this view',
+      one: '1 memory in this view',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievement_open_project => 'Open project';
+
+  @override
   String get social_delete_feat_title => 'Delete feat';
 
   @override
@@ -1389,7 +2286,493 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mind_needs_care => 'Needs Care';
 
   @override
+  String get mind_focus_current => 'Focus';
+
+  @override
+  String get mind_focus_none => 'Not set';
+
+  @override
   String get mind_quick_entry_hint => 'What\'s on your mind?';
+
+  @override
+  String get mindset_learn_title => 'Mindset log';
+
+  @override
+  String get mindset_learn_subtitle =>
+      'Capture principles and lessons you\'re internalizing.';
+
+  @override
+  String get mindset_learn_topic => 'Topic / principle';
+
+  @override
+  String get mindset_learn_topic_hint =>
+      'e.g. Patience, ship small, growth mindset';
+
+  @override
+  String get mindset_learn_lesson => 'What I learned';
+
+  @override
+  String get mindset_learn_feeling => 'Score (0–5)';
+
+  @override
+  String get mindset_learn_save => 'Save insight';
+
+  @override
+  String get mindset_learn_saved => 'Mindset insight saved';
+
+  @override
+  String get mindset_learn_validation => 'Add a topic and what you learned.';
+
+  @override
+  String get mindset_learn_history => 'Past insights';
+
+  @override
+  String get mindset_learn_empty =>
+      'No mindset notes yet. Log your first lesson above.';
+
+  @override
+  String get mindset_learn_open => 'Mindset';
+
+  @override
+  String get mind_focus_title => 'Focus areas';
+
+  @override
+  String get mind_focus_weekly_title => 'Weekly focus';
+
+  @override
+  String get mind_focus_monthly_title => 'Monthly focus';
+
+  @override
+  String mind_focus_goal_level(int level) {
+    return 'Goal: Lv. $level';
+  }
+
+  @override
+  String mind_focus_xp_progress(int current, int cap) {
+    return '$current / $cap XP';
+  }
+
+  @override
+  String get mind_focus_badge => 'FOCUS';
+
+  @override
+  String get mind_total_level => 'Total level';
+
+  @override
+  String get mind_streak_label => 'Streak';
+
+  @override
+  String mind_streak_days(int days) {
+    return '$days days';
+  }
+
+  @override
+  String get mind_streak_bonus => '+15% EXP bonus';
+
+  @override
+  String get mind_skill_tree_title => 'Skill tree';
+
+  @override
+  String get mind_skill_certificates_title => 'Certificates';
+
+  @override
+  String get mind_focus_subtitle =>
+      'Define weekly trends so you know where to put your energy.';
+
+  @override
+  String get mind_focus_empty =>
+      'No focus areas yet. Start from a template or create your own.';
+
+  @override
+  String get mind_focus_add => 'New focus area';
+
+  @override
+  String get mind_focus_edit => 'Edit focus area';
+
+  @override
+  String get mind_focus_save => 'Save focus area';
+
+  @override
+  String get mind_focus_weekly_goal => 'Logs per week (goal)';
+
+  @override
+  String get mind_focus_this_week => 'This week';
+
+  @override
+  String get mind_focus_select_hint =>
+      'Tap to focus on this area. Recent matching journal entries:';
+
+  @override
+  String get mind_focus_template_gym => 'Gym week';
+
+  @override
+  String get mind_focus_template_learn => 'Learn week';
+
+  @override
+  String get mind_focus_template_invest => 'Invest week';
+
+  @override
+  String get mind_focus_name_hint => 'Name (e.g. Gym week)';
+
+  @override
+  String get mind_focus_activities_label => 'Linked activities';
+
+  @override
+  String get mind_focus_name_required => 'Enter a name for this focus area';
+
+  @override
+  String get mind_focus_activities_required => 'Pick at least one activity';
+
+  @override
+  String get mind_focus_icon_label => 'Icon';
+
+  @override
+  String get mind_focus_color_label => 'Color';
+
+  @override
+  String get mind_focus_no_logs_yet =>
+      'No journal entries match this area yet.';
+
+  @override
+  String get mind_focus_log_now => 'Log for this area';
+
+  @override
+  String mind_focus_log_for_area(String name) {
+    return 'Focus area: $name';
+  }
+
+  @override
+  String get mind_focus_todos => 'To-do';
+
+  @override
+  String get mind_focus_open_projects => 'Projects';
+
+  @override
+  String get mind_focus_no_todos =>
+      'No active project tasks. Add tasks in Projects.';
+
+  @override
+  String mind_focus_more_todos(int count) {
+    return '+$count more in Projects';
+  }
+
+  @override
+  String get mind_dashboard_today => 'Today';
+
+  @override
+  String get mind_dashboard_title => 'My skills';
+
+  @override
+  String get mind_dashboard_weekly_topic => 'Topic this week';
+
+  @override
+  String get mind_dashboard_edit_topic => 'Edit topic this week';
+
+  @override
+  String get mind_dashboard_topic_title => 'Topic title';
+
+  @override
+  String get mind_dashboard_topic_title_hint => 'e.g. Presentation week';
+
+  @override
+  String get mind_dashboard_topic_quote_hint =>
+      'Your weekly focus quote or note';
+
+  @override
+  String get mind_dashboard_topic_saved => 'Weekly topic saved to quotes';
+
+  @override
+  String get mind_dashboard_target_skills => 'Target skills';
+
+  @override
+  String get mind_dashboard_in_progress => 'In progress';
+
+  @override
+  String get mind_dashboard_focus_week => 'Focus this week';
+
+  @override
+  String get mind_dashboard_add_task => '+ Add task';
+
+  @override
+  String get mind_dashboard_no_linked_projects =>
+      'Link target skills to projects to see tasks here.';
+
+  @override
+  String get mind_dashboard_status_done => 'DONE';
+
+  @override
+  String get mind_dashboard_status_waiting => 'WAITING';
+
+  @override
+  String get mind_dashboard_certificates => 'Skill certificates';
+
+  @override
+  String get mind_dashboard_see_all => 'See all';
+
+  @override
+  String get mind_dashboard_verified => 'Verified';
+
+  @override
+  String mind_focus_avg_mood(String score) {
+    return 'Avg mood this week: $score';
+  }
+
+  @override
+  String get mind_focus_history => 'Weekly history';
+
+  @override
+  String get mind_focus_history_title => 'Focus area history';
+
+  @override
+  String mind_focus_history_week_range(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String mind_focus_history_logs(int count, int goal) {
+    return '$count / $goal logs';
+  }
+
+  @override
+  String get mind_focus_history_no_logs => 'No logs';
+
+  @override
+  String get mind_focus_linked_project => 'Linked project';
+
+  @override
+  String get mind_focus_linked_project_none => 'None (all projects)';
+
+  @override
+  String mind_focus_linked_project_label(String name) {
+    return 'Project: $name';
+  }
+
+  @override
+  String get mind_focus_add_task_title => 'Add task';
+
+  @override
+  String get mind_focus_add_task_name => 'Task name';
+
+  @override
+  String get mind_focus_add_task_desc => 'Description (optional)';
+
+  @override
+  String get mind_focus_add_task_confirm => 'Add';
+
+  @override
+  String get mind_focus_add_task_need_project =>
+      'Create a project first, then add tasks here.';
+
+  @override
+  String get mind_focus_assign_project => 'Project';
+
+  @override
+  String get mind_focus_all_tasks_mood => 'All tasks done — mood +6 logged.';
+
+  @override
+  String mind_focus_daily_cap(int max) {
+    return 'Daily limit: $max tasks per focus area.';
+  }
+
+  @override
+  String mind_focus_daily_progress(int added, int max, int done) {
+    return '$added/$max today · $done done';
+  }
+
+  @override
+  String get mind_focus_daily_hint =>
+      'Add 2–5 tasks today. Finish more than 3 for mood +6.';
+
+  @override
+  String get mind_focus_weekly_hint =>
+      'Add 2–5 tasks this week. Finish more than 3 for mood +6.';
+
+  @override
+  String get mind_focus_monthly_hint =>
+      'Add 2–5 tasks this month. Finish more than 3 for mood +6.';
+
+  @override
+  String get mind_focus_special_mood =>
+      'More than 3 tasks done — mood +6 logged!';
+
+  @override
+  String get mind_skills_session_title => 'Skill session';
+
+  @override
+  String get mind_skills_session_subtitle =>
+      'Pick skills, run a focus block, log what you learned.';
+
+  @override
+  String get mind_skills_session_start => 'Start session';
+
+  @override
+  String get mind_skills_session_empty_month =>
+      'No skill sessions this month yet.';
+
+  @override
+  String mind_skills_session_skill_meta(int sessions, int minutes) {
+    return '$sessions sessions · ${minutes}m';
+  }
+
+  @override
+  String mind_skills_session_empty(int days) {
+    return 'No skill sessions in the last $days days.';
+  }
+
+  @override
+  String mind_skills_session_stats(int sessions, int minutes, String skill) {
+    return '$sessions sessions · $minutes min · top: $skill';
+  }
+
+  @override
+  String get mind_skills_session_live => 'SESSION LIVE';
+
+  @override
+  String get mind_skills_session_tap_start => 'TAP CENTER TO START';
+
+  @override
+  String get mind_skills_session_tap_finish => 'TAP CENTER TO STOP EARLY';
+
+  @override
+  String get mind_skills_session_listening =>
+      'SESSION LIVE · AUTO-LOG WHEN MUSIC ENDS';
+
+  @override
+  String get mind_skills_session_pick_skills =>
+      'Pick at least one skill before starting.';
+
+  @override
+  String get mind_skills_my_list => 'My skills';
+
+  @override
+  String get mind_skills_add_skill => 'Add skill';
+
+  @override
+  String get mind_skills_tap_list => 'Tap skills in the list to select';
+
+  @override
+  String get mind_skills_tap_list_project =>
+      'Select skills · project XP on log';
+
+  @override
+  String get mind_skills_status_in_session => 'In session';
+
+  @override
+  String get mind_skills_status_selected => 'Selected';
+
+  @override
+  String mind_skills_level_short(int level) {
+    return 'Lv $level';
+  }
+
+  @override
+  String mind_skills_session_logged(int minutes, int xp) {
+    return 'Session logged · $minutes min · +$xp XP';
+  }
+
+  @override
+  String get mind_skills_celebration_title => 'Skill proof saved';
+
+  @override
+  String mind_skills_celebration_proof(int minutes, int xp) {
+    return 'You focused $minutes min and earned +$xp XP — real practice on your record.';
+  }
+
+  @override
+  String mind_skills_celebration_level_up(String skills) {
+    return 'Level up: $skills';
+  }
+
+  @override
+  String mind_skills_celebration_streak(int days) {
+    return '$days-day streak — keep the chain alive.';
+  }
+
+  @override
+  String get mind_skills_celebration_goal =>
+      'Tomorrow’s you is built from sessions like this.';
+
+  @override
+  String get mind_skill_name_invalid => 'Name must be 1–24 characters.';
+
+  @override
+  String get mind_skill_name_duplicate => 'That skill already exists.';
+
+  @override
+  String get mind_skill_add_title => 'Add skill';
+
+  @override
+  String get mind_skill_edit_title => 'Edit skill';
+
+  @override
+  String get mind_skill_delete_title => 'Delete skill?';
+
+  @override
+  String mind_skill_delete_body(String name) {
+    return 'Remove “$name” from your library?';
+  }
+
+  @override
+  String get mind_skill_certificate_header => 'CERTIFICATE OF PRACTICE';
+
+  @override
+  String get mind_skill_certificate_subtitle =>
+      'Human capital · verified progress';
+
+  @override
+  String get mind_skill_certificate_awarded_to =>
+      'Awarded for sustained skill practice';
+
+  @override
+  String get mind_skill_certificate_level => 'Rank';
+
+  @override
+  String get mind_skill_certificate_xp => 'Experience';
+
+  @override
+  String get mind_skill_certificate_streak => 'Streak';
+
+  @override
+  String get mind_skill_certificate_proof =>
+      'This record reflects real sessions logged in ice_gate — your proof of growth.';
+
+  @override
+  String get mind_skill_certificate_seal => 'ICEGATE SEAL';
+
+  @override
+  String get mind_skill_certificate_select_session => 'Select for session';
+
+  @override
+  String get mind_skill_certificate_close => 'Close';
+
+  @override
+  String get mind_skill_certificate_created => 'Created';
+
+  @override
+  String get mind_skill_certificate_updated => 'Last updated';
+
+  @override
+  String get mind_skill_certificate_description => 'Description';
+
+  @override
+  String get mind_skill_certificate_description_hint =>
+      'What this skill means to you, or how you earned it…';
+
+  @override
+  String get mind_skill_certificate_edit => 'Edit certificate';
+
+  @override
+  String get mind_skill_certificate_save => 'Save certificate';
+
+  @override
+  String get mind_skill_certificates_table_title => 'Practice certificates';
+
+  @override
+  String get mind_skill_certificates_table_empty =>
+      'No skills in your library yet. Open Skills to start earning certificates.';
+
+  @override
+  String get mind_skill_certificates_col_skill => 'Skill';
 
   @override
   String get mood_trends_title => 'Mood Trends';
@@ -1468,6 +2851,142 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stat_sentiment => 'Sentiment';
 
   @override
+  String get stat_mind_logs => 'Logs (30d)';
+
+  @override
+  String get stat_active_days => 'Active days';
+
+  @override
+  String get stat_avg_mood => 'Avg mood';
+
+  @override
+  String get journal_hourly_logs => 'Logs by hour (today)';
+
+  @override
+  String get mind_insights_skill_title => 'Skill practice (30d)';
+
+  @override
+  String mind_insights_skill_summary(int sessions, int minutes) {
+    return '$sessions sessions · $minutes min';
+  }
+
+  @override
+  String mind_insights_top_skill_streak(String skill, int days) {
+    return 'Top streak · $skill · ${days}d';
+  }
+
+  @override
+  String get mind_insights_open_notes => 'Mind notes';
+
+  @override
+  String get mind_insights_open_skills => 'Skill certificates';
+
+  @override
+  String get mind_insights_open_gratitude => 'Gratitude';
+
+  @override
+  String get gratitude_page_subtitle =>
+      'Record the people and things you appreciate each day.';
+
+  @override
+  String get gratitude_section_people => 'People';
+
+  @override
+  String get gratitude_section_things => 'Things';
+
+  @override
+  String gratitude_count(int count) {
+    return '$count entries';
+  }
+
+  @override
+  String get gratitude_quick_entry_hint =>
+      'Log who you\'re grateful for today...';
+
+  @override
+  String get gratitude_empty_title => 'Your gratitude flag';
+
+  @override
+  String get gratitude_empty_subtitle =>
+      'Tap below to add someone or something you\'re grateful for.';
+
+  @override
+  String get gratitude_kind_person => 'Person';
+
+  @override
+  String get gratitude_kind_thing => 'Thing';
+
+  @override
+  String get gratitude_add_title => 'Add gratitude';
+
+  @override
+  String get gratitude_name_label => 'Name';
+
+  @override
+  String get gratitude_note_hint => 'A note (optional)';
+
+  @override
+  String get gratitude_facebook_link_label => 'Facebook link';
+
+  @override
+  String get gratitude_facebook_link_hint => 'Paste a Facebook profile URL';
+
+  @override
+  String get gratitude_pick_avatar => 'Choose profile photo';
+
+  @override
+  String get gratitude_change_photo => 'Change photo';
+
+  @override
+  String get gratitude_open_facebook => 'Open Facebook';
+
+  @override
+  String get gratitude_update_flag => 'Update Flag';
+
+  @override
+  String get gratitude_edit_title => 'Edit gratitude';
+
+  @override
+  String get gratitude_tags_label => 'Tags';
+
+  @override
+  String get gratitude_filter_all => 'All';
+
+  @override
+  String get gratitude_filter_things => 'Things';
+
+  @override
+  String get gratitude_tag_play => 'Play';
+
+  @override
+  String get gratitude_tag_learn => 'Learn';
+
+  @override
+  String get gratitude_tag_work => 'Work';
+
+  @override
+  String get gratitude_tag_health => 'Health';
+
+  @override
+  String get gratitude_tag_social => 'Social';
+
+  @override
+  String get gratitude_tag_family => 'Family';
+
+  @override
+  String get gratitude_invalid_facebook_link => 'Invalid Facebook link';
+
+  @override
+  String get gratitude_delete_confirm => 'Remove this gratitude entry?';
+
+  @override
+  String get gratitude_pick_title => 'Who or what are you grateful for?';
+
+  @override
+  String get gratitude_pick_required =>
+      'Pick someone or something you\'re grateful for.';
+
+  @override
   String get weekly_mood_trend => 'Weekly Mood Trend';
 
   @override
@@ -1531,6 +3050,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get act_kindness => 'Kindness';
 
   @override
+  String get act_gratitude => 'Gratitude';
+
+  @override
   String get act_gaming => 'Gaming';
 
   @override
@@ -1541,6 +3063,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get act_walking => 'Walking';
+
+  @override
+  String get act_focus_todos_streak => '4+ focus tasks done';
+
+  @override
+  String get act_focus_todos_complete => 'Focus tasks complete';
 
   @override
   String get act_logging => 'Logging';
@@ -1611,6 +3139,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projects => 'Projects';
+
+  @override
+  String get projects_page_tagline =>
+      'Sessions, tasks, and notes in one place.';
+
+  @override
+  String get projects_summary_workspaces => 'Workspaces';
+
+  @override
+  String get projects_summary_plugins => 'Plugins';
+
+  @override
+  String get projects_quick_more => 'More shortcuts';
 
   @override
   String get kcal_consume => 'Kcal Consumed';
@@ -1830,7 +3371,492 @@ class AppLocalizationsEn extends AppLocalizations {
   String get canvas_goal_center => 'Goal Evolution';
 
   @override
+  String get dev_quick_tabs_title => 'Software Dev';
+
+  @override
+  String get dev_quick_tabs_subtitle =>
+      'Saved browser tabs — Northflank, Supabase, n8n, and more.';
+
+  @override
+  String get dev_quick_tabs_empty => 'No tabs yet. Tap + to add one.';
+
+  @override
+  String get dev_quick_tabs_add => 'Add tab';
+
+  @override
+  String get dev_quick_tabs_open => 'Open';
+
+  @override
+  String get dev_quick_tabs_edit => 'Edit tab';
+
+  @override
+  String get dev_quick_tabs_label => 'Title';
+
+  @override
+  String get dev_quick_tabs_url => 'Local URL (LAN)';
+
+  @override
+  String get dev_quick_tabs_remote_url => 'Remote URL';
+
+  @override
+  String get dev_quick_tabs_remote_url_hint =>
+      'Used when the LAN address is unreachable (VPN, Tailscale, public host).';
+
+  @override
+  String get dev_quick_tabs_validation_error =>
+      'Title and at least one URL are required';
+
+  @override
+  String get dev_quick_tabs_delete_title => 'Delete tab?';
+
+  @override
+  String dev_quick_tabs_delete_message(String title) {
+    return 'Remove \"$title\" from quick access.';
+  }
+
+  @override
+  String get dev_quick_tabs_delete_confirm => 'Delete';
+
+  @override
+  String get dev_quick_tabs_credentials => 'Saved logins';
+
+  @override
+  String get dev_quick_tabs_credentials_subtitle =>
+      'HTTP login and SSL trust per host.';
+
+  @override
+  String get dev_quick_tabs_credentials_login => 'Login saved';
+
+  @override
+  String get dev_quick_tabs_credentials_ssl => 'SSL trusted';
+
+  @override
+  String get dev_quick_tabs_credentials_none => 'No saved data';
+
+  @override
+  String get dev_quick_tabs_credentials_set_login => 'Set login';
+
+  @override
+  String get dev_quick_tabs_credentials_username => 'Username';
+
+  @override
+  String get dev_quick_tabs_credentials_password => 'Password';
+
+  @override
+  String get dev_quick_tabs_credentials_passkey => 'Passkey / API key';
+
+  @override
+  String get dev_quick_tabs_credentials_saved => 'Credentials saved';
+
+  @override
+  String get dev_quick_tabs_credentials_ssl_hint =>
+      'For self-signed homelab HTTPS (e.g. OPNsense).';
+
+  @override
+  String get dev_quick_tabs_credentials_clear => 'Clear all';
+
+  @override
+  String get dev_quick_tabs_credentials_clear_title => 'Clear saved data?';
+
+  @override
+  String dev_quick_tabs_credentials_clear_message(String host) {
+    return 'Remove login and SSL trust for $host.';
+  }
+
+  @override
+  String get dev_quick_tabs_credentials_revoke_ssl => 'Revoke SSL trust';
+
+  @override
+  String get dev_quick_tabs_login_type => 'Login type';
+
+  @override
+  String get dev_quick_tabs_login_type_html_form =>
+      'HTML form (OPNsense, homelab)';
+
+  @override
+  String get dev_quick_tabs_login_type_email_password =>
+      'Email + password (SPA)';
+
+  @override
+  String get dev_quick_tabs_login_type_http_basic => 'HTTP Basic only';
+
+  @override
+  String get dev_quick_tabs_login_type_api_key => 'API key / token';
+
+  @override
+  String get dev_quick_tabs_login_type_bearer_token =>
+      'Bearer token (K8s Dashboard)';
+
+  @override
+  String get dev_quick_tabs_login_type_external_browser =>
+      'Open in Safari / Chrome';
+
+  @override
+  String get dev_quick_tabs_login_type_oauth =>
+      'OAuth / SSO (manual in WebView)';
+
+  @override
+  String get dev_quick_tabs_login_type_none => 'No autofill';
+
+  @override
+  String get dev_quick_tabs_credentials_email => 'Email';
+
+  @override
+  String get dev_quick_tabs_credentials_bearer_token => 'Bearer token';
+
+  @override
+  String get dev_quick_tabs_login_type_external_browser_hint =>
+      'Opens this site in your system browser — best for GitHub, Google SSO, and passkeys.';
+
+  @override
+  String get dev_quick_tabs_login_type_oauth_hint =>
+      'GitHub or Google sign-in cannot be auto-filled. Use manual login.';
+
+  @override
+  String get webview_connection_error => 'Connection Error';
+
+  @override
+  String get webview_retry => 'Retry';
+
+  @override
+  String get webview_ssl_trust_title => 'Trust homelab certificate?';
+
+  @override
+  String webview_ssl_trust_message(String host) {
+    return 'The certificate for $host is not trusted (common for OPNsense and LAN devices). Only continue on networks you trust.';
+  }
+
+  @override
+  String get webview_ssl_trust_continue => 'Trust and continue';
+
+  @override
+  String get webview_choose_url => 'Choose URL';
+
+  @override
+  String get webview_ssl_protocol_hint =>
+      'This often means the server uses plain HTTP, not HTTPS. Edit the tab URL to http:// or tap Try HTTP below.';
+
+  @override
+  String get webview_ssl_protocol_tailscale_hint =>
+      'Tailscale HTTPS is usually on your machine name (https://name.tailnet.ts.net on port 443 via Serve), not https://100.x.x.x:9001. Port 9001 is often HTTP-only behind the proxy — put the Serve URL in Remote URL.';
+
+  @override
+  String get webview_try_http => 'Try HTTP';
+
+  @override
   String get canvas_goal_desc => 'Adjust tactical goal parameters';
+
+  @override
+  String get canvas_finance_reports_title => 'Finance reports';
+
+  @override
+  String get canvas_finance_reports_desc =>
+      'Daily summary, local reminders, and shortcuts';
+
+  @override
+  String get canvas_finance_n8n_title => 'Email report';
+
+  @override
+  String get canvas_finance_n8n_desc =>
+      'Finance and health snapshot delivered through n8n';
+
+  @override
+  String get canvas_finance_n8n_send_success => 'Report sent to n8n.';
+
+  @override
+  String get canvas_finance_n8n_send_failed =>
+      'Could not send report. Try again later.';
+
+  @override
+  String get canvas_finance_n8n_not_configured =>
+      'n8n webhook is not configured in the app environment.';
+
+  @override
+  String get canvas_finance_n8n_no_email =>
+      'Add an email to your profile before sending a report.';
+
+  @override
+  String get canvas_finance_n8n_confirm_title => 'Send email report?';
+
+  @override
+  String canvas_finance_n8n_confirm_message(String email) {
+    return 'Today\'s finance and health summary will be sent to n8n for delivery to $email.';
+  }
+
+  @override
+  String get canvas_mail_summary_recipient => 'Recipient';
+
+  @override
+  String get canvas_mail_summary_finance => 'Finance today';
+
+  @override
+  String get canvas_mail_summary_health => 'Health today';
+
+  @override
+  String get canvas_mail_summary_send => 'Send email report';
+
+  @override
+  String get canvas_mail_summary_auto_title => 'Automatic daily email';
+
+  @override
+  String get canvas_mail_summary_auto_subtitle =>
+      'After this time, send once per day while the app is open';
+
+  @override
+  String get mail_suggestion_title => 'Report tips';
+
+  @override
+  String get mail_suggestion_ai_loading => 'AI is analyzing your day…';
+
+  @override
+  String get mail_suggestion_ai_fallback =>
+      'Offline tips — connect MAIL_SUGGESTIONS_AGENT_URL for AI.';
+
+  @override
+  String get mail_suggestion_negative_net =>
+      'Today\'s spending exceeded income — review recent transactions.';
+
+  @override
+  String get mail_suggestion_no_transactions =>
+      'No transactions logged today — add expenses to keep reports accurate.';
+
+  @override
+  String mail_suggestion_budget_high(String percent) {
+    return 'You\'ve used $percent% of your monthly budget — pace spending.';
+  }
+
+  @override
+  String get mail_suggestion_monthly_deficit =>
+      'Monthly spending exceeds income — consider trimming fixed costs.';
+
+  @override
+  String mail_suggestion_steps_low(String percent) {
+    return 'Steps at $percent% of goal — a short walk helps hit your target.';
+  }
+
+  @override
+  String get mail_suggestion_water_low =>
+      'Water intake is below half your goal — hydrate through the day.';
+
+  @override
+  String get mail_suggestion_sleep_low =>
+      'Sleep below your goal — try an earlier wind-down tonight.';
+
+  @override
+  String get mail_suggestion_log_mood =>
+      'No mood logged today — a quick check-in improves your trends.';
+
+  @override
+  String get mail_suggestion_focus_low =>
+      'Focus time is low — schedule a short deep-work block.';
+
+  @override
+  String mail_suggestion_tasks_many(String count) {
+    return '$count active tasks open — pick one priority for tomorrow.';
+  }
+
+  @override
+  String get reports_hub_title => 'Report via mail';
+
+  @override
+  String get reports_hub_subtitle =>
+      'Daily finance on device, email delivery through n8n';
+
+  @override
+  String get system_monitor_title => 'System Monitor';
+
+  @override
+  String get system_monitor_subtitle =>
+      'Homelab launcher, dev accounts, DB & sync telemetry — admin only.';
+
+  @override
+  String get system_monitor_denied_title => 'Admin access required';
+
+  @override
+  String get system_monitor_denied_body =>
+      'This page is restricted to accounts with the admin role.';
+
+  @override
+  String system_monitor_denied_roles(String local, String remote) {
+    return 'Local: $local · Remote: $remote';
+  }
+
+  @override
+  String get system_monitor_denied_hint =>
+      'Set role to admin in Supabase → Table Editor → user_accounts (not Auth metadata). Then tap Refresh role.';
+
+  @override
+  String get system_monitor_retry => 'Refresh role';
+
+  @override
+  String get system_monitor_overview_section => 'Overview';
+
+  @override
+  String get system_monitor_db_section => 'Local database';
+
+  @override
+  String get system_monitor_sync_section => 'Sync engine';
+
+  @override
+  String get system_monitor_app_version => 'App version';
+
+  @override
+  String get system_monitor_platform => 'Platform';
+
+  @override
+  String get system_monitor_role => 'Role';
+
+  @override
+  String get system_monitor_auth_status => 'Auth status';
+
+  @override
+  String get system_monitor_supabase_user => 'Supabase user';
+
+  @override
+  String get system_monitor_running_checks => 'Running diagnostics…';
+
+  @override
+  String get system_monitor_healthy => 'Database healthy';
+
+  @override
+  String get system_monitor_issues => 'Issues detected';
+
+  @override
+  String get system_monitor_smoke_test => 'Smoke test';
+
+  @override
+  String get system_monitor_sync_active => 'Sync active';
+
+  @override
+  String get system_monitor_sync_status => 'Last status';
+
+  @override
+  String get system_monitor_uptime => 'Session uptime';
+
+  @override
+  String get system_monitor_open_sync_engine => 'Open Sync Engine';
+
+  @override
+  String get dev_launcher_web_title => 'Web apps (homelab)';
+
+  @override
+  String get dev_launcher_accounts_title => 'Dev & cloud accounts';
+
+  @override
+  String get dev_launcher_accounts_empty =>
+      'Save OPNsense, Supabase, Northflank, n8n logins here. Secrets stay on device.';
+
+  @override
+  String get dev_launcher_add_web => 'Add web app';
+
+  @override
+  String get dev_launcher_add_account => 'Add dev account';
+
+  @override
+  String get dev_launcher_name => 'Name';
+
+  @override
+  String get dev_launcher_url => 'URL';
+
+  @override
+  String get dev_launcher_service => 'Service';
+
+  @override
+  String get dev_launcher_username => 'Username';
+
+  @override
+  String get dev_launcher_password => 'Password / API key';
+
+  @override
+  String get dev_launcher_copied => 'Copied to clipboard';
+
+  @override
+  String get dev_launcher_pin_canvas => 'Pin to Canvas';
+
+  @override
+  String get dev_launcher_pinned => 'Added to Canvas widgets';
+
+  @override
+  String get dev_launcher_add_from_catalog => 'From plugin catalog';
+
+  @override
+  String get dev_launcher_pick_plugin => 'Homelab web plugins';
+
+  @override
+  String get infra_api_section_title => 'Infra API';
+
+  @override
+  String get infra_api_section_subtitle =>
+      'Connect Cloudflare, Tailscale, Northflank. API tokens stay on this device.';
+
+  @override
+  String infra_api_configure(String provider) {
+    return 'Configure $provider';
+  }
+
+  @override
+  String get infra_api_token_label => 'API token / key';
+
+  @override
+  String get infra_api_tailnet_label => 'Tailnet name';
+
+  @override
+  String get infra_api_tailnet_hint => 'Use - for default tailnet';
+
+  @override
+  String get infra_api_clear => 'Remove';
+
+  @override
+  String get infra_api_test => 'Test connection';
+
+  @override
+  String get infra_api_not_configured => 'Not configured';
+
+  @override
+  String get infra_api_connected => 'Connected';
+
+  @override
+  String get infra_api_token_saved => 'Token saved — tap Test';
+
+  @override
+  String infra_api_test_ok(String summary) {
+    return 'OK · $summary';
+  }
+
+  @override
+  String infra_api_test_fail(String message) {
+    return 'Failed · $message';
+  }
+
+  @override
+  String get island_system_monitor => 'SYSTEM MONITOR';
+
+  @override
+  String get reports_mail_section_title => 'Email via n8n';
+
+  @override
+  String get reports_mail_section_subtitle =>
+      'Finance and health snapshot delivered by email';
+
+  @override
+  String get reports_finance_section => 'On-device finance report';
+
+  @override
+  String get reports_recipient_hint => 'recipient@example.com';
+
+  @override
+  String get reports_recipient_save => 'Save recipient';
+
+  @override
+  String get reports_recipient_saved => 'Report recipient saved.';
+
+  @override
+  String reports_recipient_profile_fallback(String email) {
+    return 'Profile email default: $email';
+  }
+
+  @override
+  String get canvas_finance_n8n_confirm_send => 'Send';
 
   @override
   String get gps_permissions_required =>
@@ -2138,10 +4164,83 @@ class AppLocalizationsEn extends AppLocalizations {
   String get project_notes_label => 'Notes';
 
   @override
+  String get note_type_picker_title => 'Choose note type';
+
+  @override
+  String get note_type_markdown => 'Markdown (.md)';
+
+  @override
+  String get note_type_plain_text => 'Plain text (.txt)';
+
+  @override
+  String get note_type_word => 'Word (.docx)';
+
+  @override
+  String get project_journal_label => 'Journal';
+
+  @override
+  String get project_no_journal =>
+      'No journal entries yet. Tap + to log mood and progress.';
+
+  @override
+  String get project_journal_entry => 'Project log';
+
+  @override
+  String project_log_context(String name) {
+    return 'Project: $name';
+  }
+
+  @override
+  String get project_journal_mood_label => 'Mood';
+
+  @override
+  String get project_journal_desc_label => 'Description';
+
+  @override
+  String get project_journal_save => 'Save log';
+
+  @override
+  String get project_journal_composer_hint =>
+      'Tap to record how this project session felt.';
+
+  @override
+  String project_journal_count(int count) {
+    return '$count';
+  }
+
+  @override
   String get project_no_notes => 'No notes yet. Tap + to create one.';
 
   @override
   String get project_no_notes_list => 'No notes found';
+
+  @override
+  String get project_choose_document_type => 'Choose document type';
+
+  @override
+  String get project_doc_blank_note => 'Blank note';
+
+  @override
+  String get project_doc_blank_note_desc => 'Start with a clean slate';
+
+  @override
+  String get project_doc_tech => 'Technical doc';
+
+  @override
+  String get project_doc_tech_desc =>
+      'Architecture and implementation template';
+
+  @override
+  String get project_doc_api => 'API specification';
+
+  @override
+  String get project_doc_api_desc => 'Endpoints and schema template';
+
+  @override
+  String get project_doc_tech_title => 'Technical Documentation';
+
+  @override
+  String get project_doc_api_title => 'API Specification';
 
   @override
   String get project_finance_label => 'Finance';
@@ -2151,10 +4250,224 @@ class AppLocalizationsEn extends AppLocalizations {
       'No financial records linked to this project.';
 
   @override
+  String get project_skills_label => 'Skills';
+
+  @override
+  String get project_no_skills =>
+      'No skills yet. Tap + to track what you improve on this project.';
+
+  @override
+  String get project_add_skill_title => 'Add skill';
+
+  @override
+  String get project_skill_name_hint =>
+      'e.g. Flutter, debugging, system design';
+
+  @override
+  String project_skill_streak_days(int count) {
+    return '$count day streak';
+  }
+
+  @override
+  String get project_skill_streak_none => 'No streak yet';
+
+  @override
+  String project_skill_xp_hint(int total, int remaining) {
+    return '$total XP · $remaining XP to next level';
+  }
+
+  @override
+  String get project_skill_xp_on_complete =>
+      'Complete tasks to earn +15 XP per skill';
+
+  @override
+  String get project_skill_log_session =>
+      'Log a Skill Boost session to level these skills.';
+
+  @override
+  String get project_skill_practice => 'Open Skill Boost';
+
+  @override
+  String get project_skill_tap_to_start =>
+      'Select one or more skills, then start the session';
+
+  @override
+  String project_skill_start_session(int count) {
+    return 'Start session ($count)';
+  }
+
+  @override
+  String get project_skill_catalog_hint =>
+      'Pick from the same skills as Mind → Skills tiles.';
+
+  @override
+  String get project_auto_add_all_skills => 'Create new skill';
+
+  @override
+  String get project_auto_add_all_skills_subtitle =>
+      'Add a brand-new skill to Mind and this project';
+
+  @override
+  String get project_skill_already_exists => 'That skill already exists';
+
+  @override
+  String get project_skill_name_too_long =>
+      'Skill name too long (max 24 characters)';
+
+  @override
+  String get project_skills_all_on_project =>
+      'All Mind skills are already on this project';
+
+  @override
+  String project_skills_added_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skills added',
+      one: '1 skill added',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String project_skill_delete_confirm(String name) {
+    return 'Remove \"$name\" from this project?';
+  }
+
+  @override
+  String get project_skill_added => 'Skill added';
+
+  @override
+  String project_skill_xp_granted(int xp) {
+    return 'Skills gained +$xp XP';
+  }
+
+  @override
+  String get project_sub_projects_label => 'Sub-projects';
+
+  @override
+  String get project_no_sub_projects =>
+      'No sub-projects yet. Tap + to add a child project.';
+
+  @override
+  String get project_add_sub_project_title => 'New sub-project';
+
+  @override
+  String get project_sub_project_name_hint => 'Sub-project name';
+
+  @override
   String get project_add_task_title => 'New Task';
 
   @override
+  String get project_task_assign_to => 'Assign to project';
+
+  @override
   String get project_task_title_hint => 'Task title';
+
+  @override
+  String get project_sdlc_board_title => 'SDLC board';
+
+  @override
+  String get project_sdlc_open => 'Open SDLC board';
+
+  @override
+  String get project_sdlc_add_task_title => 'Add SDLC task';
+
+  @override
+  String get project_sdlc_move_phase => 'SDLC phase';
+
+  @override
+  String get project_sdlc_due_date => 'Due date';
+
+  @override
+  String get project_sdlc_due_date_none => 'No due date';
+
+  @override
+  String get project_sdlc_clear_due_date => 'Clear due date';
+
+  @override
+  String get project_sdlc_default_purpose =>
+      'Define what this project must deliver and why.';
+
+  @override
+  String get project_sdlc_empty =>
+      'No active tasks. Tap + to add one to a phase.';
+
+  @override
+  String get project_sdlc_column_empty => 'No tasks';
+
+  @override
+  String get project_sdlc_add_to_phase => 'Add task to this phase';
+
+  @override
+  String get project_sdlc_drop_here => 'Drop to move here';
+
+  @override
+  String project_sdlc_task_moved(String phase) {
+    return 'Moved to $phase';
+  }
+
+  @override
+  String project_sdlc_phase_stat(int phase, int count) {
+    return 'P$phase: $count';
+  }
+
+  @override
+  String get project_sdlc_phase_planning_title => 'Planning & requirements';
+
+  @override
+  String get project_sdlc_phase_planning_hint => 'SRS, feasibility';
+
+  @override
+  String get project_sdlc_phase_design_title => 'Architecture & design';
+
+  @override
+  String get project_sdlc_phase_design_hint => 'Tech stack, UI';
+
+  @override
+  String get project_sdlc_phase_implementation_title => 'Implementation';
+
+  @override
+  String get project_sdlc_phase_implementation_hint => 'Code, Git, reviews';
+
+  @override
+  String get project_sdlc_phase_testing_title => 'Testing & QA';
+
+  @override
+  String get project_sdlc_phase_testing_hint => 'Unit, integration, UAT';
+
+  @override
+  String get project_sdlc_phase_deployment_title => 'Deployment';
+
+  @override
+  String get project_sdlc_phase_deployment_hint => 'CI/CD, release';
+
+  @override
+  String get project_sdlc_phase_maintenance_title => 'Operations & maintenance';
+
+  @override
+  String get project_sdlc_phase_maintenance_hint => 'Monitor, patches, scale';
+
+  @override
+  String get project_sdlc_no_project =>
+      'Create a project first to open the SDLC board.';
+
+  @override
+  String get project_sdlc_pick_project => 'Choose project for SDLC board';
+
+  @override
+  String get task_delete_tooltip => 'Delete task';
+
+  @override
+  String get task_delete_confirm_title => 'Delete task';
+
+  @override
+  String task_delete_confirm_msg(String name) {
+    return 'Are you sure you want to delete \"$name\"? This cannot be undone.';
+  }
+
+  @override
+  String get task_deleted_msg => 'Task deleted';
 
   @override
   String get project_add_investment_title => 'Add Investment';
@@ -2201,6 +4514,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get project_note_no_content => 'No content';
+
+  @override
+  String get note_editor_write_hint => 'Start writing your note…';
+
+  @override
+  String note_editor_saved_label(String when) {
+    return 'Saved $when';
+  }
+
+  @override
+  String get note_editor_saved_just_now => 'just now';
+
+  @override
+  String note_editor_saved_minutes(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String note_editor_saved_hours(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String get note_editor_unsaved => 'Unsaved';
+
+  @override
+  String get note_editor_saving => 'Saving…';
 
   @override
   String get focus_select_project => 'TAP TO SELECT PROJECT';
@@ -2431,6 +4771,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'I understand my account may not be fully erased from the server until backend deletion is enabled.';
 
   @override
+  String get delete_account_type_key_word => 'DELETE-ACCOUNT';
+
+  @override
+  String delete_account_type_key_prompt(String word) {
+    return 'Type $word to confirm:';
+  }
+
+  @override
   String get delete_account_confirm => 'Delete and sign out';
 
   @override
@@ -2477,6 +4825,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notification_daily_quest => 'DAILY QUEST';
 
   @override
+  String get notification_no_active_quests =>
+      'No active quests right now. Complete tasks in Projects to earn daily quests.';
+
+  @override
   String notification_quest_completed_snack(String title, int exp) {
     return 'Quest completed: $title (+$exp EXP)';
   }
@@ -2493,6 +4845,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notification_disabled_desc =>
       'System notifications are currently disabled.';
+
+  @override
+  String get notification_system_preferences => 'SYSTEM PREFERENCES';
+
+  @override
+  String get notification_pomodoro_reminder_title => 'Pomodoros Reminder';
+
+  @override
+  String get notification_pomodoro_reminder_subtitle =>
+      'Receive notification after you finish a pomodoro or end a break.';
+
+  @override
+  String get notification_live_activities_title => 'Live Activities';
+
+  @override
+  String get notification_live_activities_subtitle =>
+      'Track focus timer and information on your Lock Screen.';
+
+  @override
+  String get notification_morning_briefing_subtitle =>
+      'Today\'s schedule, yesterday recap, and motivation when you first open Home (5:00–11:59).';
+
+  @override
+  String get notification_status_on => 'on';
+
+  @override
+  String get notification_status_off => 'off';
 
   @override
   String get notification_wisdom_board => 'Wisdom Board';
@@ -2523,6 +4902,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notification_focus_complete => 'FOCUS COMPLETE';
+
+  @override
+  String get notification_task_success => 'TASK SUCCESS';
 
   @override
   String get notification_reminder => 'REMINDER';
@@ -2579,6 +4961,141 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finance_label_description_optional => 'Description (optional)';
 
   @override
+  String get finance_txn_source_account => 'Paid from';
+
+  @override
+  String get finance_txn_source_account_none => 'Not specified';
+
+  @override
+  String get finance_txn_source_account_empty =>
+      'Save a wallet or account first, then choose it when logging spend.';
+
+  @override
+  String get finance_txn_source_account_add => 'Add account';
+
+  @override
+  String get finance_txn_source_account_required =>
+      'Choose which account this money left.';
+
+  @override
+  String get finance_recurring_income => 'Recurring income';
+
+  @override
+  String get finance_recurring_interval => 'Repeat every';
+
+  @override
+  String get finance_fixed_income_title => 'Fixed income';
+
+  @override
+  String get finance_fixed_income_subtitle =>
+      'Human capital (skills), salary, rent received, and other steady inflows';
+
+  @override
+  String get finance_fixed_income_monthly_total => 'Monthly total';
+
+  @override
+  String get finance_fixed_income_empty => 'No fixed income yet';
+
+  @override
+  String get finance_shortcut_transaction => 'Transaction';
+
+  @override
+  String get finance_shortcut_account => 'Account';
+
+  @override
+  String get finance_shortcut_asset => 'Asset';
+
+  @override
+  String get finance_shortcut_income => 'Income';
+
+  @override
+  String get finance_fixed_income_add => 'Add fixed income';
+
+  @override
+  String get finance_fixed_income_new => 'New fixed income';
+
+  @override
+  String get finance_fixed_income_edit => 'Edit fixed income';
+
+  @override
+  String get finance_fixed_income_name => 'Income name';
+
+  @override
+  String get finance_fixed_income_next => 'Next payout';
+
+  @override
+  String get finance_fixed_income_delete_confirm =>
+      'Remove this fixed income schedule?';
+
+  @override
+  String get finance_insight_title => 'Analysis';
+
+  @override
+  String get finance_insight_suggestions => 'Suggestions';
+
+  @override
+  String get finance_insight_enter_amount =>
+      'Enter an amount to preview how this affects your month.';
+
+  @override
+  String finance_insight_fixed_after(String amount) {
+    return 'After saving: about $amount/month in fixed income.';
+  }
+
+  @override
+  String finance_insight_covers_spending(String percent, String spent) {
+    return 'Covers about $percent% of spending logged this month ($spent).';
+  }
+
+  @override
+  String finance_insight_shortfall(String amount) {
+    return 'Still about $amount short vs monthly spending.';
+  }
+
+  @override
+  String finance_insight_surplus(String amount) {
+    return 'Roughly $amount/month left after typical spending.';
+  }
+
+  @override
+  String finance_insight_duplicate_fixed(String name) {
+    return 'You already have fixed income in “$name” — avoid double counting.';
+  }
+
+  @override
+  String finance_insight_expense_share(String percent) {
+    return 'This would be about $percent% of spending this month.';
+  }
+
+  @override
+  String get finance_insight_expense_large =>
+      'Large one-off expense — double-check the category.';
+
+  @override
+  String finance_insight_income_share(String percent) {
+    return 'Adds about $percent% to income logged this month.';
+  }
+
+  @override
+  String finance_insight_recurring_equiv(String amount) {
+    return 'As recurring: about $amount/month on top of fixed income.';
+  }
+
+  @override
+  String finance_insight_savings_total(String amount) {
+    return 'Savings balance would reach about $amount.';
+  }
+
+  @override
+  String get finance_interval_weekly => 'Week';
+
+  @override
+  String get finance_interval_monthly => 'Month';
+
+  @override
+  String get finance_interval_yearly => 'Year';
+
+  @override
   String get finance_btn_add => 'Add';
 
   @override
@@ -2615,6 +5132,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finance_see_all => 'SEE ALL';
 
   @override
+  String get finance_daily_report_title => 'Daily report';
+
+  @override
+  String get finance_daily_report_reminder => 'Daily reminder';
+
+  @override
+  String get finance_daily_report_reminder_subtitle =>
+      'Local notification that opens this report';
+
+  @override
+  String get finance_daily_report_open => 'Open daily report';
+
+  @override
+  String get finance_daily_report_income => 'Income';
+
+  @override
+  String get finance_daily_report_expense => 'Expenses';
+
+  @override
+  String get finance_daily_report_net => 'Net';
+
+  @override
+  String get finance_daily_report_spending_by_category =>
+      'Spending by category';
+
+  @override
+  String get finance_daily_report_today_transactions => 'Today\'s activity';
+
+  @override
+  String get finance_daily_report_empty_day =>
+      'No transactions for this day yet.';
+
+  @override
+  String get finance_daily_report_notifications_off =>
+      'Enable system notifications in Settings to use daily reminders.';
+
+  @override
   String get finance_cat_food => 'Food';
 
   @override
@@ -2639,6 +5193,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finance_cat_subscriptions => 'Subscriptions';
 
   @override
+  String get finance_subscriptions_active_header => 'ACTIVE SUBSCRIPTIONS';
+
+  @override
+  String get finance_subscriptions_monthly_total => 'MONTHLY TOTAL';
+
+  @override
+  String get finance_subscriptions_next_month_header => 'PLAN NEXT MONTH';
+
+  @override
+  String get finance_subscriptions_next_month_total => 'PLANNED TOTAL';
+
+  @override
+  String get finance_subscriptions_next_month_empty =>
+      'No subscription charges scheduled for next month.';
+
+  @override
+  String get finance_subscriptions_next_month_remove_tooltip =>
+      'Remove from this month\'s plan';
+
+  @override
+  String get finance_subscriptions_next_month_remove_title =>
+      'REMOVE FROM PLAN';
+
+  @override
+  String get finance_subscriptions_next_month_remove_message =>
+      'This only removes the charge from next month\'s plan. Your subscription stays active and will show again when that billing month arrives.';
+
+  @override
+  String get finance_subscriptions_next_month_remove_confirm => 'REMOVE';
+
+  @override
+  String get finance_subscriptions_next_month_remove_action =>
+      'REMOVE FROM PLAN';
+
+  @override
+  String get finance_subscription_due_today => 'DUE TODAY';
+
+  @override
+  String finance_subscription_days_left(int days) {
+    return '$days DAYS LEFT';
+  }
+
+  @override
   String get finance_cat_entertainment => 'Entertainment';
 
   @override
@@ -2652,6 +5249,224 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_cat_general => 'General';
+
+  @override
+  String get finance_cat_human_capital => 'Human capital';
+
+  @override
+  String get finance_inflow_pillar_human_capital => 'Human capital';
+
+  @override
+  String get finance_inflow_pillar_liquidity => 'Liquidity';
+
+  @override
+  String get finance_inflow_pillar_fixed_income => 'Fixed income';
+
+  @override
+  String get finance_inflow_pillar_investment => 'Investment';
+
+  @override
+  String get finance_inflow_pillar_cashflow => 'Cashflow';
+
+  @override
+  String get finance_inflow_pillars_title => 'Inflow layers';
+
+  @override
+  String get finance_inflow_pillars_subtitle =>
+      'Skills & work, cash buffer, steady yield, growth assets, recurring systems';
+
+  @override
+  String get finance_asset_pillars_title => 'Asset layers';
+
+  @override
+  String get finance_asset_pillars_subtitle =>
+      'Liquidity, fixed income, investment, cashflow';
+
+  @override
+  String get finance_asset_pillar_liquidity => 'Liquidity';
+
+  @override
+  String get finance_asset_pillar_fixed_income => 'Fixed income';
+
+  @override
+  String get finance_asset_pillar_investment => 'Investment';
+
+  @override
+  String get finance_asset_pillar_cashflow => 'Cashflow';
+
+  @override
+  String get finance_record_section_title => 'Record';
+
+  @override
+  String get finance_record_section_subtitle =>
+      'Add accounts, assets, human capital, and subscriptions';
+
+  @override
+  String get finance_record_human_capital => 'Human capital';
+
+  @override
+  String get finance_record_human_capital_hint => 'Capacity (imputed value)';
+
+  @override
+  String get finance_record_liquidity_account => 'Liquidity account';
+
+  @override
+  String get finance_record_liquidity_hint => 'Cash, checking';
+
+  @override
+  String get finance_record_fixed_income_asset => 'Fixed income asset';
+
+  @override
+  String get finance_record_fixed_income_hint => 'Bond, savings';
+
+  @override
+  String get finance_record_investment_account => 'Investment account';
+
+  @override
+  String get finance_record_investment_account_hint => 'Broker, crypto wallet';
+
+  @override
+  String get finance_record_investment_holding => 'Investment holding';
+
+  @override
+  String get finance_record_investment_holding_hint =>
+      'Stock, crypto, real estate';
+
+  @override
+  String get finance_account_type_checking => 'Checking';
+
+  @override
+  String get finance_account_type_savings => 'Savings';
+
+  @override
+  String get finance_account_type_cash => 'Cash';
+
+  @override
+  String get finance_account_type_credit_card => 'Credit card';
+
+  @override
+  String get finance_account_type_deposit => 'Term deposit';
+
+  @override
+  String get finance_account_type_investment => 'Investment account';
+
+  @override
+  String get finance_budget_limit_title => 'Budget limit';
+
+  @override
+  String get finance_budget_limit_label => 'Limit amount';
+
+  @override
+  String get finance_budget_limit_per_week => 'Per week';
+
+  @override
+  String get finance_budget_limit_per_month => 'Per month';
+
+  @override
+  String get finance_add_account_title => 'Add account';
+
+  @override
+  String get finance_account_type_section => 'Account type';
+
+  @override
+  String get finance_accounts_liquidity_title => 'Liquidity accounts';
+
+  @override
+  String get finance_accounts_investment_title => 'Investment accounts';
+
+  @override
+  String get finance_account_investment_name_hint =>
+      'e.g. VNDirect, SSI, Binance';
+
+  @override
+  String get finance_record_cashflow_asset => 'Cashflow asset';
+
+  @override
+  String get finance_record_cashflow_hint => 'SaaS, recurring system';
+
+  @override
+  String get finance_record_subscription => 'Subscription';
+
+  @override
+  String get finance_record_subscription_hint => 'Recurring expense';
+
+  @override
+  String get finance_record_contract_hint => 'One-time project or contract pay';
+
+  @override
+  String get finance_record_bonus_hint => 'One-time bonus payment';
+
+  @override
+  String get finance_bonus_section_title => 'Bonus & Contract';
+
+  @override
+  String get finance_bonus_section_subtitle =>
+      'One-time income from bonuses and contracts';
+
+  @override
+  String get finance_bonus_section_total => 'Total';
+
+  @override
+  String get finance_bonus_section_empty => 'No bonus or contract income yet';
+
+  @override
+  String get finance_total_income_title => 'Total income';
+
+  @override
+  String get finance_total_income_recurring => 'Recurring / month';
+
+  @override
+  String get finance_total_income_onetime => 'One-time';
+
+  @override
+  String get finance_hc_capacity_label => 'Capacity';
+
+  @override
+  String get finance_hc_realized_label => 'Received';
+
+  @override
+  String get finance_hc_gap_title => 'Human capital';
+
+  @override
+  String finance_hc_gap_message(String capacity, String received, String gap) {
+    return 'Capacity $capacity · received $received · gap $gap';
+  }
+
+  @override
+  String get finance_add_asset_title => 'Add asset';
+
+  @override
+  String get finance_add_asset_category => 'Asset type';
+
+  @override
+  String get finance_add_asset_name => 'Name / symbol';
+
+  @override
+  String get finance_add_asset_value => 'Estimated value';
+
+  @override
+  String get finance_add_asset_save => 'Save asset';
+
+  @override
+  String get finance_asset_cat_stock => 'Stock';
+
+  @override
+  String get finance_asset_cat_crypto => 'Crypto';
+
+  @override
+  String get finance_asset_cat_bond => 'Bond';
+
+  @override
+  String get finance_asset_cat_deposit => 'Deposit';
+
+  @override
+  String get finance_asset_cat_real_estate => 'Real estate';
+
+  @override
+  String get finance_asset_cat_cashflow => 'Cashflow (SaaS)';
+
+  @override
+  String get finance_cat_skills => 'Skills';
 
   @override
   String get finance_cat_salary => 'Salary';
@@ -2901,6 +5716,149 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ssh_search_hint => 'Search...';
 
   @override
+  String get ssh_connect_host_first =>
+      'Connect to a host first to manage live sessions.';
+
+  @override
+  String get ssh_cursor_api_title => 'Cursor API';
+
+  @override
+  String get ssh_cursor_api_subtitle =>
+      'Save your API key to drive cursor-agent on the remote host.';
+
+  @override
+  String get ssh_cursor_api_key_hint => 'cursor_…';
+
+  @override
+  String get ssh_cursor_api_key_stored => 'API key saved on this device.';
+
+  @override
+  String get ssh_cursor_api_save => 'Save key';
+
+  @override
+  String get ssh_cursor_api_test => 'Test connection';
+
+  @override
+  String get ssh_cursor_api_open_terminal => 'Open SSH (Cursor mode)';
+
+  @override
+  String get ssh_cursor_api_saved => 'Cursor API key saved.';
+
+  @override
+  String get ssh_cursor_api_test_ok => 'Cursor API key is valid.';
+
+  @override
+  String get ssh_cursor_api_missing_key =>
+      'Enter or save a Cursor API key first.';
+
+  @override
+  String get cursor_hub_title => 'Cursor';
+
+  @override
+  String get cursor_hub_page_subtitle =>
+      'Control Cursor on your Mac via My Machines and Cloud Agents — no SSH required.';
+
+  @override
+  String get cursor_hub_canvas_subtitle =>
+      'My Machines worker, API tasks, and agents dashboard';
+
+  @override
+  String get cursor_hub_integration_subtitle =>
+      'API key, worker setup, send tasks from your phone';
+
+  @override
+  String get cursor_hub_section_title => 'AI & automation';
+
+  @override
+  String get cursor_hub_key_ready => 'API key verified';
+
+  @override
+  String get cursor_hub_open_full => 'Open Cursor Hub';
+
+  @override
+  String get cursor_hub_open_agents => 'Open Agents';
+
+  @override
+  String get cursor_hub_worker_title => 'My Machine worker';
+
+  @override
+  String get cursor_hub_worker_body =>
+      'On your Mac, run this in Terminal and keep it open. Your machine then appears at cursor.com/agents.';
+
+  @override
+  String get cursor_hub_copy_worker_cmd => 'Copy command';
+
+  @override
+  String get cursor_hub_worker_copied => 'Copied: agent worker start';
+
+  @override
+  String get cursor_hub_send_title => 'Send a task';
+
+  @override
+  String get cursor_hub_target_machine => 'My Mac';
+
+  @override
+  String get cursor_hub_target_cloud => 'Cloud repo';
+
+  @override
+  String get cursor_hub_machine_name => 'Machine name (optional)';
+
+  @override
+  String get cursor_hub_machine_name_hint =>
+      'As shown in Agents environment dropdown';
+
+  @override
+  String get cursor_hub_pick_repo => 'Your repositories';
+
+  @override
+  String get cursor_hub_refresh_repos => 'Refresh repo list';
+
+  @override
+  String get cursor_hub_repos_empty =>
+      'No repos found. Enter a URL below or run on Mac to scan ~/Code.';
+
+  @override
+  String get cursor_hub_usage_limit =>
+      'Cloud agent blocked: enable usage-based pricing on cursor.com (need ~\$2 spend limit). Use My Mac mode instead.';
+
+  @override
+  String get cursor_hub_repo_url => 'GitHub repo URL';
+
+  @override
+  String get cursor_hub_prompt_label => 'What should the agent do?';
+
+  @override
+  String get cursor_hub_send_task => 'Send to Cursor';
+
+  @override
+  String get cursor_hub_task_sent => 'Task sent — opening agent…';
+
+  @override
+  String cursor_hub_task_failed(String reason) {
+    return 'Could not start agent: $reason';
+  }
+
+  @override
+  String get cursor_hub_recent_title => 'Recent agents';
+
+  @override
+  String get island_cursor_ssh_standby => 'Awaiting SSH link';
+
+  @override
+  String get island_cursor_no_api_key => 'No API key';
+
+  @override
+  String ssh_cursor_api_test_fail(String reason) {
+    return 'Connection failed: $reason';
+  }
+
+  @override
+  String get ssh_go_to_terminal => 'GO TO TERMINAL';
+
+  @override
+  String get ssh_no_tmux_sessions => 'No active tmux sessions found.';
+
+  @override
   String get journal => 'Journal';
 
   @override
@@ -3012,4 +5970,607 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get common_done => 'Done';
+
+  @override
+  String get island_app_name => 'ICE GATE';
+
+  @override
+  String get island_app_blocker => 'APP BLOCKER';
+
+  @override
+  String get island_initializing => 'INITIALIZING…';
+
+  @override
+  String get island_notifications => 'NOTIFICATIONS';
+
+  @override
+  String get island_inbox => 'INBOX';
+
+  @override
+  String get island_documentation => 'DOCUMENTATION';
+
+  @override
+  String get island_canvas => 'CANVAS';
+
+  @override
+  String get island_mind => 'MIND';
+
+  @override
+  String get island_health_data => 'DATA';
+
+  @override
+  String get island_nutrition => 'NUTRITION';
+
+  @override
+  String get island_activity => 'ACTIVITY';
+
+  @override
+  String get island_hydration => 'HYDRATION';
+
+  @override
+  String get island_focus => 'FOCUS';
+
+  @override
+  String get island_steps => 'STEPS';
+
+  @override
+  String get island_vitals => 'VITALS';
+
+  @override
+  String get island_sleep => 'SLEEP';
+
+  @override
+  String get island_calories => 'CALORIES';
+
+  @override
+  String get island_spo2 => 'SpO₂';
+
+  @override
+  String get island_biometrics => 'BIOMETRICS';
+
+  @override
+  String get finance_tab_overview => 'OVERVIEW';
+
+  @override
+  String get finance_tab_history => 'HISTORY';
+
+  @override
+  String get finance_tab_daily => 'DAILY';
+
+  @override
+  String get finance_tab_daily_subtitle =>
+      'Daily fun spending and income — pick a day on the calendar.';
+
+  @override
+  String get finance_tab_achievements => 'ACHIEVEMENTS';
+
+  @override
+  String get finance_tab_career => 'CAREER';
+
+  @override
+  String get finance_job_title => 'Job positions';
+
+  @override
+  String get finance_job_subtitle => 'Track employers, contracts, and tenure';
+
+  @override
+  String get finance_job_empty => 'No job positions yet';
+
+  @override
+  String get finance_job_current => 'Current';
+
+  @override
+  String get finance_job_ended => 'Ended';
+
+  @override
+  String finance_job_tenure(int months) {
+    return '$months months';
+  }
+
+  @override
+  String get finance_job_add => 'Add position';
+
+  @override
+  String get finance_job_new => 'New position';
+
+  @override
+  String get finance_job_edit => 'Edit position';
+
+  @override
+  String get finance_job_employer => 'Employer / company';
+
+  @override
+  String get finance_job_role => 'Job title / role';
+
+  @override
+  String get finance_job_contract_type => 'Contract type';
+
+  @override
+  String get finance_job_contract_full_time => 'Full-time';
+
+  @override
+  String get finance_job_contract_part_time => 'Part-time';
+
+  @override
+  String get finance_job_contract_freelance => 'Freelance';
+
+  @override
+  String get finance_job_contract_internship => 'Internship';
+
+  @override
+  String get finance_job_contract_contract => 'Contract';
+
+  @override
+  String get finance_job_start_date => 'Start date';
+
+  @override
+  String get finance_job_end_date => 'End date';
+
+  @override
+  String get finance_job_end_date_hint => 'Leave empty if current';
+
+  @override
+  String get finance_job_notes => 'Notes';
+
+  @override
+  String get finance_job_salary => 'Monthly income';
+
+  @override
+  String get finance_job_salary_hint =>
+      'Creates a fixed income linked to this job';
+
+  @override
+  String get finance_job_income_type => 'Income type';
+
+  @override
+  String get finance_job_income_salary => 'Salary';
+
+  @override
+  String get finance_job_income_contract => 'Contract income';
+
+  @override
+  String get finance_job_income_bonus => 'Bonus';
+
+  @override
+  String finance_job_salary_suffix(String amount) {
+    return '$amount / mo';
+  }
+
+  @override
+  String get finance_job_on_day => 'Working that day';
+
+  @override
+  String get finance_job_delete_confirm => 'Delete this job position?';
+
+  @override
+  String get finance_job_end_confirm => 'Mark this position as ended today?';
+
+  @override
+  String get finance_job_work_days => 'Work days';
+
+  @override
+  String get finance_job_log_today => 'Log today';
+
+  @override
+  String finance_job_work_streak(int count) {
+    return '$count day streak';
+  }
+
+  @override
+  String get finance_job_time_sheet_subtitle =>
+      'Plan your time and start working';
+
+  @override
+  String get finance_job_time_plan => 'Plan for today';
+
+  @override
+  String get finance_job_time_category => 'Work type';
+
+  @override
+  String get finance_job_time_start => 'Start';
+
+  @override
+  String get finance_job_time_log_now => 'Log now';
+
+  @override
+  String get finance_job_time_start_timer => 'Start timer';
+
+  @override
+  String finance_job_time_logged(int minutes) {
+    return 'Logged $minutes min';
+  }
+
+  @override
+  String get finance_job_time_stop => 'Stop';
+
+  @override
+  String finance_job_time_minutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String finance_job_time_elapsed(int minutes) {
+    return '$minutes min elapsed';
+  }
+
+  @override
+  String finance_job_time_actual_summary(int actual, int planned) {
+    return 'Actual: $actual min / planned: $planned min';
+  }
+
+  @override
+  String get finance_job_time_category_code_vibe => 'Vibe code';
+
+  @override
+  String get finance_job_time_category_code_manual => 'Manual code';
+
+  @override
+  String get finance_job_time_category_sales_desk => 'Desk sales';
+
+  @override
+  String get finance_job_time_category_sales_field => 'Field sales';
+
+  @override
+  String get finance_job_time_category_communication => 'Communication';
+
+  @override
+  String get finance_job_time_category_meditation => 'Meditation';
+
+  @override
+  String get finance_job_task_group_code => 'Code';
+
+  @override
+  String get finance_job_task_group_sales => 'Sales';
+
+  @override
+  String get finance_job_task_group_speech => 'Speaking';
+
+  @override
+  String get finance_job_task_group_health => 'Health';
+
+  @override
+  String get finance_job_task_group_time_log => 'Log time';
+
+  @override
+  String get finance_job_task_add_job => 'Add task';
+
+  @override
+  String get finance_job_sub_task_name => 'Task name';
+
+  @override
+  String get finance_job_time_log => 'Log time';
+
+  @override
+  String get finance_job_time_log_title => 'Log time';
+
+  @override
+  String get finance_job_task_read_docs => 'Read docs';
+
+  @override
+  String get finance_job_task_sales_customer => 'Customer contact';
+
+  @override
+  String get finance_job_task_sales_report => 'Reports';
+
+  @override
+  String get finance_job_task_pick_group => 'Choose work type';
+
+  @override
+  String get finance_job_task_full_time => 'Full-time';
+
+  @override
+  String get finance_job_task_part_time => 'Part-time';
+
+  @override
+  String get finance_job_task_part_time_hours => 'Hours worked';
+
+  @override
+  String get finance_job_task_part_time_save => 'Log hours';
+
+  @override
+  String get finance_job_task_pick_detail => 'Choose detail';
+
+  @override
+  String get finance_job_history => 'History';
+
+  @override
+  String get finance_job_history_title => 'Work history';
+
+  @override
+  String get finance_job_history_subtitle => 'Synced from your job time logs';
+
+  @override
+  String get finance_job_history_empty => 'No time logged yet';
+
+  @override
+  String get finance_job_present => 'present';
+
+  @override
+  String get finance_job_time_notes => 'Notes';
+
+  @override
+  String get finance_job_time_notes_hint => 'What did you work on?';
+
+  @override
+  String get finance_job_customer_title => 'Customer';
+
+  @override
+  String get finance_job_customer_name => 'Customer name';
+
+  @override
+  String get finance_job_customer_company => 'Company';
+
+  @override
+  String get finance_job_customer_phone => 'Phone';
+
+  @override
+  String get finance_job_customer_save => 'Save customer';
+
+  @override
+  String finance_job_customer_existing(int count) {
+    return '$count customers saved';
+  }
+
+  @override
+  String get finance_job_customer_open_form => 'Open customer form';
+
+  @override
+  String get finance_achievements_subtitle =>
+      'Major financial wins by month and year.';
+
+  @override
+  String get finance_period_month => 'Month';
+
+  @override
+  String get finance_period_year => 'Year';
+
+  @override
+  String get finance_daily_in => 'Money in';
+
+  @override
+  String get finance_daily_out => 'Money out';
+
+  @override
+  String get finance_daily_empty => 'Nothing logged this day';
+
+  @override
+  String get finance_achievements_empty =>
+      'No major achievements in this period yet';
+
+  @override
+  String get finance_achievements_add => 'Record achievement';
+
+  @override
+  String get finance_milestone_month_income => 'Monthly income recorded';
+
+  @override
+  String get finance_milestone_month_savings => 'Monthly savings added';
+
+  @override
+  String get finance_milestone_year_total => 'Year total income';
+
+  @override
+  String get finance_tab_billing => 'BILLING';
+
+  @override
+  String get finance_tab_saving => 'SAVINGS';
+
+  @override
+  String get island_documents => 'DOCUMENTS';
+
+  @override
+  String get island_editor => 'EDITOR';
+
+  @override
+  String get island_identity => 'IDENTITY';
+
+  @override
+  String get island_id_update => 'ID UPDATE';
+
+  @override
+  String get island_protocols => 'PROTOCOLS';
+
+  @override
+  String get island_sync_core => 'SYNC CORE';
+
+  @override
+  String get island_settings => 'SETTINGS';
+
+  @override
+  String get island_remote_ssh => 'REMOTE SSH';
+
+  @override
+  String get island_connected => 'CONNECTED';
+
+  @override
+  String get island_not_active => 'NOT ACTIVE';
+
+  @override
+  String get island_connect => 'CONNECT';
+
+  @override
+  String get island_tmux_active => 'TMUX ACTIVE';
+
+  @override
+  String get daily_loop_title => 'Today\'s loop';
+
+  @override
+  String get daily_loop_subtitle =>
+      'Complete all 4 pillars to extend your streak';
+
+  @override
+  String get daily_loop_complete => 'Loop complete — you\'re on fire!';
+
+  @override
+  String daily_loop_streak(int count) {
+    return '${count}d';
+  }
+
+  @override
+  String daily_loop_progress(int done, int total) {
+    return '$done / $total done';
+  }
+
+  @override
+  String get daily_loop_health => 'Health pulse';
+
+  @override
+  String get daily_loop_finance => 'Money check';
+
+  @override
+  String get daily_loop_mind => 'Mood log';
+
+  @override
+  String get daily_loop_projects => 'Project touch';
+
+  @override
+  String get morning_loop_reminder_title => 'Morning push reminder';
+
+  @override
+  String get morning_loop_reminder_subtitle =>
+      'Optional phone notification — your in-app summary on Home works without this';
+
+  @override
+  String get morning_briefing_toggle => 'Morning summary on Home';
+
+  @override
+  String get morning_briefing_today_schedule => 'Today\'s schedule';
+
+  @override
+  String get morning_briefing_today_empty =>
+      'No events today — a clear day to plan.';
+
+  @override
+  String get morning_briefing_today_connect_hint =>
+      'Connect Google or device calendar to see today\'s events here.';
+
+  @override
+  String morning_briefing_today_more(int count) {
+    return '+$count more in calendar';
+  }
+
+  @override
+  String get morning_briefing_all_day => 'All day';
+
+  @override
+  String get morning_briefing_open_calendar => 'Open calendar';
+
+  @override
+  String get morning_briefing_title => 'Good morning';
+
+  @override
+  String morning_briefing_title_name(String name) {
+    return 'Good morning, $name';
+  }
+
+  @override
+  String get morning_briefing_subtitle =>
+      'Care for body and mind — then finish your 4-pillar loop today.';
+
+  @override
+  String get morning_briefing_yesterday_title => 'Yesterday';
+
+  @override
+  String get morning_briefing_yesterday_empty =>
+      'A quiet day — today is a fresh start.';
+
+  @override
+  String morning_briefing_yesterday_steps(int steps) {
+    return '$steps steps';
+  }
+
+  @override
+  String morning_briefing_yesterday_water(int ml) {
+    return '$ml ml water';
+  }
+
+  @override
+  String morning_briefing_yesterday_sleep(String hours) {
+    return '$hours h sleep';
+  }
+
+  @override
+  String morning_briefing_yesterday_loop(int done, int total) {
+    return '$done/$total pillars completed';
+  }
+
+  @override
+  String get morning_briefing_motivation_title => 'Today\'s motivation';
+
+  @override
+  String get morning_briefing_motivation_empty =>
+      'Yesterday was light — one small win today resets your rhythm.';
+
+  @override
+  String get morning_briefing_motivation_all_done =>
+      'You closed yesterday strong — ride that momentum into today.';
+
+  @override
+  String get morning_briefing_motivation_strong =>
+      'Solid progress yesterday — one more pillar today keeps the streak alive.';
+
+  @override
+  String get morning_briefing_motivation_mid =>
+      'You moved forward yesterday — stack another small win this morning.';
+
+  @override
+  String get morning_briefing_motivation_low =>
+      'Yesterday was a rest day — water, a walk, or a mood log is enough to begin.';
+
+  @override
+  String morning_briefing_progress(int done, int total) {
+    return '$done of $total pillars done today';
+  }
+
+  @override
+  String get morning_briefing_start => 'Start my day';
+
+  @override
+  String get morning_briefing_log_mood => 'Log mood first';
+
+  @override
+  String get aiMemoryTitle => 'Screen Memory';
+
+  @override
+  String get aiMemoryDraftsTitle => 'Waiting for review';
+
+  @override
+  String get aiMemoryConfirmedTitle => 'Confirmed memories';
+
+  @override
+  String get aiMemoryNoDrafts => 'No memories waiting for review.';
+
+  @override
+  String get aiMemoryNoConfirmed => 'No confirmed memories yet.';
+
+  @override
+  String get aiMemoryAutoCaptureTitle => 'Automatic capture';
+
+  @override
+  String aiMemoryAutoCaptureSubtitle(int cap) {
+    return 'Capture important screens automatically. Up to $cap per day.';
+  }
+
+  @override
+  String get aiMemoryDisclosure =>
+      'Automatic capture is off by default. When on, the app records screens you use and extracts text from them on this device or by upload. Nothing is added to AI prompts until you confirm it. You can delete all captures at any time.';
+
+  @override
+  String get aiMemoryDailyCap => 'Daily capture limit';
+
+  @override
+  String get aiMemorySyncNow => 'Sync now';
+
+  @override
+  String get aiMemoryDeleteAll => 'Delete all';
+
+  @override
+  String get aiMemoryDeleteAllConfirm =>
+      'Delete all captured screens and their memories? This cannot be undone.';
+
+  @override
+  String get aiMemoryConfirm => 'Confirm';
+
+  @override
+  String get aiMemoryDiscard => 'Discard';
 }

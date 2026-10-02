@@ -1,11 +1,12 @@
-import 'dart:async' show unawaited;
+import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../UIConstants.dart';
-import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricsData.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart'
     show InternalWidgetBlock;
 // import 'package:ice_gate/orchestration_layer/Services/FireAPI/UrlNavigate.dart' as WidgetNavigatorAction;
@@ -13,12 +14,11 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
@@ -29,15 +29,25 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/PulseFeedCard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/AvailablePlugins.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/WebPlugin/GoogleCalendar.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/MorningBriefingSheet.dart';
+import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/EnvironmentalPluginCards.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/HomePageSettings.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 /// Avoids re-running heavy bootstrap when returning to Home (same session / same user).
 String? _homePageBootstrapUserId;
@@ -54,7 +64,7 @@ class HomePage extends StatefulWidget {
       mainFunction: () => context.go("/"),
       icon: Icons.ac_unit,
       doubleClickFunction: () {
-        print("double click");
+        appLog("double click");
         context.pop();
       },
       onSwipeUp: () {
@@ -111,7 +121,7 @@ class HomePage extends StatefulWidget {
       //   );
       // }),
       doubleClickFunction: () {
-        print("double click");
+        appLog("double click");
         context.pop();
       },
       onSwipeRight: () => WidgetNavigatorAction.smartPop(context),
@@ -129,10 +139,6 @@ class _HomePageState extends State<HomePage> {
   late InternalWidgetBlock internalWidgetBlock;
   late AuthBlock authBlock;
   late PersonBlock personBlock;
-  late HealthMetricsDAO healthMetricsDAO;
-  late Map<String, HealthMetric> healthMetricsData = {};
-  late Map<String, HealthMetric> financeMetricsData = {};
-  late Map<String, HealthMetric> socialMetricsData = {};
   late ScoreBlock scoreBlock;
   late FinanceBlock financeBlock;
   late ExternalWidgetBlock externalWidgetBlock;
@@ -158,13 +164,16 @@ class _HomePageState extends State<HomePage> {
     scoreBlock = context.read<ScoreBlock>();
     personBlock = context.read<PersonBlock>();
     growthBlock = context.read<GrowthBlock>();
-    healthMetricsDAO = context.read<HealthMetricsDAO>();
     financeBlock = context.read<FinanceBlock>();
     healthBlock = context.read<HealthBlock>();
     projectBlock = context.read<ProjectBlock>();
     quoteBlock = context.read<QuoteBlock>();
     mindBlock = context.read<MindBlock>();
     configBlock = context.read<ConfigBlock>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleMorningHooks();
+    });
 
     final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
     if (userId.isEmpty) {
@@ -175,10 +184,26 @@ class _HomePageState extends State<HomePage> {
       _fetchInitialData();
     }
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final personId = personBlock.currentPersonID.value;
+      if (personId != null && personId.isNotEmpty) {
+        context.read<SocialBlock>().restoreActiveFocus(personId);
+      }
+    });
+
     // Level Up effect
     // Future.microtask(() {
     //   _initLevelTracking();
     // });
+  }
+
+  Future<void> _scheduleMorningHooks() async {
+    if (!mounted) return;
+    try {
+      await context.read<LocalNotificationService>().scheduleMorningLoopFromPrefs();
+    } catch (e) {
+      appLog('Morning notification schedule skipped: $e');
+    }
   }
 
   void _fetchInitialData() {
@@ -187,33 +212,28 @@ class _HomePageState extends State<HomePage> {
       personBlock.fetchFromDatabase(jwtValue);
     }
 
-    Future.microtask(() {
-      print("DUYLONG>>");
-      unawaited(financeBlock.refreshFromLocalDatabase());
-      final String personIdToUse =
-          Supabase.instance.client.auth.currentUser?.id ?? "";
-      internalWidgetBlock.refreshBlock(
-        database.internalWidgetsDAO,
-        personIdToUse,
-        'home',
-      );
-      externalWidgetBlock.refreshBlock(
-        database.externalWidgetsDAO,
-        personIdToUse,
-      );
+    final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
+    if (personId.isEmpty) return;
 
-      // print("DUYLONG<>:internal widget block: "+internalWidgetBlock.listInternalWidgetHomePage.value.toString()
-      // );
-      final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
-      HealthMetricsData.getMetricsByDay(personId, DateTime.now(), context).then(
-        (newData) {
-          if (mounted) {
-            setState(() {
-              healthMetricsData = newData;
-            });
-          }
-        },
-      );
+    // DataLayer already warms finance/health/widgets on personId — only fill gaps.
+    Future.microtask(() async {
+      if (internalWidgetBlock.listInternalWidgetHomePage.value.isEmpty) {
+        internalWidgetBlock.refreshBlock(
+          database.internalWidgetsDAO,
+          personId,
+          'home',
+        );
+      }
+      if (externalWidgetBlock.listExternalWidgets.value.isEmpty) {
+        externalWidgetBlock.refreshBlock(
+          database.externalWidgetsDAO,
+          personId,
+        );
+      }
+      if (financeBlock.accounts.value.isEmpty &&
+          financeBlock.transactions.value.isEmpty) {
+        await financeBlock.refreshFromLocalDatabase();
+      }
     });
   }
 
@@ -297,10 +317,7 @@ class _HomePageState extends State<HomePage> {
             // SignalEffectException crashes.
             body: Builder(builder: (context) {
               final l10n = AppLocalizations.of(context)!;
-              return SwipeablePage(
-                direction: SwipeablePageDirection.leftToRight,
-                onSwipe: () => context.pop(),
-                child: SingleChildScrollView(
+              final scrollBody = SingleChildScrollView(
                   key: const PageStorageKey<String>('home_feed_scroll'),
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
@@ -322,8 +339,9 @@ class _HomePageState extends State<HomePage> {
                       _buildEnvironmentalSummary(context),
                       _buildQuotesSection(context),
 
-                      // const SizedBox(height: 20),
-                      const SizedBox(height: 24),
+                      // --- SECTION: PULSE FEED (AdSMind play layer) ---
+                      const PulseFeedCard(),
+                      const SizedBox(height: 8),
 
                       // --- SECTION: 4 life elements ---
                       _buildSectionHeader(
@@ -397,7 +415,7 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 l10n.health,
                                 Icons.favorite_rounded,
-                                Colors.green,
+                                HealthMetricColors.homePillarAccent('health'),
                                 metrics: visibleMetrics,
                                 route: '/health',
                                 scoreData: scoreBlock.score.healthGlobalScore,
@@ -482,7 +500,7 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 l10n.finance,
                                 Icons.account_balance_wallet_rounded,
-                                EntryColors.primaryIceBlue,
+                                HealthMetricColors.homePillarAccent('finance'),
                                 metrics: visibleMetrics,
                                 route: '/finance',
                                 scoreData:
@@ -493,7 +511,12 @@ class _HomePageState extends State<HomePage> {
                               final moodLog = mindBlock.latestMoodLog.value;
                               final socialScore =
                                   scoreBlock.score.socialGlobalScore;
-                              final focus = healthBlock.todayFocusMinutes.value;
+                              final focusMinutes =
+                                  healthBlock.todayFocusMinutes.value;
+                              final activeMindFocus = context
+                                  .read<SocialBlock>()
+                                  .activeFocusTrend
+                                  .value;
                               dynamic moodDisplay = l10n.mood_no_data;
                               if (moodLog != null) {
                                 moodDisplay = Row(
@@ -547,15 +570,40 @@ class _HomePageState extends State<HomePage> {
                                   'visible': true,
                                 },
                                 {
-                                  'label': l10n.mind_status,
-                                  'value': socialScore >= 70
-                                      ? l10n.mind_stable
-                                      : l10n.mind_needs_care,
+                                  'label': l10n.mind_focus_current,
+                                  'value': activeMindFocus != null
+                                      ? Row(
+                                          children: [
+                                            Icon(
+                                              MindFocusTrend.resolveIcon(
+                                                activeMindFocus.iconCodePoint,
+                                              ),
+                                              size: 14,
+                                              color: activeMindFocus.color,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: AutoSizeText(
+                                                activeMindFocus.name,
+                                                style: TextStyle(
+                                                  color: colorScheme.onSurface
+                                                      .withValues(alpha: 0.9),
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                                maxLines: 2,
+                                                minFontSize: 8,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : l10n.mind_focus_none,
                                   'visible': true,
                                 },
                                 {
                                   'label': l10n.home_index_focus,
-                                  'value': '${focus}m',
+                                  'value': '${focusMinutes}m',
                                   'visible': configBlock.showIndexFocus.value,
                                 },
                                 {
@@ -580,7 +628,7 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 l10n.social,
                                 Icons.psychology_rounded,
-                                Colors.purple,
+                                HealthMetricColors.homePillarAccent('mind'),
                                 metrics: visibleMetrics,
                                 route: '/social',
                                 scoreData: socialScore,
@@ -647,7 +695,7 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 l10n.projects,
                                 Icons.rocket_launch_rounded,
-                                Colors.orange,
+                                HealthMetricColors.homePillarAccent('projects'),
                                 metrics: visibleMetrics,
                                 route: '/projects',
                                 scoreData: scoreBlock.score.careerGlobalScore,
@@ -657,7 +705,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      // const SizedBox(height: 20),
+                      // const DailyFinanceReportReminderCard(),
+                      const SizedBox(height: 12),
 
                       // --- SECTION: QUICK ACCESS GRID ---
                       Row(
@@ -738,21 +788,30 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
 
-                          // 2. All Internal Plugins
-                          for (final pluginDef in AvailablePlugins.internal) {
-                            pluginItems.add(
-                              Padding(
-                                padding: const EdgeInsets.only(right: 16),
-                                child: SizedBox(
-                                  width: sizeOfWidget,
-                                  height: sizeOfWidget,
-                                  child: _buildInternalWidget(
-                                    context,
-                                    pluginDef.createInstance(),
+                          pluginItems.add(
+                            const Padding(
+                              padding: EdgeInsets.only(right: 16),
+                              child: IntegrationHubPluginCard(),
+                            ),
+                          );
+
+                          // 2. Internal plugins — phones only; macOS/web sidebar covers these.
+                          if (!WorkspaceSidebarLayout.useHomeWorkspace(context)) {
+                            for (final pluginDef in AvailablePlugins.internal) {
+                              pluginItems.add(
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: SizedBox(
+                                    width: sizeOfWidget,
+                                    height: sizeOfWidget,
+                                    child: _buildInternalWidget(
+                                      context,
+                                      pluginDef.createInstance(),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
+                              );
+                            }
                           }
 
                           // 3. External Widgets
@@ -799,7 +858,19 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 40),
                     ],
                   ),
-                ),
+                );
+
+              final bodyChild = WorkspaceSidebarLayout.useHomeWorkspace(context)
+                  ? WorkspaceSidebarLayout(
+                      onPluginTap: () => _showAddPluginDialog(context),
+                      child: scrollBody,
+                    )
+                  : scrollBody;
+
+              return SwipeablePage(
+                direction: SwipeablePageDirection.leftToRight,
+                onSwipe: () => context.pop(),
+                child: bodyChild,
               );
             }),
           ),
@@ -841,6 +912,41 @@ class _HomePageState extends State<HomePage> {
     return 'Just now';
   }
 
+  /// L1 glass + --ice-health wash (duylongart_glass_ui.md). Health pillar only.
+  static const Color _iceHealth = HealthMetricColors.pillarGreen;
+
+  BoxDecoration _healthL1IceDecoration() {
+    const glassBg = Color.fromRGBO(255, 255, 255, 0.03);
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          _iceHealth.withValues(alpha: 0.2),
+          glassBg,
+          glassBg,
+        ],
+        stops: const [0.0, 0.35, 1.0],
+      ),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.08),
+        width: 1,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF000f1e).withValues(alpha: 0.37),
+          blurRadius: 32,
+          offset: const Offset(0, 8),
+        ),
+        BoxShadow(
+          color: _iceHealth.withValues(alpha: 0.12),
+          blurRadius: 48,
+        ),
+      ],
+    );
+  }
+
   Widget _buildQuickAccessCard(
     BuildContext context,
     String title,
@@ -849,55 +955,86 @@ class _HomePageState extends State<HomePage> {
     required List<Map<String, dynamic>> metrics,
     required String route,
     required double scoreData,
+    bool useL1IceGlass = false,
   }) {
     final isPhone = MediaQuery.of(context).size.width < 600;
+    final isLaptop = defaultTargetPlatform == TargetPlatform.macOS;
+    // Icon badge: size set directly on the Container (not padding-driven).
+    final double iconContainerSize = isPhone
+        ? 50.0
+        : (isLaptop ? 40.0 : 52.0);
+    final double headerIconSize = isPhone
+        ? 26.0
+        : (isLaptop ? 22.0 : 25.0);
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iceEtchedPrimary = Colors.white.withValues(alpha: 0.95);
+    final iceEtchedSecondary =
+        const Color.fromRGBO(173, 216, 230, 0.5);
+    final titleColor =
+        useL1IceGlass ? iceEtchedPrimary : colorScheme.onSurface;
+    final labelColor = useL1IceGlass
+        ? iceEtchedSecondary
+        : colorScheme.onSurface.withValues(alpha: isDark ? 0.5 : 0.72);
+    final valueColor = useL1IceGlass
+        ? iceEtchedPrimary
+        : colorScheme.onSurface.withValues(alpha: isDark ? 0.9 : 0.95);
+    final pillarGradientTop = isDark ? 0.18 : 0.36;
+    final pillarGradientMid = isDark ? 0.08 : 0.20;
+    final pillarGradientBottom = isDark ? 0.02 : 0.08;
+    final iconBadgeAlpha = isDark ? 0.1 : 0.22;
+    final glowAlpha = isDark ? 0.1 : 0.18;
 
-    return Container(
-      width: isPhone ? 210 : 280,
-      margin: const EdgeInsets.only(right: 12),
-      child: Card(
-        elevation: 0,
-        color: colorScheme.onPrimary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-          side: BorderSide(color: color.withValues(alpha: 0.12)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
+    final cardBody = InkWell(
           onTap: () => context.push(route),
           child: Stack(
             children: [
-              // Glassmorphism Background
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        color.withValues(alpha: 0.18),
-                        color.withValues(alpha: 0.08),
-                        color.withValues(alpha: 0.02),
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
+              if (useL1IceGlass)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // Subtle Glow
-              Positioned(
-                top: -25,
-                right: -20,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+              if (!useL1IceGlass) ...[
+                // Glassmorphism Background (non–ice pillars)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: pillarGradientTop),
+                          color.withValues(alpha: pillarGradientMid),
+                          color.withValues(alpha: pillarGradientBottom),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                Positioned(
+                  top: -25,
+                  right: -20,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: glowAlpha),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
               Padding(
                 padding: EdgeInsets.all(isPhone ? 12.0 : 20.0),
                 child: Column(
@@ -907,15 +1044,17 @@ class _HomePageState extends State<HomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: EdgeInsets.all(isPhone ? 12 : 16),
+                          width: iconContainerSize,
+                          height: iconContainerSize,
+                          alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.1),
+                            color: color.withValues(alpha: iconBadgeAlpha),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             icon,
                             color: color,
-                            size: isPhone ? 26 : 30,
+                            size: headerIconSize,
                           ),
                         ),
                         Container(
@@ -931,7 +1070,7 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: isPhone ? 18 : 22,
-                                  color: colorScheme.onSurface,
+                                  color: titleColor,
                                   letterSpacing: -0.5,
                                 ),
                                 maxLines: 1,
@@ -961,10 +1100,7 @@ class _HomePageState extends State<HomePage> {
                                     : AutoSizeText(
                                       m['value']?.toString() ?? '',
                                       style: TextStyle(
-                                        color: colorScheme.onSurface
-                                            .withValues(
-                                          alpha: 0.9,
-                                        ),
+                                        color: valueColor,
                                         fontSize: isPhone ? 11 : 13,
                                         fontWeight: FontWeight.w800,
                                         height: 1.1,
@@ -985,10 +1121,7 @@ class _HomePageState extends State<HomePage> {
                                   AutoSizeText(
                                     m['label']?.toString() ?? '',
                                     style: TextStyle(
-                                      color: colorScheme.onSurface
-                                          .withValues(
-                                        alpha: 0.5,
-                                      ),
+                                      color: labelColor,
                                       fontSize: isPhone ? 9 : 10,
                                       fontWeight: FontWeight.w600,
                                       height: 1.1,
@@ -1009,7 +1142,42 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+        );
+
+    final width = isPhone ? 210.0 : (isLaptop ? 240.0 : 280.0);
+    const margin = EdgeInsets.only(right: 12);
+
+    if (useL1IceGlass) {
+      return Container(
+        width: width,
+        margin: margin,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: DecoratedBox(
+              decoration: _healthL1IceDecoration(),
+              child: cardBody,
+            ),
+          ),
         ),
+      );
+    }
+
+    return Container(
+      width: width,
+      margin: margin,
+      child: Card(
+        elevation: isDark ? 0 : 1,
+        color: isDark ? colorScheme.onPrimary : colorScheme.surfaceContainerHigh,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+          side: BorderSide(
+            color: color.withValues(alpha: isDark ? 0.12 : 0.32),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: cardBody,
       ),
     );
   }
@@ -1020,6 +1188,13 @@ class _HomePageState extends State<HomePage> {
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     final sizeOfWidget = UIConstants.getSizeOfWidget(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark
+        ? colorScheme.primary.withValues(alpha: 0.8)
+        : colorScheme.onSurface.withValues(alpha: 0.85);
+    final labelColor = isDark
+        ? colorScheme.primary.withValues(alpha: 0.7)
+        : colorScheme.onSurface.withValues(alpha: 0.72);
 
     if (widgetData == null) {
       return InkWell(
@@ -1049,17 +1224,21 @@ class _HomePageState extends State<HomePage> {
       width: sizeOfWidget,
       height: sizeOfWidget,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: isDark
+            ? colorScheme.surface
+            : colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.05 : 0.10),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.1),
+          color: isDark
+              ? colorScheme.primary.withValues(alpha: 0.1)
+              : colorScheme.outline.withValues(alpha: 0.28),
           width: 1.5,
         ),
       ),
@@ -1088,7 +1267,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Icon(
                     widgetData.icon,
-                    color: colorScheme.primary.withValues(alpha: 0.8),
+                    color: iconColor,
                     size: sizeOfWidget * 0.3,
                   ),
                   const SizedBox(height: 6),
@@ -1099,7 +1278,7 @@ class _HomePageState extends State<HomePage> {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 10,
-                        color: colorScheme.primary.withValues(alpha: 0.7),
+                        color: labelColor,
                         letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
@@ -1172,25 +1351,39 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildExternalWidget(BuildContext context, ExternalWidgetData data) {
     final colorScheme = Theme.of(context).colorScheme;
-    final String fullUrl =
-        "${data.protocol ?? 'https'}://${data.host ?? ''}${data.url ?? ''}";
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark
+        ? colorScheme.secondary.withValues(alpha: 0.8)
+        : colorScheme.onSurface.withValues(alpha: 0.85);
+    final labelColor = isDark
+        ? colorScheme.secondary.withValues(alpha: 0.7)
+        : colorScheme.onSurface.withValues(alpha: 0.72);
+    final String fullUrl = GoogleCalendarPlugin.resolveLaunchUrl(
+      protocol: data.protocol ?? 'https',
+      host: data.host ?? '',
+      path: data.url ?? '',
+    );
 
     final sizeOfWidget = UIConstants.getSizeOfWidget(context);
     final item = Container(
       width: sizeOfWidget,
       height: sizeOfWidget,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: isDark
+            ? colorScheme.surface
+            : colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.05 : 0.10),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: colorScheme.secondary.withValues(alpha: 0.1),
+          color: isDark
+              ? colorScheme.secondary.withValues(alpha: 0.1)
+              : colorScheme.outline.withValues(alpha: 0.28),
           width: 1.5,
         ),
       ),
@@ -1218,7 +1411,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Icon(
                     Icons.language_rounded,
-                    color: colorScheme.secondary.withValues(alpha: 0.8),
+                    color: iconColor,
                     size: sizeOfWidget * 0.3,
                   ),
                   const SizedBox(height: 6),
@@ -1229,7 +1422,7 @@ class _HomePageState extends State<HomePage> {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 10,
-                        color: colorScheme.secondary.withValues(alpha: 0.7),
+                        color: labelColor,
                         letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
@@ -1252,7 +1445,11 @@ class _HomePageState extends State<HomePage> {
                   _showRenameExternalDialog(context, data);
                 }
               : () {
-                  WidgetNavigatorAction.navigateExternalUrl(context, fullUrl);
+                  WidgetNavigatorAction.navigateExternalUrl(
+                    context,
+                    fullUrl,
+                    title: data.name ?? 'Web',
+                  );
                 },
           borderRadius: BorderRadius.circular(28),
           child: item,
@@ -1378,10 +1575,16 @@ class _HomePageState extends State<HomePage> {
     final configBlock = context.read<ConfigBlock>();
     final envBlock = context.read<EnvironmentalBlock>();
 
-    const tempTint = Color(0xFF8BD4F0);
-    const aqiTint = Color(0xFF8FD9A8);
-
     return Watch((context) {
+      final colorScheme = Theme.of(context).colorScheme;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+
+      final tempTint = colorScheme.primary.withValues(alpha: isDark ? 0.95 : 0.85);
+      final aqiTint = colorScheme.tertiary.withValues(alpha: isDark ? 0.95 : 0.85);
+      final containerColor = Colors.transparent;
+      final separatorColor = colorScheme.onSurface.withValues(alpha: 0.18);
+      final conditionColor = colorScheme.onSurfaceVariant.withValues(alpha: 0.9);
+
       final showAqi = configBlock.showAqi.value;
       final showWeather = configBlock.showWeather.value;
 
@@ -1424,104 +1627,100 @@ class _HomePageState extends State<HomePage> {
                 alpha: 0.15,
               ),
               child: Ink(
-                decoration: BoxDecoration(
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(999)),
+                child: ClipRRect(
                   borderRadius: BorderRadius.circular(999),
-                  color: const Color(0xFF252A38).withValues(alpha: 0.92),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      // Make the header truly transparent: no blur, no frosted fill,
+                      // no outline, and no drop shadow.
+                      color: containerColor,
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 11,
-                  ),
-                  child: Row(
-                    children: [
-                      if (showWeather) ...[
-                        Icon(
-                          Icons.thermostat_rounded,
-                          color: tempTint,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          tempLabel,
-                          style: const TextStyle(
-                            color: tempTint,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ],
-                      if (showAqi && showWeather)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Container(
-                            width: 1,
-                            height: 22,
-                            color: Colors.white.withValues(alpha: 0.18),
-                          ),
-                        ),
-                      if (showAqi) ...[
-                        Icon(
-                          Icons.waves_rounded,
-                          size: 20,
-                          color: envData != null
-                              ? _getAQIColor(envData.aqi)
-                              : aqiTint,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          aqiLabel,
-                          style: TextStyle(
-                            color: envData != null
-                                ? _getAQIColor(envData.aqi)
-                                : aqiTint,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
-                            letterSpacing: 0.15,
-                          ),
-                        ),
-                      ],
-                      if (showCondition) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Container(
-                            width: 1,
-                            height: 22,
-                            color: Colors.white.withValues(alpha: 0.14),
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: Text(
-                              envData.weatherDescription,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                color: EntryLandscapePalette.dustySkyBlue
-                                    .withValues(alpha: 0.9),
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                height: 1.2,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 11,
+                      ),
+                      child: Row(
+                        children: [
+                            if (showWeather) ...[
+                              Icon(
+                                Icons.thermostat_rounded,
+                                color: tempTint,
+                                size: 20,
                               ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                              const SizedBox(width: 8),
+                              Text(
+                                tempLabel,
+                                style: TextStyle(
+                                  color: tempTint,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ],
+                            if (showAqi && showWeather)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: Container(
+                                  width: 1,
+                                  height: 22,
+                                  color: separatorColor,
+                                ),
+                              ),
+                            if (showAqi) ...[
+                              Icon(
+                                Icons.waves_rounded,
+                                size: 20,
+                                color: envData != null
+                                    ? _getAQIColor(envData.aqi)
+                                    : aqiTint,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                aqiLabel,
+                                style: TextStyle(
+                                  color: envData != null
+                                      ? _getAQIColor(envData.aqi)
+                                      : aqiTint,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                  letterSpacing: 0.15,
+                                ),
+                              ),
+                            ],
+                            if (showCondition) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: Container(
+                                  width: 1,
+                                  height: 22,
+                                  color: separatorColor.withValues(alpha: 0.78),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 10),
+                                  child: Text(
+                                    envData.weatherDescription,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      color: conditionColor,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1542,32 +1741,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMoodIcon(BuildContext context, int score) {
-    final Color color;
+    final color = mindMoodAccent(score);
     final IconData icon;
 
     switch (score) {
       case 1:
-        color = const Color(0xFF8000FF);
         icon = Icons.sentiment_very_dissatisfied_rounded;
         break;
       case 2:
-        color = const Color(0xFF2C3E50);
         icon = Icons.sentiment_dissatisfied_rounded;
         break;
       case 3:
-        color = const Color(0xFFE0E0E0);
         icon = Icons.sentiment_neutral_rounded;
         break;
       case 4:
-        color = const Color(0xFF00FF88);
         icon = Icons.sentiment_satisfied_alt_rounded;
         break;
       case 5:
-        color = const Color(0xFF00FFFF);
         icon = Icons.sentiment_very_satisfied_rounded;
         break;
       default:
-        color = const Color(0xFFE0E0E0);
         icon = Icons.sentiment_neutral_rounded;
     }
 

@@ -10,16 +10,20 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:live_activities/live_activities.dart';
 
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/quick_save_sheet.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/transaction_builder_dialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/QuickSaveSheet.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_form/AddAccountDialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionBuilderDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceOverviewPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceTransactionsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceDailyPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSubscriptionsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSavingsPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/subscription_manager.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceJobPositionsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/JobPositionManager.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SubscriptionManager.dart';
 
 class FinancePage extends StatefulWidget {
   const FinancePage({super.key});
@@ -50,6 +54,8 @@ class FinancePage extends StatefulWidget {
         return l10n.finance_cat_education;
       case 'investing':
         return l10n.finance_cat_investing;
+      case 'human_capital':
+        return l10n.finance_cat_human_capital;
       case 'salary':
         return l10n.finance_cat_salary;
       case 'freelance':
@@ -89,14 +95,20 @@ class FinancePage extends StatefulWidget {
         type: "finance",
         destination: "/finance",
         size: size,
-        backgroundColor: EntryColors.financeYellow.withValues(alpha: 0.9),
-        iconColor: const Color(0xFF0D0D12),
+        backgroundColor: EntryColors.financeSilverAccent.withValues(alpha: 0.92),
+        iconColor: EntryColors.deepGlacier,
         icon: Icons.add,
         mainFunction: () {
-          if (tab == 2) {
+          if (tab == 0) {
+            AddAccountDialog.show(context);
+          } else if (tab == 1) {
+            TransactionBuilderDialog.show(context, financeBlock: financeBlock);
+          } else if (tab == 2) {
             showSubscriptionEditor(context, financeBlock);
           } else if (tab == 3) {
             QuickSaveSheet.show(context, financeBlock);
+          } else if (tab == 4) {
+            showJobPositionEditor(context, financeBlock);
           } else {
             TransactionBuilderDialog.show(context, financeBlock: financeBlock);
           }
@@ -149,7 +161,6 @@ class FinancePage extends StatefulWidget {
 
 class _FinancePageState extends State<FinancePage>
     with TickerProviderStateMixin {
-  late AnimationController _scanController;
   late TabController _tabController;
   late FinanceBlock _financeBlock;
   final _liveActivities = LiveActivities();
@@ -160,15 +171,11 @@ class _FinancePageState extends State<FinancePage>
   void initState() {
     super.initState();
     _financeBlock = context.read<FinanceBlock>();
-    _scanController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat();
 
     _tabController = TabController(
-      length: 4,
+      length: 5,
       vsync: this,
-      initialIndex: _financeBlock.activeTab.peek().clamp(0, 3),
+      initialIndex: _financeBlock.activeTab.peek().clamp(0, 4),
     );
 
     _tabController.addListener(() {
@@ -179,8 +186,15 @@ class _FinancePageState extends State<FinancePage>
           _financeBlock.activeTab.value = newIndex;
         });
       }
+      if (newIndex == 0) {
+        unawaited(_financeBlock.refreshRecurringIncomes());
+      }
       if (newIndex == 2) {
         unawaited(_financeBlock.refreshSubscriptions());
+      }
+      if (newIndex == 4) {
+        unawaited(_financeBlock.refreshJobPositions());
+        unawaited(_financeBlock.refreshRecurringIncomes());
       }
     });
 
@@ -190,7 +204,7 @@ class _FinancePageState extends State<FinancePage>
     });
 
     _disposeEffect = effect(() {
-      final index = _financeBlock.activeTab.value.clamp(0, 3);
+      final index = _financeBlock.activeTab.value.clamp(0, 4);
       if (mounted) _updateLiveActivity(context, index);
       if (_tabController.index != index) {
         if (mounted) _tabController.animateTo(index);
@@ -242,17 +256,20 @@ class _FinancePageState extends State<FinancePage>
   }
 
   String _getTabName(BuildContext context, int index) {
+    final l10n = AppLocalizations.of(context)!;
     switch (index) {
       case 0:
-        return "OVERVIEW";
+        return l10n.finance_tab_overview;
       case 1:
-        return "HISTORY";
+        return l10n.finance_tab_daily;
       case 2:
-        return "BILLING";
+        return l10n.finance_tab_billing;
       case 3:
-        return "SAVINGS";
+        return l10n.finance_tab_saving;
+      case 4:
+        return l10n.finance_tab_career;
       default:
-        return "FINANCE";
+        return l10n.finance.toUpperCase();
     }
   }
 
@@ -260,264 +277,113 @@ class _FinancePageState extends State<FinancePage>
   void dispose() {
     if (_activityId != null) _liveActivities.endActivity(_activityId!);
     _disposeEffect?.call();
-    _scanController.dispose();
     _tabController.dispose();
     super.dispose();
   }
 
+  /// Clears [MainShell]'s Dynamic Island (SafeArea + 54px bar + 2px pad).
+  static double _islandTopInset(BuildContext context) =>
+      MediaQuery.paddingOf(context).top + 56 + 8;
+
   @override
   Widget build(BuildContext context) {
     final financeBlock = context.read<FinanceBlock>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final topInset = _islandTopInset(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D12), // Deep Obsidian
-      appBar: AppBar(
-        toolbarHeight: 80, // Space for Dynamic Island, same as SocialPage
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          // Tactical Scanline
-          _buildScanline(),
-
-          SwipeablePage(
-            onSwipe: () => context.pop(),
-            direction: SwipeablePageDirection.leftToRight,
-            child: Column(
-              children: [
-                const SizedBox(height: 120),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      FinanceOverviewPage(financeBlock: financeBlock),
-                      FinanceTransactionsPage(financeBlock: financeBlock),
-                      FinanceSubscriptionsPage(financeBlock: financeBlock),
-                      FinanceSavingsPage(financeBlock: financeBlock),
-                    ],
-                  ),
-                ),
-                SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 20, right: 24),
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: Watch((context) {
-                        final useVnd = financeBlock.useVnd.value;
-                        return GestureDetector(
-                          onTap: () {
-                            HapticFeedback.mediumImpact();
-                            financeBlock.toggleCurrency();
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: EntryColors.financeYellow.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: EntryColors.financeYellow.withValues(alpha: 0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildCurrencyIndicator(
-                                  "USD",
-                                  !useVnd,
-                                  EntryColors.financeYellow,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                  ),
-                                  child: Icon(
-                                    Icons.sync_alt_rounded,
-                                    size: 14,
-                                    color: EntryColors.financeYellow.withValues(alpha: 0.5),
-                                  ),
-                                ),
-                                _buildCurrencyIndicator(
-                                  "VND",
-                                  useVnd,
-                                  EntryColors.financeYellow,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, FinanceBlock block) {
-    return Container(
-      // Padding-top is now handled by AppBar, so we only need a small gap
-      padding: const EdgeInsets.only(top: 80, bottom: 10, left: 24, right: 24),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        backgroundColor: colorScheme.surface,
+        body: SwipeablePage(
+          onSwipe: () => context.pop(),
+          direction: SwipeablePageDirection.leftToRight,
+          child: Column(
             children: [
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  Navigator.maybePop(context);
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: Colors.white70,
-                    size: 16,
-                  ),
+              SizedBox(height: topInset),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    FinanceOverviewPage(financeBlock: financeBlock),
+                    FinanceDailyPage(financeBlock: financeBlock),
+                    FinanceSubscriptionsPage(financeBlock: financeBlock),
+                    FinanceSavingsPage(financeBlock: financeBlock),
+                    FinanceJobPositionsPage(financeBlock: financeBlock),
+                  ],
                 ),
               ),
-              const SizedBox(width: 16),
-              const Text(
-                "FINANCE",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
-                ),
-              ),
-              const Spacer(),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      HapticFeedback.mediumImpact();
-                      TransactionBuilderDialog.show(
-                        context,
-                        financeBlock: block,
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.add_box_rounded,
-                      color: EntryColors.financeYellow,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Watch((context) {
-                    final isSyncing = block.isSyncing.value;
-                    return IconButton(
-                      onPressed: isSyncing ? null : () => block.sync(),
-                      icon: isSyncing
-                          ? SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.5,
-                                color: EntryColors.financeYellow.withValues(alpha: 0.5),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 20, right: 24),
+                  child: Align(
+                    alignment: Alignment.bottomRight,
+                    child: Watch((context) {
+                      final useVnd = financeBlock.useVnd.value;
+                      final isDark =
+                          Theme.of(context).brightness == Brightness.dark;
+                      final cs = Theme.of(context).colorScheme;
+                      return GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          financeBlock.toggleCurrency();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration:
+                              FinanceSurface.panel(cs, isDark: isDark, radius: 20),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildCurrencyIndicator(
+                                "USD",
+                                !useVnd,
+                                isDark: isDark,
                               ),
-                            )
-                          : const Icon(
-                              Icons.sync_rounded,
-                              size: 18,
-                              color: EntryColors.financeYellow,
-                            ),
-                    );
-                  }),
-                ],
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                child: Icon(
+                                  Icons.sync_alt_rounded,
+                                  size: 14,
+                                  color: FinanceSurface.mutedInk(isDark: isDark),
+                                ),
+                              ),
+                              _buildCurrencyIndicator(
+                                "VND",
+                                useVnd,
+                                isDark: isDark,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            indicatorSize: TabBarIndicatorSize.label,
-            labelColor: EntryColors.financeYellow,
-            unselectedLabelColor: Colors.white24,
-            dividerColor: Colors.transparent,
-            indicator: UnderlineTabIndicator(
-              borderSide: BorderSide(
-                width: 3,
-                color: EntryColors.financeYellow,
-              ),
-              borderRadius: BorderRadius.circular(3),
-            ),
-            labelStyle: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
-            ),
-            tabs: [
-              Tab(text: "OVERVIEW"),
-              Tab(text: "HISTORY"),
-              Tab(text: "BILLING"),
-              Tab(text: "SAVINGS"),
-            ],
-          ),
-        ],
-      ),
+        ),
     );
   }
 
-  Widget _buildGlowSphere(Color color, double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 100,
-            spreadRadius: 20,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScanline() {
-    return AnimatedBuilder(
-      animation: _scanController,
-      builder: (context, child) {
-        return Positioned.fill(
-          child: IgnorePointer(
-            child: CustomPaint(
-              painter: _ScanlinePainter(progress: _scanController.value),
-            ),
-          ),
-        );
-      },
-    );
-  }
-  Widget _buildCurrencyIndicator(String label, bool isActive, Color color) {
+  Widget _buildCurrencyIndicator(
+    String label,
+    bool isActive, {
+    required bool isDark,
+  }) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isActive ? color : Colors.transparent,
+        color: FinanceSurface.currencyPillBackground(
+          isDark: isDark,
+          active: isActive,
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -525,41 +391,12 @@ class _FinancePageState extends State<FinancePage>
         style: TextStyle(
           fontWeight: FontWeight.w900,
           fontSize: 10,
-          color: isActive ? Colors.black : color.withValues(alpha: 0.5),
+          color: FinanceSurface.currencyPillForeground(
+            isDark: isDark,
+            active: isActive,
+          ),
         ),
       ),
     );
   }
-}
-
-class _ScanlinePainter extends CustomPainter {
-  final double progress;
-  _ScanlinePainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader =
-          LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              EntryColors.financeYellow.withValues(alpha: 0.03),
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.5, 1.0],
-          ).createShader(
-            Rect.fromLTWH(0, (progress * size.height) - 50, size.width, 100),
-          );
-
-    canvas.drawRect(
-      Rect.fromLTWH(0, (progress * size.height) - 50, size.width, 100),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_ScanlinePainter oldDelegate) =>
-      oldDelegate.progress != progress;
 }

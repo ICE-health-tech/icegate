@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // import 'package:http/http.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:provider/provider.dart' show ReadContext;
 import 'package:signals_flutter/signals_flutter.dart';
 // Required for context.read
@@ -18,6 +18,7 @@ import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewWidget.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 
 import '../UIConstants.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class ExternalDragWidget extends StatefulWidget {
   final int index;
@@ -63,12 +64,12 @@ class _ExternalDragWidgetState extends State<ExternalDragWidget> {
 
           if (incomingData is int) {
             // Case A: Dragging from another Grid Cell (Int Index)
-            // print("Test");
+            // appLog("Test");
             widget.store.handleInteraction(incomingData, widget.index);
 
             // TODO: You can use 'dao' here to update the position in DB
           } else if (incomingData is InternalWidgetDragProtocol) {
-            // print("Widget from outside");
+            // appLog("Widget from outside");
 
             // Add to MobX Store
             widget.store.addWidget(widget.index, incomingData);
@@ -264,7 +265,7 @@ class _BuildCard extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () {
-              print("Navigating to: ${item.url}");
+              appLog("Navigating to: ${item.url}");
               WidgetNavigatorAction.navigateExternalUrl(context, item.url);
             },
             child: Container(
@@ -363,7 +364,13 @@ class _BuildCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: EmbeddedWebViewWidget(url: targetUrl, showControls: true),
+        child: EmbeddedWebViewWidget(
+          url: targetUrl,
+          showControls: true,
+          displayOptions: WebViewDisplayOptions.forUrl(targetUrl).copyWith(
+            showFloatingRefresh: false,
+          ),
+        ),
       ),
     );
   }

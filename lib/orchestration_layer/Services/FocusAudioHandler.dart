@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class FocusAudioHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler {
@@ -12,7 +13,7 @@ class FocusAudioHandler extends BaseAudioHandler
 
   FocusAudioHandler() {
     _player.setPlaylistMode(PlaylistMode.single);
-    print("🎧 [AudioHandler-MediaKit] Initialized");
+    appLog("🎧 [AudioHandler-MediaKit] Initialized");
 
     // Listen to changes in the player state to update system notifications if needed
     _player.stream.playing.listen((playing) {
@@ -53,13 +54,13 @@ class FocusAudioHandler extends BaseAudioHandler
         await _player.open(Media(source));
       }
     } catch (e) {
-      print("FocusAudioHandler: Failed to set source: $e");
+      appLog("FocusAudioHandler: Failed to set source: $e");
     }
   }
 
   @override
   Future<void> play() async {
-    print("🎧 [AudioHandler] play() received");
+    appLog("🎧 [AudioHandler] play() received");
     playbackState.add(
       playbackState.value.copyWith(
         playing: true,
@@ -71,19 +72,19 @@ class FocusAudioHandler extends BaseAudioHandler
     try {
       await _player.play();
     } catch (e) {
-      print("FocusAudioHandler: play failed: $e");
+      appLog("FocusAudioHandler: play failed: $e");
     }
 
     try {
       _focusBlock?.startTimer(fromSystem: true);
     } catch (e) {
-      print("FocusAudioHandler: Error syncing play: $e");
+      appLog("FocusAudioHandler: Error syncing play: $e");
     }
   }
 
   @override
   Future<void> pause() async {
-    print("⏸️ [AudioHandler] pause() received");
+    appLog("⏸️ [AudioHandler] pause() received");
     playbackState.add(
       playbackState.value.copyWith(
         playing: false,
@@ -94,19 +95,19 @@ class FocusAudioHandler extends BaseAudioHandler
     try {
       await _player.pause();
     } catch (e) {
-      print("FocusAudioHandler: pause failed: $e");
+      appLog("FocusAudioHandler: pause failed: $e");
     }
 
     try {
       _focusBlock?.pauseTimer(fromSystem: true);
     } catch (e) {
-      print("FocusAudioHandler: Error syncing pause: $e");
+      appLog("FocusAudioHandler: Error syncing pause: $e");
     }
   }
 
   @override
   Future<void> stop() async {
-    print("🛑 [AudioHandler] stop() received");
+    appLog("🛑 [AudioHandler] stop() received");
     await _player.stop();
     playbackState.add(
       playbackState.value.copyWith(
@@ -119,7 +120,7 @@ class FocusAudioHandler extends BaseAudioHandler
     try {
       _focusBlock?.stopTimer();
     } catch (e) {
-      print("FocusAudioHandler: Error syncing stop: $e");
+      appLog("FocusAudioHandler: Error syncing stop: $e");
     }
   }
 

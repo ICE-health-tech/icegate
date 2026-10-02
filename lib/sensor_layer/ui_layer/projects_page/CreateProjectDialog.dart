@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 // import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
@@ -13,7 +13,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/utils/l10n_extensions.dart';
+import 'package:ice_gate/utils/L10nExtensions.dart';
 
 class CreateProjectDialog extends StatefulWidget {
   const CreateProjectDialog({super.key});
@@ -64,7 +64,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         final dateAdded = DateTime.now().toUtc().toIso8601String();
 
         // Result: "2026-02-25T13:53:14.123Z"
-        // print("date time: " + dateAdded);
+        // appLog("date time: " + dateAdded);
 
         // 0. Create Project Entity
         final projectId = await projectBlock.createProject(

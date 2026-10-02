@@ -1,5 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/link_layer/storage_services/MediaImageCache.dart';
+import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
+import 'package:ice_gate/link_layer/storage_services/MediaS3Paths.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
@@ -191,6 +194,57 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
         }
       }
 
+      // 4. Try downloading from S3 (meals ↔ food aliases).
+      final primaryKey = _s3ObjectKey(filename);
+      if (primaryKey.isNotEmpty) {
+        final localRel = canonicalLocalMediaPath(primaryKey);
+        final targetAbs = p.join(appDir.path, localRel);
+        final minio = MinioService();
+        for (final key in mediaS3KeysForRelativePath(localRel)) {
+          if (!await minio.objectExists(key)) continue;
+          final ok = await minio.downloadToFile(
+            objectName: key,
+            outFile: File(targetAbs),
+          );
+          if (ok && await File(targetAbs).exists()) {
+            final size = await File(targetAbs).length();
+            if (mounted) {
+              setState(() {
+                _resolvedAbsolutePath = targetAbs;
+                _fileSize = size;
+                _isLoading = false;
+              });
+            }
+            return;
+          }
+        }
+      }
+
+      // 5. HTTP cache — persist public URL to canonical documents path.
+      final cacheRel = MediaImageCache.canonicalRelativePath(
+        localPath: widget.localPath,
+        subFolder: widget.subFolder,
+        ownerId: widget.ownerId,
+      );
+      final remoteUrl = _effectiveRemoteUrl;
+      if (cacheRel.isNotEmpty && remoteUrl.isNotEmpty) {
+        final cached = await MediaImageCache.ensureRelativePath(
+          relativePath: cacheRel,
+          remoteUrl: remoteUrl,
+        );
+        if (cached != null && await cached.exists()) {
+          final size = await cached.length();
+          if (mounted) {
+            setState(() {
+              _resolvedAbsolutePath = cached.path;
+              _fileSize = size;
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+
       // Not found locally, fallback to remote
       if (mounted) {
         setState(() {
@@ -207,6 +261,34 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
         });
       }
     }
+  }
+
+  String _s3ObjectKey(String filename) {
+    var path = widget.localPath.replaceAll('\\', '/').trim();
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return '';
+    }
+    if (path.contains('/')) return path;
+    if (widget.ownerId != null && widget.ownerId!.isNotEmpty) {
+      return '${widget.ownerId}/${widget.subFolder}/$filename';
+    }
+    if (widget.subFolder.isNotEmpty) {
+      return '${widget.subFolder}/$filename';
+    }
+    return filename;
+  }
+
+  String get _effectiveRemoteUrl {
+    if (widget.remoteUrl.isNotEmpty) return widget.remoteUrl;
+    final primaryKey = _s3ObjectKey(p.basename(widget.localPath));
+    if (primaryKey.isEmpty) return '';
+    final keys = mediaS3KeysForRelativePath(canonicalLocalMediaPath(primaryKey));
+    for (final key in keys) {
+      if (key.contains('/food/')) {
+        return MinioService().publicUrlForKey(key);
+      }
+    }
+    return MinioService().publicUrlForKey(keys.first);
   }
 
   @override
@@ -263,13 +345,24 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
   }
 
   Widget _buildRemoteImage() {
-    if (widget.remoteUrl.isEmpty) {
+    final url = _effectiveRemoteUrl;
+    if (url.isEmpty) {
       return _buildPlaceholder();
     }
 
+    final uri = Uri.tryParse(url);
+    if (uri == null ||
+        (uri.scheme != 'http' && uri.scheme != 'https') ||
+        uri.host.isEmpty) {
+      return _buildPlaceholder();
+    }
+
+    // Last resort: stream from network while a background cache attempt runs.
+    _warmCacheFromRemote(url);
+
     return Image.network(
-      widget.remoteUrl,
-      key: ValueKey('${widget.ownerId}_${widget.remoteUrl}'),
+      url,
+      key: ValueKey('${widget.ownerId}_$url'),
       fit: widget.fit,
       width: widget.width,
       height: widget.height,
@@ -282,5 +375,26 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
         return _buildPlaceholder();
       },
     );
+  }
+
+  void _warmCacheFromRemote(String url) {
+    final cacheRel = MediaImageCache.canonicalRelativePath(
+      localPath: widget.localPath,
+      subFolder: widget.subFolder,
+      ownerId: widget.ownerId,
+    );
+    if (cacheRel.isEmpty) return;
+
+    MediaImageCache.ensureRelativePath(
+      relativePath: cacheRel,
+      remoteUrl: url,
+    ).then((file) {
+      if (!mounted || file == null) return;
+      if (_resolvedAbsolutePath != null) return;
+      setState(() {
+        _resolvedAbsolutePath = file.path;
+        _fileSize = file.lengthSync();
+      });
+    });
   }
 }

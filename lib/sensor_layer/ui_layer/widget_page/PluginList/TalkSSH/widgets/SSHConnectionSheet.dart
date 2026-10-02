@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/orchestration_layer/Services/CursorApiService.dart';
 import 'package:ice_gate/orchestration_layer/Services/SSHService.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import '../SSHHostModel.dart';
 import '../SSHStorageService.dart';
 
@@ -33,11 +35,23 @@ class SSHConnectionSheet extends StatefulWidget {
 class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
   List<SSHHostModel> _savedHosts = [];
   bool _isLoadingHosts = true;
+  final _cursorKeyController = TextEditingController();
+  final _cursorApi = CursorApiService.instance;
+  final _sshService = SSHService();
+  bool _cursorKeyObscure = true;
+  String? _cursorStatus;
 
   @override
   void initState() {
     super.initState();
     _loadHosts();
+    _cursorApi.refreshKeyState();
+  }
+
+  @override
+  void dispose() {
+    _cursorKeyController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadHosts() async {
@@ -153,6 +167,144 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
             const SizedBox(height: 12),
             _buildTextField(context, widget.remotePathController, 'REMOTE FILE PATH', Icons.folder_open),
             const SizedBox(height: 16),
+            Watch((context) {
+              if (_sshService.aiMode.value != 'cursor') {
+                return const SizedBox.shrink();
+              }
+              final hasKey = _cursorApi.hasKeySignal.value;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.tealAccent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.tealAccent.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.smart_toy_outlined,
+                          size: 18,
+                          color: Colors.tealAccent,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.ssh_cursor_api_title.toUpperCase(),
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontFamily: 'Courier',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (hasKey) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.ssh_cursor_api_key_stored,
+                        style: TextStyle(
+                          color: Colors.greenAccent.shade400,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _cursorKeyController,
+                      obscureText: _cursorKeyObscure,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontFamily: 'Courier',
+                        fontSize: 12,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: l10n.ssh_cursor_api_key_hint,
+                        isDense: true,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _cursorKeyObscure
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                          onPressed: () => setState(
+                            () => _cursorKeyObscure = !_cursorKeyObscure,
+                          ),
+                        ),
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    if (_cursorStatus != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        _cursorStatus!,
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        TextButton(
+                          onPressed: () async {
+                            await _cursorApi.saveApiKey(
+                              _cursorKeyController.text,
+                            );
+                            if (!mounted) return;
+                            setState(() {
+                              _cursorStatus = l10n.ssh_cursor_api_saved;
+                            });
+                            _cursorKeyController.clear();
+                          },
+                          child: Text(l10n.ssh_cursor_api_save),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            final result = await _cursorApi.testConnection(
+                              apiKey: _cursorKeyController.text.trim().isEmpty
+                                  ? null
+                                  : _cursorKeyController.text,
+                            );
+                            if (!mounted) return;
+                            setState(() {
+                              if (result.ok) {
+                                _cursorStatus = l10n.ssh_cursor_api_test_ok;
+                                if (_cursorKeyController.text
+                                    .trim()
+                                    .isNotEmpty) {
+                                  _cursorApi.saveApiKey(
+                                    _cursorKeyController.text,
+                                  );
+                                  _cursorKeyController.clear();
+                                }
+                              } else if (result.message == 'missing_key') {
+                                _cursorStatus =
+                                    l10n.ssh_cursor_api_missing_key;
+                              } else {
+                                _cursorStatus = l10n.ssh_cursor_api_test_fail(
+                                  result.message,
+                                );
+                              }
+                            });
+                          },
+                          child: Text(l10n.ssh_cursor_api_test),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
             Container(
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),

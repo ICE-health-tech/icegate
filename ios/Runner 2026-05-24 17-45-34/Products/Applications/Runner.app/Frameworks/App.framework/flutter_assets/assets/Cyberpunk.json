@@ -1,0 +1,60 @@
+{
+    "theme_name": "Cyberpunk 2077",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFFF3E600",
+    "color_scheme": {
+        "primary": "0xFFF3E600",
+        "onPrimary": "0xFF000000",
+        "primaryContainer": "0xFF4D4D00",
+        "onPrimaryContainer": "0xFFF3E600",
+        "secondary": "0xFF00FF9F",
+        "onSecondary": "0xFF000000",
+        "tertiary": "0xFFFE00FE",
+        "surface": "0xFF0D0D0D",
+        "onSurface": "0xFFFFFFFF",
+        "surfaceContainer": "0xFF1A1A1A",
+        "outline": "0xFF333333",
+        "outlineVariant": "0xFFF3E600"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF0D0D0D",
+            "foregroundColor": "0xFFF3E600",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFFF3E600",
+            "foregroundColor": "0xFF000000",
+            "borderRadius": 4.0,
+            "elevation": 8.0
+        },
+        "card": {
+            "backgroundColor": "0xFF1A1A1A",
+            "elevation": 4.0,
+            "borderRadius": 0.0
+        },
+        "icon": {
+            "color": "0xFF00FF9F",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Orbitron",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFFFFFFFF"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFFFFFFF"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "bold",
+            "color": "0xFFFFFFFF"
+        }
+    }
+}

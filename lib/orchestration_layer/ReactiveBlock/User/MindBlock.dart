@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class MindBlock {
   final MindLogsDAO dao;
@@ -18,7 +18,7 @@ class MindBlock {
   MindBlock(this.dao);
 
   void init(String personId) {
-    dao.watchLatestLog(personId).delay(Duration(milliseconds: 300)).listen((
+    dao.watchLatestLog(personId).listen((
       log,
     ) {
       // This callback can fire while another signal computation/batch is in
@@ -38,7 +38,7 @@ class MindBlock {
 
   /// Watch ALL logs for a person (for debugging / total history)
   Stream<List<MindLogData>> watchAllMindLogs(String personId) {
-    print("🔭 [MindBlock] Watching ALL logs for $personId");
+    appLog("🔭 [MindBlock] Watching ALL logs for $personId");
     return dao.watchAllLogs(personId).map((logs) {
       debugPrint("📊 [MindBlock] Total logs in local DB: ${logs.length}");
       return logs;
@@ -109,11 +109,21 @@ class MindBlock {
     // Normalize logDate to local midnight to ensure grouping by day works reliably across timezones
     final localMidnight = DateTime(now.year, now.month, now.day);
 
+    final resolvedTenant = tenantId?.trim();
+    if (resolvedTenant == null || resolvedTenant.isEmpty) {
+      debugPrint(
+        '⚠️ [MindBlock] addMindLog missing tenant_id for person $personId; '
+        'using $DEFAULT_TENANT_ID',
+      );
+    }
+
     final entry = MindLogsTableCompanion.insert(
       id: IDGen.UUIDV7(),
-      tenantID: tenantId != null
-          ? drift.Value(tenantId)
-          : const drift.Value.absent(),
+      tenantID: drift.Value(
+        (resolvedTenant != null && resolvedTenant.isNotEmpty)
+            ? resolvedTenant
+            : DEFAULT_TENANT_ID,
+      ),
       personID: drift.Value(personId),
       moodScore: moodScore,
       activities: jsonEncode(activities),
@@ -126,5 +136,21 @@ class MindBlock {
 
     await dao.insertLog(entry);
     debugPrint("✅ [MindBlock] Mind log added successfully");
+  }
+
+  /// Push local gratitude rows up, then pull from Supabase.
+  Future<void> syncGratitude(String personId) async {
+    if (personId.isEmpty) return;
+    final db = dao.attachedDatabase;
+    try {
+      await db.gratitudeDAO.pushAllToCloud(personId);
+      await db.syncTableDown('gratitude_entries', personId);
+      final count = await db.gratitudeDAO.watchForPerson(personId).first;
+      debugPrint(
+        '📡 [MindBlock] gratitude sync done — ${count.length} local entries',
+      );
+    } catch (e) {
+      debugPrint('MindBlock: gratitude sync failed: $e');
+    }
   }
 }

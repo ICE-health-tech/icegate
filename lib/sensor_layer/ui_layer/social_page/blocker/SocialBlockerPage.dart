@@ -1,16 +1,48 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/Protocol/Social/SocialBlockProtocol.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlockerBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ChallengeBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/blocker/widgets/ChallengeDialog.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
-class SocialBlockerPage extends StatelessWidget {
+class SocialBlockerPage extends StatefulWidget {
   const SocialBlockerPage({super.key});
 
   @override
+  State<SocialBlockerPage> createState() => _SocialBlockerPageState();
+}
+
+class _SocialBlockerPageState extends State<SocialBlockerPage>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<SocialBlockerBlock>().reconcileShieldAfterLifecycle();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<SocialBlockerBlock>().reconcileShieldAfterLifecycle();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final blocker = context.watch<SocialBlockerBlock>();
     final challengeBlock = context.watch<ChallengeBlock>();
@@ -89,52 +121,57 @@ class SocialBlockerPage extends StatelessWidget {
             ),
           ),
           SliverToBoxAdapter(
-            child: _buildSection(context, [
-              Watch((context) {
-                final isEnabled = blocker.isAppBlacklistEnabled.value;
+            child: Watch((context) {
+              final isEnabled = blocker.isAppBlacklistEnabled.value;
+              final hasSelection =
+                  blocker.hasAnyRuleWithAppSelectionSignal.value;
 
-                return _buildTile(
+              return _buildSection(context, [
+                _buildTile(
                   context,
-                  title: "System Shield Master",
-                  subtitle: "New blocking feature will comming soon",
+                  title: l10n.social_shield_turn_on,
+                  subtitle: !isEnabled
+                      ? l10n.social_shield_subtitle_off
+                      : (!hasSelection
+                            ? 'Choose apps inside each rule below'
+                            : l10n.social_shield_subtitle_ready),
                   icon: Icons.shield_rounded,
-                  color: orangeAccent,
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("New blocking feature will comming soon"),
-                        behavior: SnackBarBehavior.floating,
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                  },
+                  color: isEnabled ? orangeAccent : colorScheme.onSurface,
+                  onTap: isEnabled && !hasSelection
+                      ? () => _openBlockedAppPicker(context, blocker, l10n)
+                      : null,
                   trailing: Switch.adaptive(
                     value: isEnabled,
                     activeColor: orangeAccent,
                     onChanged: (val) async {
                       if (!val) {
-                        // Turning OFF -> check for challenge
-                        final challenge = blocker.getRequiredChallengeForMaster(
-                          false,
-                        );
+                        final challenge =
+                            blocker.getRequiredChallengeForMaster(false);
                         if (challenge != null) {
                           challengeBlock.generateChallenge(
                             challenge.type,
                             challenge.level,
                           );
-                          ChallengeDialog.show(context, challengeBlock, () {
-                            blocker.toggleBlacklist(false);
+                          ChallengeDialog.show(context, challengeBlock, () async {
+                            await blocker.toggleBlacklist(false);
                           });
                           return;
                         }
+                        await blocker.toggleBlacklist(false);
+                        return;
                       }
-                      blocker.toggleBlacklist(val);
+
+                      await blocker.toggleBlacklist(true);
+                      if (!context.mounted) return;
+                      if (!blocker.hasAnyRuleWithAppSelectionSignal.value &&
+                          blocker.rules.value.isNotEmpty) {
+                        await _openBlockedAppPicker(context, blocker, l10n);
+                      }
                     },
                   ),
-                );
-              }),
-              _buildDivider(context),
-            ]),
+                ),
+              ]);
+            }),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
@@ -209,7 +246,7 @@ class SocialBlockerPage extends StatelessWidget {
             ),
           ),
           Watch((context) {
-            final rules = blocker.rules.value;
+            final rules = blocker.rules.watch(context);
             if (rules.isEmpty) {
               return SliverToBoxAdapter(
                 child: Container(
@@ -311,6 +348,17 @@ class SocialBlockerPage extends StatelessWidget {
                                   style: TextStyle(
                                     color: colorScheme.onSurface,
                                     fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  SocialBlockerBlock.ruleHasAppSelection(rule)
+                                      ? 'Apps configured for this rule'
+                                      : 'No apps selected — tap to choose',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: SocialBlockerBlock.ruleHasAppSelection(rule)
+                                        ? orangeAccent
+                                        : colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                                 if (rule.challengeType !=
@@ -463,7 +511,7 @@ class SocialBlockerPage extends StatelessWidget {
 
           // Add Rule Button (if not empty)
           Watch((context) {
-            final rules = blocker.rules.value;
+            final rules = blocker.rules.watch(context);
             if (rules.isEmpty) {
               return const SliverToBoxAdapter(child: SizedBox.shrink());
             }
@@ -563,59 +611,92 @@ class SocialBlockerPage extends StatelessWidget {
     VoidCallback? onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.7,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      height: 1.3,
+                      child: Icon(icon, color: color, size: 22),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.7,
+                              ),
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
+          ),
+          if (trailing != null) ...[
             const SizedBox(width: 12),
-            trailing ??
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                ),
+            trailing,
           ],
-        ),
+        ],
       ),
     );
+  }
+
+  Future<void> _openBlockedAppPicker(
+    BuildContext context,
+    SocialBlockerBlock blocker,
+    AppLocalizations l10n,
+  ) async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.social_shield_unsupported_platform),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    final ok = await blocker.ensureBlockedAppsSelected();
+    if (!context.mounted) return;
+    if (ok && blocker.hasBlockedAppsSelected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.social_shield_apps_saved),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Widget _buildDivider(BuildContext context) {
@@ -652,6 +733,7 @@ class _AddRuleSheet extends StatefulWidget {
 }
 
 class _AddRuleSheetState extends State<_AddRuleSheet> {
+  late final String ruleId;
   late TextEditingController ruleNameController;
   late SocialPlatform selectedPlatform;
   late ChallengeType selectedChallengeType;
@@ -661,11 +743,13 @@ class _AddRuleSheetState extends State<_AddRuleSheet> {
   late bool blockDuringFocus;
   late bool useSchedule;
   late List<int> blockedDays;
+  String? appSelectionJson;
 
   @override
   void initState() {
     super.initState();
     final rule = widget.existingRule;
+    ruleId = rule?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
     ruleNameController = TextEditingController(text: rule?.ruleName ?? '');
     selectedPlatform = rule?.platform ?? SocialPlatform.instagram;
     selectedChallengeType = rule?.challengeType ?? ChallengeType.none;
@@ -675,6 +759,7 @@ class _AddRuleSheetState extends State<_AddRuleSheet> {
     blockDuringFocus = rule?.blockDuringFocus ?? true;
     useSchedule = rule?.scheduleStart != null;
     blockedDays = List<int>.from(rule?.blockedDays ?? [1, 2, 3, 4, 5, 6, 7]);
+    appSelectionJson = rule?.appSelectionJson;
   }
 
   @override
@@ -803,67 +888,82 @@ class _AddRuleSheetState extends State<_AddRuleSheet> {
               ),
             ),
 
-            if (selectedPlatform == SocialPlatform.custom) ...[
-              const SizedBox(height: 32),
-              _buildLabel(colorScheme, "Target Content"),
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () => widget.blocker.openAppPicker(),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: orangeAccent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: orangeAccent, width: 2),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: orangeAccent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.apps_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+            const SizedBox(height: 32),
+            _buildLabel(colorScheme, "Apps to block"),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () async {
+                final picked = await widget.blocker.openAppPickerForRule(
+                  ruleId,
+                  initialSelection: appSelectionJson,
+                );
+                if (!mounted || picked == null) return;
+                setState(() => appSelectionJson = picked);
+                await widget.blocker.reconcileShieldAfterLifecycle();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: orangeAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: orangeAccent, width: 2),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: orangeAccent,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Choose Apps to Block",
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
-                              ),
+                      child: const Icon(
+                        Icons.apps_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            appSelectionJson != null &&
+                                    SocialBlockerBlock.ruleHasAppSelection(
+                                      SocialBlockRule(
+                                        id: ruleId,
+                                        platform: selectedPlatform,
+                                        appSelectionJson: appSelectionJson,
+                                      ),
+                                    )
+                                ? "Apps selected"
+                                : "Choose apps for this rule",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              "Select categories or specific apps from iOS",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            "Only these apps are blocked when this rule is active",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 14,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
 
             const SizedBox(height: 32),
             _buildLabel(colorScheme, "Challenge Friction"),
@@ -1077,8 +1177,27 @@ class _AddRuleSheetState extends State<_AddRuleSheet> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final name = ruleNameController.text;
+                  if (!SocialBlockerBlock.ruleHasAppSelection(
+                    SocialBlockRule(
+                      id: ruleId,
+                      platform: selectedPlatform,
+                      appSelectionJson: appSelectionJson,
+                    ),
+                  )) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Choose apps to block, then save the rule.',
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    return;
+                  }
+
                   if (widget.existingRule != null) {
                     final updatedRule = widget.existingRule!.copyWith(
                       ruleName: name,
@@ -1089,11 +1208,12 @@ class _AddRuleSheetState extends State<_AddRuleSheet> {
                       blockedDays: blockedDays,
                       challengeType: selectedChallengeType,
                       challengeLevel: selectedLevel,
+                      appSelectionJson: appSelectionJson,
                     );
-                    widget.blocker.updateRule(updatedRule);
+                    await widget.blocker.updateRule(updatedRule);
                   } else {
                     final rule = SocialBlockRule(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      id: ruleId,
                       ruleName: name,
                       platform: selectedPlatform,
                       blockDuringFocus: blockDuringFocus,
@@ -1102,10 +1222,12 @@ class _AddRuleSheetState extends State<_AddRuleSheet> {
                       blockedDays: blockedDays,
                       challengeType: selectedChallengeType,
                       challengeLevel: selectedLevel,
+                      appSelectionJson: appSelectionJson,
                       isEnabled: true,
                     );
-                    widget.blocker.addRule(rule);
+                    await widget.blocker.addRule(rule);
                   }
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(

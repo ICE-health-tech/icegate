@@ -11,8 +11,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import '../../../data_layer/Services/cloud/GoogleDriveService.dart';
+import 'package:ice_gate/link_layer/note_export/DocxUtils.dart';
+import 'package:ice_gate/data_layer/Protocol/Integrations/integration_domain.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Integrations/IntegrationHubBlock.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class DocumentationBlock {
+  static const notionVaultFolderName = 'notion';
+  static final _notionDateFileName = RegExp(
+    r'^\d{4}-\d{2}-\d{2}\.(md|docx)$',
+    caseSensitive: false,
+  );
+  static final _ingestBannerLine = RegExp(
+    r'^>\s*\*?Ingested from Notion Pipeline\*?\s*$',
+    multiLine: true,
+  );
+  static final _ingestBannerSnippet = RegExp(
+    r'>\s*\*?Ingested from Notion Pipeline\*?',
+    caseSensitive: false,
+  );
+
   // Cloud Service
   final driveService = GoogleDriveService();
 
@@ -58,6 +76,12 @@ class DocumentationBlock {
   Directory? get rootDir => _docDir;
   Directory? get googleDriveRootDir => _googleDriveDir;
 
+  IntegrationHubBlock? _integrationHub;
+
+  void bindIntegrationHub(IntegrationHubBlock hub) {
+    _integrationHub = hub;
+  }
+
   DocumentationBlock() {
     _init();
   }
@@ -88,6 +112,8 @@ class DocumentationBlock {
       await _googleDriveDir!.create(recursive: true);
     }
 
+    await _ensureNotionVault();
+    await _organizeNotionVault();
     _loadFiles();
     await _loadInventory();
     _startWatching();
@@ -122,9 +148,20 @@ class DocumentationBlock {
     if (secret == null || secret.isEmpty) {
       await prefs.remove('notion_secret');
       notionSecret.value = null;
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.notion,
+        status: IntegrationConnectionStatus.disconnected,
+        displayName: 'Notion',
+      );
     } else {
       await prefs.setString('notion_secret', secret);
       notionSecret.value = secret;
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.notion,
+        status: IntegrationConnectionStatus.connected,
+        displayName: 'Notion',
+        configJson: '{"configured":true}',
+      );
     }
   }
 
@@ -147,7 +184,7 @@ class DocumentationBlock {
         final content = await file.readAsString();
         _syncInventory = Map<String, String>.from(jsonDecode(content));
       } catch (e) {
-        print("Error loading sync inventory: $e");
+        appLog("Error loading sync inventory: $e");
       }
     }
   }
@@ -209,7 +246,7 @@ class DocumentationBlock {
         _loadFiles();
       }
     } catch (e) {
-      print("Error deleting file: $e");
+      appLog("Error deleting file: $e");
       syncStatus.value = "❌ Delete failed: $e";
     } finally {
       Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
@@ -242,7 +279,7 @@ class DocumentationBlock {
         _loadFiles();
       }
     } catch (e) {
-      print("Error deleting folder: $e");
+      appLog("Error deleting folder: $e");
       syncStatus.value = "❌ Delete failed: $e";
     } finally {
       Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
@@ -341,13 +378,8 @@ class DocumentationBlock {
     syncStatus.value = "Searching Notion for shared content...";
 
     try {
-      // 1. Pre-create 'Notion' local folder at root
-      final notionRoot = Directory(p.join(_docDir!.path, 'Notion'));
-      if (!await notionRoot.exists()) {
-        await notionRoot.create(recursive: true);
-      }
-      
-      await _cleanupNotionFiles(); // Move legacy files to the new vault
+      await _ensureNotionVault();
+      await _organizeNotionVault();
       
       // 2. Search for everything shared with this integration
       final searchResponse = await http.post(
@@ -386,7 +418,7 @@ class DocumentationBlock {
       syncStatus.value =
           "✅ Pipeline Ingested $totalIngested items from Notion!";
     } catch (e) {
-      print('❌ Notion Auto-Ingestion failed: $e');
+      appLog('❌ Notion Auto-Ingestion failed: $e');
       syncStatus.value = "❌ Ingestion failed: $e";
     } finally {
       isSyncing.value = false;
@@ -429,7 +461,7 @@ class DocumentationBlock {
         }
       }
     } catch (e) {
-      print("Error querying database $databaseId: $e");
+      appLog("Error querying database $databaseId: $e");
     }
     return count;
   }
@@ -454,7 +486,7 @@ class DocumentationBlock {
     final fileName = title.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
     
     // Determine target directory
-    String parentPath = p.join(_docDir!.path, 'Notion');
+    String parentPath = p.join(_docDir!.path, notionVaultFolderName);
     if (subFolder != null) {
       parentPath = p.join(parentPath, subFolder);
       final dir = Directory(parentPath);
@@ -475,8 +507,6 @@ class DocumentationBlock {
   ) async {
     final buffer = StringBuffer();
     buffer.writeln("# $title");
-    // buffer.writeln();
-    // buffer.writeln("> *Ingested from Notion Pipeline*");
     buffer.writeln();
 
     try {
@@ -639,9 +669,22 @@ class DocumentationBlock {
         logActivity("Auth Failed", details: "Google Drive sign-in unsuccessful", isError: true);
         syncStatus.value = "❌ Sign-in failed";
         isGoogleDriveConnected.value = false;
+        await _integrationHub?.recordStatus(
+          provider: IntegrationProviderId.googleDrive,
+          status: IntegrationConnectionStatus.needsReauth,
+          displayName: 'Google Drive',
+          lastError: 'Sign-in failed',
+        );
         return;
       }
       isGoogleDriveConnected.value = true;
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.googleDrive,
+        status: IntegrationConnectionStatus.connected,
+        displayName:
+            Supabase.instance.client.auth.currentUser?.email ?? 'Google Drive',
+        externalAccountId: Supabase.instance.client.auth.currentUser?.id,
+      );
 
       final driveApi = driveService.driveApi!;
 
@@ -678,10 +721,24 @@ class DocumentationBlock {
 
       logActivity("Sync Complete", details: "Two-way mirroring finished successfully");
       syncStatus.value = "✅ Full Recursive Sync Complete!";
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.googleDrive,
+        status: IntegrationConnectionStatus.connected,
+        displayName:
+            Supabase.instance.client.auth.currentUser?.email ?? 'Google Drive',
+        externalAccountId: Supabase.instance.client.auth.currentUser?.id,
+        lastSyncAt: DateTime.now(),
+      );
     } catch (e) {
       logActivity("Sync Error", details: e.toString(), isError: true);
-      print('❌ Google Drive Sync Error: $e');
+      appLog('❌ Google Drive Sync Error: $e');
       syncStatus.value = "❌ Sync failed: $e";
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.googleDrive,
+        status: IntegrationConnectionStatus.error,
+        displayName: 'Google Drive',
+        lastError: e.toString(),
+      );
     } finally {
       isSyncing.value = false;
       syncType.value = null;
@@ -718,37 +775,132 @@ class DocumentationBlock {
         syncStatus.value = "⚠️ Folder '$name' already exists.";
       }
     } catch (e) {
-      print("Error creating folder: $e");
+      appLog("Error creating folder: $e");
       syncStatus.value = "❌ Error creating folder: $e";
     } finally {
       Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
     }
   }
 
-  /// Retroactive cleanup: move any root Notion files into the Notion vault
-  Future<void> _cleanupNotionFiles() async {
-    if (_docDir == null) return;
-    final notionDirPath = p.join(_docDir!.path, 'Notion');
-    final notionDir = Directory(notionDirPath);
-    
-    // We assume 'Notion' folder was already created by createLocalFolder
-    if (!await notionDir.exists()) return;
+  Directory _notionVaultDir() => Directory(
+    p.join(_docDir!.path, notionVaultFolderName),
+  );
 
-    final files = _docDir!.listSync();
-    for (var f in files) {
-      if (f is File) {
-        final name = p.basename(f.path);
-        // Heuristic: items that have 'Notion' in name or were untitled Notion items
-        if (name.endsWith('.md') && 
-            (name.contains('Notion') || name == 'Untitled_Notion_Page.md')) {
-          final targetPath = p.join(notionDirPath, name);
-          // Only move if target doesn't already exist to avoid conflicts
-          if (!await File(targetPath).exists()) {
-            await f.rename(targetPath);
-          }
+  /// Ensures `notion/` exists and migrates legacy `Notion/` if present.
+  Future<void> _ensureNotionVault() async {
+    if (_docDir == null) return;
+    final vault = _notionVaultDir();
+    if (!await vault.exists()) {
+      await vault.create(recursive: true);
+    }
+
+    final legacy = Directory(p.join(_docDir!.path, 'Notion'));
+    if (!await legacy.exists()) return;
+
+    for (final entity in legacy.listSync()) {
+      final name = p.basename(entity.path);
+      final targetPath = p.join(vault.path, name);
+      if (await FileSystemEntity.type(targetPath) ==
+          FileSystemEntityType.notFound) {
+        await entity.rename(targetPath);
+      }
+    }
+    if (legacy.listSync().isEmpty) {
+      await legacy.delete(recursive: true);
+    }
+  }
+
+  String _stripNotionIngestBanner(String content) {
+    var cleaned = content.replaceAll(_ingestBannerLine, '');
+    cleaned = cleaned.replaceAll(_ingestBannerSnippet, '');
+    cleaned = cleaned.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+    return cleaned.trimLeft();
+  }
+
+  Future<String> _readDocText(File file) async {
+    final ext = p.extension(file.path).toLowerCase();
+    if (ext == '.docx') {
+      return DocxUtils.extractPlainText(await file.readAsBytes());
+    }
+    return file.readAsString();
+  }
+
+  Future<void> _writeDocText(File file, String content) async {
+    final ext = p.extension(file.path).toLowerCase();
+    if (ext == '.docx') {
+      await file.writeAsBytes(
+        DocxUtils.createDocxBytesFromPlainText(content),
+        flush: true,
+      );
+    } else {
+      await file.writeAsString(content, flush: true);
+    }
+  }
+
+  Future<bool> _isNotionImportCandidate(File file) async {
+    final name = p.basename(file.path);
+    final ext = p.extension(name).toLowerCase();
+    if (ext != '.md' && ext != '.docx' && ext != '.txt') return false;
+
+    if (_notionDateFileName.hasMatch(name)) return true;
+    if (name.contains('Notion') || name == 'Untitled_Notion_Page.md') {
+      return true;
+    }
+
+    try {
+      final text = await _readDocText(file);
+      return _ingestBannerSnippet.hasMatch(text);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _stripIngestBannerFromFile(File file) async {
+    try {
+      final original = await _readDocText(file);
+      final cleaned = _stripNotionIngestBanner(original);
+      if (cleaned != original) {
+        await _writeDocText(file, cleaned);
+      }
+    } catch (e) {
+      appLog('Could not strip Notion banner from ${file.path}: $e');
+    }
+  }
+
+  /// Moves root-level Notion imports into `notion/` and removes ingest banner.
+  Future<void> _organizeNotionVault() async {
+    if (_docDir == null) return;
+    await _ensureNotionVault();
+    final vaultPath = _notionVaultDir().path;
+
+    final rootEntities = _docDir!.listSync(recursive: false);
+    for (final entity in rootEntities) {
+      if (entity is! File) continue;
+      if (!await _isNotionImportCandidate(entity)) continue;
+
+      await _stripIngestBannerFromFile(entity);
+
+      final name = p.basename(entity.path);
+      final targetPath = p.join(vaultPath, name);
+      if (p.equals(entity.path, targetPath)) continue;
+      if (!await entity.exists()) continue;
+      if (await File(targetPath).exists()) continue;
+      try {
+        await entity.rename(targetPath);
+      } on FileSystemException catch (e) {
+        appLog('Notion vault move skipped for ${entity.path}: $e');
+      }
+    }
+
+    final vault = _notionVaultDir();
+    if (await vault.exists()) {
+      for (final entity in vault.listSync(recursive: true)) {
+        if (entity is File) {
+          await _stripIngestBannerFromFile(entity);
         }
       }
     }
+
     _loadFiles();
   }
 
@@ -801,7 +953,7 @@ class DocumentationBlock {
       logActivity("Fetch Success", details: "Downloaded folder '$targetRemoteName'");
       syncStatus.value = "✅ Folder Fetch Complete!";
     } catch (e) {
-      print('❌ Fetch Error: $e');
+      appLog('❌ Fetch Error: $e');
       syncStatus.value = "❌ Fetch failed: $e";
     } finally {
       isSyncing.value = false;
@@ -877,7 +1029,7 @@ class DocumentationBlock {
     final List<drive.File> trashedItems = trashedFilesList.files ?? [];
 
     syncStatus.value = "Scanning ${p.basename(localDirPath)}... (${remoteItems.length} cloud items)";
-    print("DEBUG: Syncing $localDirPath. Remote count: ${remoteItems.length}, Trashed count: ${trashedItems.length}");
+    appLog("DEBUG: Syncing $localDirPath. Remote count: ${remoteItems.length}, Trashed count: ${trashedItems.length}");
 
     // 2. Local Inventory
     final localItems = localDir.listSync();
@@ -935,12 +1087,12 @@ class DocumentationBlock {
               }
               _syncInventory[localPath] = remoteItem.id!;
             } catch (e) {
-              print("Failed to download $name: $e");
+              appLog("Failed to download $name: $e");
             }
           }
         }
       } catch (e) {
-        print("Error processing remote item ${remoteItem.name}: $e");
+        appLog("Error processing remote item ${remoteItem.name}: $e");
       }
     }
 
@@ -974,11 +1126,11 @@ class DocumentationBlock {
               _syncInventory[entity.path] = created.id!; // Track folder in inventory
               await _syncRecursive(created.id!, entity.path);
             } catch (e) {
-              print("Failed to create remote folder $name: $e");
+              appLog("Failed to create remote folder $name: $e");
             }
           }
         } catch (e) {
-          print("Error processing local directory $name: $e");
+          appLog("Error processing local directory $name: $e");
         }
       } else if (entity is File) {
         // MIRROR DELETE: Only sync deletion if explicitly found in Cloud Trash
@@ -1018,7 +1170,7 @@ class DocumentationBlock {
           _syncInventory[entity.path] = created.id!;
             }
           } catch (e) {
-            print("Failed to upload $name: $e");
+            appLog("Failed to upload $name: $e");
           }
         }
       }
@@ -1031,7 +1183,7 @@ class DocumentationBlock {
       final file = drive.File()..trashed = true;
       await driveApi.files.update(file, fileId);
     } catch (e) {
-      print("Failed to trash remote item: $e");
+      appLog("Failed to trash remote item: $e");
     }
   }
 

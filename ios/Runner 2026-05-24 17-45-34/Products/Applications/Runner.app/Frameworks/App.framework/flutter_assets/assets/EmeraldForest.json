@@ -1,0 +1,59 @@
+{
+    "theme_name": "Emerald Forest",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFF2E7D32",
+    "color_scheme": {
+        "primary": "0xFF81C784",
+        "onPrimary": "0xFF003300",
+        "primaryContainer": "0xFF1B5E20",
+        "onPrimaryContainer": "0xFFA5D6A7",
+        "secondary": "0xFFFFD54F",
+        "onSecondary": "0xFF332200",
+        "surface": "0xFF0D1B0E",
+        "onSurface": "0xFFE8F5E9",
+        "surfaceContainer": "0xFF142615",
+        "outline": "0xFF4CAF50",
+        "outlineVariant": "0xFF2E7D32"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF0D1B0E",
+            "foregroundColor": "0xFF81C784",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFF81C784",
+            "foregroundColor": "0xFF003300",
+            "borderRadius": 12.0,
+            "elevation": 4.0
+        },
+        "card": {
+            "backgroundColor": "0xFF1B2E1C",
+            "elevation": 4.0,
+            "borderRadius": 16.0
+        },
+        "icon": {
+            "color": "0xFF81C784",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Inter",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFF81C784"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFC8E6C9"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "medium",
+            "color": "0xFFFFFFFF"
+        }
+    }
+}

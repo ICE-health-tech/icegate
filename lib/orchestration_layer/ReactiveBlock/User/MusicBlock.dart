@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/Services/YoutubeService.dart';
 import 'package:ice_gate/orchestration_layer/Services/FocusAudioHandler.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class MusicBlock {
   // Dependencies
@@ -178,7 +179,7 @@ class MusicBlock {
       }
       return true;
     } catch (e) {
-      print("MusicBlock: Audio setup failed ($e)");
+      appLog("MusicBlock: Audio setup failed ($e)");
       return false;
     }
   }

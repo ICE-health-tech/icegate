@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
+import 'package:flutter/services.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
 import 'package:ice_gate/orchestration_layer/ThemeLayer/CurrentThemeData.dart';
 import 'package:provider/provider.dart';
@@ -23,9 +26,12 @@ class ThemeManager {
   static void showThemeSelectionDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        final colorScheme = Theme.of(context).colorScheme;
-        final size = MediaQuery.of(context).size;
+      useRootNavigator: true,
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
+        final colorScheme = Theme.of(dialogContext).colorScheme;
+        final size = MediaQuery.of(dialogContext).size;
+        final textTheme = Theme.of(dialogContext).textTheme;
 
         return Center(
           child: Container(
@@ -56,7 +62,7 @@ class ThemeManager {
                     padding: const EdgeInsets.all(20.0),
                     child: Text(
                       "Appearance",
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5,
                       ),
@@ -84,10 +90,7 @@ class ThemeManager {
                                   ),
                                   child: Text(
                                     "Watch-style",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge
-                                        ?.copyWith(
+                                    style: textTheme.labelLarge?.copyWith(
                                           letterSpacing: 1.2,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -98,31 +101,31 @@ class ThemeManager {
                             ),
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Watchface Noir ⌚',
                             'assets/WatchfaceNoir.json',
                             Icons.watch_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Watchface Rose Gold',
                             'assets/WatchfaceRoseGold.json',
-                            Icons.watch_outlined,
+                            Icons.diamond_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Watchface Sterling',
                             'assets/WatchfaceSterling.json',
                             Icons.schedule_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Watchface Midnight Navy',
                             'assets/WatchfaceMidnightNavy.json',
                             Icons.water_drop_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Watchface Forest Night',
                             'assets/WatchfaceForestNight.json',
                             Icons.forest_rounded,
@@ -141,10 +144,7 @@ class ThemeManager {
                                   ),
                                   child: Text(
                                     "Presets",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge
-                                        ?.copyWith(
+                                    style: textTheme.labelLarge?.copyWith(
                                           letterSpacing: 0.8,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -155,121 +155,121 @@ class ThemeManager {
                             ),
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Data Dashboard 📊',
                             'assets/DataDenseDashboard.json',
                             Icons.dashboard_customize_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Haven',
                             'assets/DefaultTheme.json',
                             Icons.security_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Nostalgia 📼',
                             'assets/NostalgiaTheme.json',
                             Icons.settings_backup_restore_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Cyberpunk 2077 ',
                             'assets/Cyberpunk.json',
                             Icons.bolt_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Sakura Zen 🌸',
                             'assets/SakuraZen.json',
                             Icons.spa_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Emerald Forest 🌲',
                             'assets/EmeraldForest.json',
                             Icons.forest_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Nordic Night ❄️',
                             'assets/NordicNight.json',
                             Icons.ac_unit_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Royal Velvet 👑',
                             'assets/RoyalVelvet.json',
                             Icons.workspace_premium_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Midnight Gold',
                             'assets/MidnightGold.json',
-                            Icons.nights_stay_rounded,
+                            Icons.star_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Deep Sea',
                             'assets/DeepSea.json',
                             Icons.waves_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Frosty Morning',
                             'assets/Frosty.json',
                             Icons.wb_sunny_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Light Purple',
                             'assets/LightThemePurple.json',
                             Icons.auto_awesome_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Purple Seed',
                             'assets/PurpleSeed.json',
                             Icons.egg_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Midnight Nebula',
                             'assets/MidnightNebula.json',
                             Icons.cloud_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Sunset Horizon',
                             'assets/SunsetHorizon.json',
                             Icons.wb_twilight_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Forest Whisper',
                             'assets/ForestWhisper.json',
-                            Icons.hearing_rounded,
+                            Icons.eco_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Volcano 🌋',
                             'assets/Volcano.json',
                             Icons.volcano_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Ocean Deep 🌊',
                             'assets/OceanDeep.json',
                             Icons.waves_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Cyberpunk Pink 💖',
                             'assets/CyberpunkPink.json',
                             Icons.flash_on_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Enchanted Forest ✨',
                             'assets/EnchantedForest.json',
                             Icons.nature_people_rounded,
@@ -289,9 +289,7 @@ class ThemeManager {
                                   ),
                                   child: Text(
                                     "Core Colors",
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
+                                    style: textTheme.bodySmall,
                                   ),
                                 ),
                                 const Expanded(child: Divider()),
@@ -300,43 +298,43 @@ class ThemeManager {
                           ),
 
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Seed Blue',
                             'assets/SeedBlue.json',
                             Icons.palette_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Seed Green',
                             'assets/SeedGreen.json',
                             Icons.palette_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Seed Orange',
                             'assets/SeedOrange.json',
                             Icons.palette_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Seed Pink (Dark)',
                             'assets/SeedPink.json',
                             Icons.palette_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Seed Red',
                             'assets/SeedRed.json',
                             Icons.palette_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Seed Teal',
                             'assets/SeedTeal.json',
                             Icons.palette_rounded,
                           ),
                           _buildThemeOption(
-                            context,
+                            dialogContext,
                             'Seed Indigo',
                             'assets/SeedIndigo.json',
                             Icons.palette_rounded,
@@ -355,61 +353,153 @@ class ThemeManager {
     );
   }
 
+  static Future<_ThemePreview?> _loadThemePreview(String assetPath) async {
+    try {
+      final raw = await rootBundle.loadString(assetPath);
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      final scheme = json['color_scheme'] as Map<String, dynamic>?;
+      Color parse(String? hex, String fallback) {
+        if (hex == null || hex.isEmpty) return _parseHexColor(fallback);
+        return _parseHexColor(hex);
+      }
+
+      final seed = json['seed_color']?.toString() ?? '0xFF6200EE';
+      return _ThemePreview(
+        primary: parse(scheme?['primary']?.toString(), seed),
+        secondary: parse(scheme?['secondary']?.toString(), seed),
+        surface: parse(scheme?['surface']?.toString(), '0xFFF5F5F5'),
+        isDark: (json['brightness']?.toString().toLowerCase() ?? 'light') ==
+            'dark',
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Color _parseHexColor(String hex) {
+    var clean = hex.trim().replaceAll(RegExp(r'[^\dA-Fa-f0-9xX]'), '');
+    if (clean.startsWith('0x') || clean.startsWith('0X')) {
+      clean = clean.substring(2);
+    }
+    if (clean.length == 6) clean = 'FF$clean';
+    return Color(int.parse(clean, radix: 16));
+  }
+
   static Widget _buildThemeOption(
     BuildContext context,
     String name,
     String assetPath,
     IconData iconData,
   ) {
-    final width = MediaQuery.of(context).size.width;
-
     final colorScheme = Theme.of(context).colorScheme;
-    final buttonColor = colorScheme
-        .primary; // Use the theme's primary color as default for ElevatedButton
+    final textTheme = Theme.of(context).textTheme;
 
-    // Improved luminance check for better contrast
-    final double luminance = buttonColor.computeLuminance();
-    final Color textColor = luminance > 0.5 ? Colors.black : Colors.white;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: FutureBuilder<_ThemePreview?>(
+        future: _loadThemePreview(assetPath),
+        builder: (context, snapshot) {
+          final preview = snapshot.data;
+          final primary = preview?.primary ?? colorScheme.primary;
+          final secondary = preview?.secondary ?? colorScheme.secondary;
+          final iconOnSwatch =
+              primary.computeLuminance() > 0.55 ? Colors.black87 : Colors.white;
 
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: buttonColor,
-        foregroundColor: textColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ), // More rounded for attractiveness
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-      child: SizedBox(
-        width: width * 0.5,
-        child: Row(
-          children: [
-            Icon(iconData, size: 20, color: textColor),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                name,
-                maxLines: 1,
-                style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+          return Material(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(14),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                Provider.of<ThemeStore>(context, listen: false)
+                    .loadTheme(assetPath);
+                final themeDAO = LegacyThemeDAO(context.read<AppDatabase>());
+                themeDAO.saveCurrentTheme(CurrentThemeData(themePath: assetPath));
+                Navigator.of(context).pop();
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [primary, secondary],
+                        ),
+                        border: Border.all(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.45,
+                          ),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primary.withValues(alpha: 0.25),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(iconData, size: 22, color: iconOnSwatch),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          if (preview != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              preview.isDark ? 'Dark theme' : 'Light theme',
+                              style: textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      preview?.isDark == true
+                          ? Icons.dark_mode_rounded
+                          : Icons.light_mode_rounded,
+                      size: 18,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
-
-      onPressed: () {
-        Provider.of<ThemeStore>(context, listen: false).loadTheme(assetPath);
-        LegacyThemeDAO themeDAO = LegacyThemeDAO(context.read<AppDatabase>());
-        themeDAO.saveCurrentTheme(CurrentThemeData(themePath: assetPath));
-
-        // var currentThemeData = themeDAO.getCurrentTheme();
-        // printCurrentThemeData(context);
-        Navigator.of(context).pop();
-      },
     );
   }
+}
+
+class _ThemePreview {
+  const _ThemePreview({
+    required this.primary,
+    required this.secondary,
+    required this.surface,
+    required this.isDark,
+  });
+
+  final Color primary;
+  final Color secondary;
+  final Color surface;
+  final bool isDark;
 }

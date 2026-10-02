@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 
 class RadialPremiumBackground extends StatelessWidget {
   final Widget child;
   final bool showGlow;
   final Alignment center;
   final double radius;
+  /// When set, overrides [Theme.colorScheme.primary] for the radial glow.
+  final Color? glowColor;
+  /// When set, overrides themed scaffold background for the base fill.
+  final Color? baseColor;
 
   const RadialPremiumBackground({
     super.key,
@@ -13,19 +17,51 @@ class RadialPremiumBackground extends StatelessWidget {
     this.showGlow = true,
     this.center = Alignment.center,
     this.radius = 1.5,
+    this.glowColor,
+    this.baseColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final primaryColor = glowColor ?? colorScheme.primary;
+    final themedBase = baseColor ?? theme.scaffoldBackgroundColor;
 
     return Stack(
       children: [
-        // Base Foundation: Deep Obsidian
+        // L0 shell — glacial night gradient when [baseColor] is set.
         Container(
           width: double.infinity,
           height: double.infinity,
-          color: EntryColors.obsidianBase,
+          decoration: baseColor != null
+              ? BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: const Alignment(0.4, 1.0),
+                    colors: [
+                      HealthMetricColors.iceBgDeep,
+                      baseColor!,
+                      HealthMetricColors.iceBgMid,
+                    ],
+                    stops: const [0.0, 0.45, 1.0],
+                  ),
+                )
+              : BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      themedBase,
+                      Color.lerp(
+                            themedBase,
+                            colorScheme.surfaceContainerHighest,
+                            0.35,
+                          ) ??
+                          themedBase,
+                    ],
+                  ),
+                ),
         ),
         
         // Dynamic Glow Layer

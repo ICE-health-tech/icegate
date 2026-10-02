@@ -7,6 +7,7 @@ import 'package:powersync/powersync.dart' show PowerSyncDatabase;
 // import 'package:ice_gate/orchestration_layer/Servic es/PowerPoint/GameConst.dart';
 import 'package:ice_gate/orchestration_layer/ThemeLayer/CurrentThemeData.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/Models/JobDayHistoryEntry.dart';
 import 'package:ice_gate/data_layer/Protocol/User/PersonProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/PersonalInformationProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/UserAccountProtocol.dart';
@@ -19,29 +20,36 @@ import 'package:rxdart/rxdart.dart';
 // For File
 import 'dart:math'; // For Random() used in DAOs
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 // For finding the database path
 // For path joining
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:ice_gate/data_layer/Services/cloud/supabase_payload_codec.dart';
+import 'package:ice_gate/data_layer/Services/cloud/SupabasePayloadCodec.dart';
 import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 // 2. Part Directives (Crucial for generated code)
 // NOTE: You must run `flutter pub run build_runner build` to generate this file.
 part 'Database.g.dart';
-part 'daos/internal_widgets_dao.dart';
-part 'daos/hourly_activity_log_dao.dart';
-part 'daos/theme_dao.dart';
-part 'daos/external_widgets_dao.dart';
-part 'daos/growth_dao.dart';
-part 'daos/progression_dao.dart';
-part 'daos/ssh_sessions_dao.dart';
-part 'daos/ai_prompts_dao.dart';
+part 'daos/InternalWidgetsDao.dart';
+part 'daos/HourlyActivityLogDao.dart';
+part 'daos/JobWorkTrackingDao.dart';
+part 'daos/GratitudeDao.dart';
+part 'daos/ThemeDao.dart';
+part 'daos/ExternalWidgetsDao.dart';
+part 'daos/GrowthDao.dart';
+part 'daos/ProgressionDao.dart';
+part 'daos/SshSessionsDao.dart';
+part 'daos/AiPromptsDao.dart';
 part 'daos/ai_memories_dao.dart';
 part 'daos/capture_queue_dao.dart';
-part 'daos/configs_dao.dart';
-part 'daos/portfolio_snapshots_dao.dart';
+part 'daos/ConfigsDao.dart';
+part 'daos/IntegrationAccountDao.dart';
+part 'daos/DevQuickTabsDao.dart';
+part 'daos/PortfolioSnapshotsDao.dart';
+part 'daos/LocalMediaIndexDao.dart';
 
 // NOTE: I'm using 'app_database.g.dart' as the standard naming convention.
 
@@ -116,7 +124,7 @@ class InternalWidgetsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// InternalWidgetsDAO moved to daos/internal_widgets_dao.dart
+// InternalWidgetsDAO moved to daos/InternalWidgetsDao.dart
 
 @DataClassName('HourlyActivityLogData')
 class HourlyActivityLogTable extends Table {
@@ -158,7 +166,7 @@ class HourlyActivityLogTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// HourlyActivityLogDAO moved to daos/hourly_activity_log_dao.dart
+// HourlyActivityLogDAO moved to daos/HourlyActivityLogDao.dart
 
 @DataClassName('ExternalWidgetData') // The generated data class name
 class ExternalWidgetsTable extends Table {
@@ -239,6 +247,10 @@ class ProjectNotesTable extends Table {
   TextColumn get extension =>
       text().withDefault(const Constant('.md')).named('extension')();
 
+  TextColumn get localPath => text().nullable().named('local_path')();
+  TextColumn get remotePath => text().nullable().named('remote_path')();
+  TextColumn get device => text().nullable().named('device')();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -253,6 +265,8 @@ class ProjectsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get projectID => text().nullable().named('project_id')();
+  TextColumn get parentProjectId =>
+      text().nullable().named('parent_project_id')();
   TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get name => text().withLength(min: 1, max: 200).named('name')();
   TextColumn get description => text().nullable().named('description')();
@@ -343,6 +357,44 @@ enum EmailStatus { pending, verified, bounced, disabled }
 enum CurrencyType { USD, EUR, VND, JPY, GBP, CNY }
 
 enum SkillLevel { beginner, intermediate, advanced, expert }
+
+/// Local-only media index for files stored under app documents directory.
+/// This enables "auto scan → save path to local DB" features and later allows
+/// background sync to S3/Supabase.
+@DataClassName('LocalMediaIndexData')
+class LocalMediaIndexTable extends Table {
+  @override
+  String get tableName => 'local_media_index';
+
+  TextColumn get id => text()(); // deterministic hash ID recommended
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get relativePath => text().named('relative_path')(); // local path: "<pid>/meals/abc.jpg"
+  TextColumn get remotePath => text().nullable().named('remote_path')(); // S3 object key
+  TextColumn get device => text().nullable().named('device')(); // ios | mac | android | other
+  TextColumn get subFolder => text().named('sub_folder')(); // e.g. "meals"
+  TextColumn get fileName => text().named('file_name')(); // basename
+  IntColumn get fileBytes => integer().nullable().named('file_bytes')();
+  DateTimeColumn get lastModifiedAt => dateTime()
+      .nullable()
+      .map(const DateTimeUTCConverter())
+      .named('last_modified_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {personID, relativePath},
+  ];
+}
 
 @DataClassName('OrganizationData')
 class OrganizationsTable extends Table {
@@ -627,8 +679,17 @@ class SkillsTable extends Table {
   TextColumn get proficiencyLevel => textEnum<SkillLevel>()
       .withDefault(const Constant('beginner'))
       .named('proficiency_level')();
-  IntColumn get yearsOfExperience =>
-      integer().withDefault(const Constant(0)).named('years_of_experience')();
+
+  /// Running points earned for this skill (accumulated from events).
+  IntColumn get point =>
+      integer().withDefault(const Constant(0)).named('point')();
+
+  /// One-time bonus granted the moment this skill is first achieved.
+  IntColumn get achievedPoints =>
+      integer().withDefault(const Constant(0)).named('achieved_points')();
+
+  /// Last event that impacted this skill. Full event table comes later.
+  TextColumn get eventID => text().nullable().named('event_id')();
   TextColumn get description => text().nullable().named('description')();
   BoolColumn get isFeatured =>
       boolean().withDefault(const Constant(false)).named('is_featured')();
@@ -749,6 +810,8 @@ class TransactionsTable extends Table {
       .map(const DateTimeUTCConverter())
       .named('created_at')();
   TextColumn get projectID => text().nullable().named('project_id')();
+  TextColumn get sourceAccountId =>
+      text().nullable().named('source_account_id')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -770,6 +833,85 @@ class SubscriptionsTable extends Table {
       boolean().withDefault(const Constant(true)).named('is_active')();
   TextColumn get billingCycle =>
       text().withDefault(const Constant('monthly')).named('billing_cycle')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Local-only scheduled income (e.g. salary); posts transactions when due.
+@DataClassName('RecurringIncomeData')
+class RecurringIncomesTable extends Table {
+  @override
+  String get tableName => 'recurring_incomes';
+  TextColumn get id => text()();
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get category => text().named('category')();
+  RealColumn get amount => real().named('amount')();
+  TextColumn get description => text().nullable().named('description')();
+  /// `weekly`, `monthly`, or `yearly`
+  TextColumn get interval =>
+      text().withDefault(const Constant('monthly')).named('interval')();
+  DateTimeColumn get nextDueAt => dateTime().named('next_due_at')();
+  BoolColumn get isActive =>
+      boolean().withDefault(const Constant(true)).named('is_active')();
+  /// Soft FK → job_positions.id. Job = master; its incomes over time form
+  /// the salary timeline (raise = deactivate old row, insert new one).
+  TextColumn get jobPositionId =>
+      text().nullable().named('job_position_id')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Employment / contract positions — links income + project.
+@DataClassName('JobPositionData')
+class JobPositionsTable extends Table {
+  @override
+  String get tableName => 'job_positions';
+  TextColumn get id => text()();
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get employer => text().withDefault(const Constant(''))();
+  TextColumn get jobTitle =>
+      text().withDefault(const Constant('')).named('job_title')();
+  /// full_time, part_time, freelance, internship, contract
+  TextColumn get contractType =>
+      text().withDefault(const Constant('full_time')).named('contract_type')();
+  DateTimeColumn get startDate => dateTime().named('start_date')();
+  DateTimeColumn get endDate => dateTime().nullable().named('end_date')();
+  TextColumn get linkedIncomeId =>
+      text().nullable().named('linked_income_id')();
+  TextColumn get linkedProjectId =>
+      text().nullable().named('linked_project_id')();
+  TextColumn get notes => text().withDefault(const Constant(''))();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('BonusData')
+class BonusesTable extends Table {
+  @override
+  String get tableName => 'bonuses';
+  TextColumn get id => text()();
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get jobPositionId =>
+      text().nullable().named('job_position_id')();
+  RealColumn get amount => real()();
+  TextColumn get description =>
+      text().withDefault(const Constant(''))();
+  DateTimeColumn get bonusDate => dateTime().named('bonus_date')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1686,6 +1828,10 @@ class AchievementsTable extends Table {
   TextColumn get moodPost => text().nullable().named('mood_post')();
   TextColumn get impactDescWho => text().named('impact_desc_who')();
   TextColumn get impactDescHow => text().named('impact_desc_how')();
+  TextColumn get projectID => text().nullable().named('project_id')();
+  /// Offline story image (relative path under app documents).
+  TextColumn get localImagePath =>
+      text().nullable().named('local_image_path')();
 
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
@@ -1698,6 +1844,68 @@ class AchievementsTable extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Something that happened — linked to a person; media URLs point at S3/CDN.
+@DataClassName('EventData')
+class EventsTable extends Table {
+  @override
+  String get tableName => 'events';
+
+  TextColumn get id => text()();
+  TextColumn get tenantID => text()
+      .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
+      .named('tenant_id')();
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get name => text().withLength(min: 1, max: 200).named('name')();
+  TextColumn get description => text().nullable().named('description')();
+  TextColumn get urlImage => text().nullable().named('url_image')();
+  TextColumn get urlVideo => text().nullable().named('url_video')();
+  DateTimeColumn get occurredAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('occurred_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Junction: which [EventsTable] rows affected which [SkillsTable] rows.
+@DataClassName('EventSkillData')
+class EventSkillsTable extends Table {
+  @override
+  String get tableName => 'event_skills';
+  TextColumn get id => text()();
+  TextColumn get tenantID => text()
+      .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
+      .named('tenant_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
+  TextColumn get eventRowID => text().named('event_id')();
+  TextColumn get skillRowID => text().named('skill_id')();
+  IntColumn get earningPoint =>
+      integer().withDefault(const Constant(0)).named('earning_point')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {eventRowID, skillRowID},
+  ];
 }
 
 @DataClassName('MindLogData')
@@ -1751,7 +1959,7 @@ class JournalActivityOptionsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// MindLogsDAO moved to daos/growth_dao.dart
+// MindLogsDAO moved to daos/GrowthDao.dart
 
 @DataClassName('FeedbackLocalData')
 class FeedbacksTable extends Table {
@@ -1776,7 +1984,7 @@ class FeedbacksTable extends Table {
 }
 
 // Legacy SharedPreferences-based theme persistence (not a Drift accessor).
-// Renamed to avoid collision with the Drift-based ThemeDAO in theme_dao.dart.
+// Renamed to avoid collision with the Drift-based ThemeDAO in ThemeDao.dart.
 class LegacyThemeDAO {
   final AppDatabase db;
   LegacyThemeDAO(this.db);
@@ -2197,10 +2405,10 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
 }
 
 // 4.1 ExternalWidgetsDAO
-// ExternalWidgetsDAO moved to daos/external_widgets_dao.dart
+// ExternalWidgetsDAO moved to daos/ExternalWidgetsDao.dart
 
 // 4.2 ThemesTableDAO
-// ThemesTableDAO moved to daos/theme_dao.dart
+// ThemesTableDAO moved to daos/ThemeDao.dart
 
 // 4.3 ProjectNoteDAO
 @DriftAccessor(tables: [ProjectNotesTable])
@@ -2217,6 +2425,9 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
     String? category,
     String? mood,
     String extension = '.md',
+    String? localPath,
+    String? remotePath,
+    String? device,
   }) async {
     final uuid = IDGen.UUIDV7();
     final companion = ProjectNotesTableCompanion.insert(
@@ -2229,6 +2440,9 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
       category: Value(category ?? 'projects'),
       mood: Value(mood),
       extension: Value(extension),
+      localPath: Value(localPath),
+      remotePath: Value(remotePath),
+      device: Value(device),
       createdAt: Value(DateTime.now()),
       updatedAt: Value(DateTime.now()),
     );
@@ -2253,6 +2467,9 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
         category: Value(record['category'] as String? ?? 'projects'),
         mood: Value(record['mood'] as String?),
         extension: Value(record['extension'] as String? ?? '.md'),
+        localPath: Value(record['local_path'] as String?),
+        remotePath: Value(record['remote_path'] as String?),
+        device: Value(record['device'] as String?),
         createdAt: Value(
           record['created_at'] != null
               ? DateTime.parse(record['created_at'].toString())
@@ -2345,6 +2562,48 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
       projectNotesTable,
     )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
+
+  Future<List<ProjectNoteData>> getNotesForPerson(
+    String personID, {
+    String? category,
+  }) {
+    final query = select(projectNotesTable)
+      ..where(
+        (tbl) => tbl.personID.equals(personID) | tbl.personID.isNull(),
+      );
+    if (category != null) {
+      query.where((tbl) => tbl.category.equals(category));
+    }
+    return query.get();
+  }
+
+  /// Updates journal image columns without bumping [updatedAt].
+  Future<bool> updateNoteMediaPaths({
+    required String id,
+    String? localPath,
+    String? remotePath,
+    String? device,
+  }) async {
+    final count = await (update(projectNotesTable)
+          ..where((tbl) => tbl.id.equals(id)))
+        .write(
+      ProjectNotesTableCompanion(
+        localPath: Value(localPath),
+        remotePath: Value(remotePath),
+        device: Value(device),
+      ),
+    );
+    if (count > 0) {
+      final note = await getNoteById(id);
+      if (note != null) {
+        await db.pushToSupabase(
+          table: 'project_notes',
+          payload: note.toJson(),
+        );
+      }
+    }
+    return count > 0;
+  }
 }
 
 @DriftAccessor(tables: [ProjectsTable])
@@ -2357,6 +2616,7 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
       id: Value(r['id'] as String),
       tenantID: Value(r['tenant_id'] as String?),
       projectID: Value(r['project_id'] as String?),
+      parentProjectId: Value(r['parent_project_id'] as String?),
       personID: Value(r['person_id'] as String?),
       name: Value(r['name'] as String? ?? 'Untitled Project'),
       description: Value(r['description'] as String?),
@@ -2402,6 +2662,7 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
             (row) => ProjectData(
               id: row.data['id'] as String,
               projectID: row.data['project_id'] as String?,
+              parentProjectId: row.data['parent_project_id'] as String?,
               personID: (row.data['person_id'] as String?) ?? personID,
               name: (row.data['name'] as String?) ?? 'Untitled',
               description: row.data['description'] as String?,
@@ -2428,9 +2689,77 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> updateProject(ProjectData project) async {
     await update(projectsTable).replace(project);
-    // Convert data class to map
-    final payload = project.toJson();
-    await db.pushToSupabase(table: 'projects', payload: payload);
+    await db.pushToSupabase(
+      table: 'projects',
+      payload: _projectDataToSupabasePayload(project),
+    );
+  }
+
+  /// PostgREST column names (includes [parent_project_id] for sub-projects).
+  static Map<String, dynamic> _projectDataToSupabasePayload(ProjectData project) {
+    return {
+      'id': project.id,
+      'tenant_id': project.tenantID,
+      'project_id': project.projectID,
+      'parent_project_id': project.parentProjectId,
+      'person_id': project.personID,
+      'name': project.name,
+      'description': project.description,
+      'category': project.category,
+      'color': project.color,
+      'status': project.status,
+      'ssh_host_id': project.sshHostId,
+      'remote_path': project.remotePath,
+      'ai_model': project.aiModel,
+      'created_at': project.createdAt.toUtc().toIso8601String(),
+      'updated_at': project.updatedAt.toUtc().toIso8601String(),
+    };
+  }
+
+  /// Re-push all local projects (repairs child [parent_project_id] after upgrade).
+  Future<void> pushAllProjectsForPerson(String personId) async {
+    if (personId.isEmpty) return;
+    final rows = await customSelect(
+      'SELECT * FROM projects WHERE person_id = ?',
+      variables: [Variable.withString(personId)],
+      readsFrom: {projectsTable},
+    ).get();
+    for (final row in rows) {
+      final data = row.data;
+      if (data['id'] == null) continue;
+      await db.pushToSupabase(
+        table: 'projects',
+        payload: _projectDataToSupabasePayload(
+          ProjectData(
+            id: data['id'] as String,
+            projectID: data['project_id'] as String?,
+            parentProjectId: data['parent_project_id'] as String?,
+            personID: data['person_id'] as String?,
+            name: (data['name'] as String?) ?? 'Untitled',
+            description: data['description'] as String?,
+            category: data['category'] as String?,
+            color: data['color'] as String?,
+            sshHostId: data['ssh_host_id'] as String?,
+            remotePath: data['remote_path'] as String?,
+            aiModel: data['ai_model'] as String?,
+            status: (data['status'] as int?) ?? 0,
+            createdAt: data['created_at'] != null
+                ? DateTime.tryParse(data['created_at'].toString()) ??
+                      DateTime.now()
+                : DateTime.now(),
+            updatedAt: data['updated_at'] != null
+                ? DateTime.tryParse(data['updated_at'].toString()) ??
+                      DateTime.now()
+                : DateTime.now(),
+          ),
+        ),
+      );
+    }
+  }
+
+  /// Pull projects from Supabase (includes sub-project [parent_project_id] links).
+  Future<void> syncFromCloud(String personId) async {
+    await db.syncTableDown('projects', personId);
   }
 
   Future<void> updateProjectManual(
@@ -2481,6 +2810,7 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
     CVAddressesTable,
     PersonContactsTable,
     QuestsTable,
+    ScoresTable,
   ],
 )
 class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
@@ -2622,12 +2952,117 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     const guestId = DataSeeder.guestPersonId;
     if (newPersonId == guestId) return; // No self-migration
 
-    print(
+    appLog(
       "🛰️ [Migration] Promoting guest data to user $newPersonId with tenant $tenantId...",
     );
 
+    double maxNullable(double? a, double? b) {
+      if (a == null && b == null) return 0.0;
+      if (a == null) return b ?? 0.0;
+      if (b == null) return a;
+      return a > b ? a : b;
+    }
+
+    /// [scores] has a UNIQUE [person_id]. Reassigning guest rows can collide with
+    /// an existing row for the real user — merge guest metrics into the user row
+    /// and delete the guest row.
+    Future<void> migrateGuestScores() async {
+      final guest = await (select(
+        scoresTable,
+      )..where((t) => t.personID.equals(guestId))).getSingleOrNull();
+      if (guest == null) return;
+
+      final userRow = await (select(
+        scoresTable,
+      )..where((t) => t.personID.equals(newPersonId))).getSingleOrNull();
+
+      if (userRow == null) {
+        try {
+          await (update(
+            scoresTable,
+          )..where((t) => t.personID.equals(guestId))).write(
+            ScoresTableCompanion(
+              personID: Value(newPersonId),
+              tenantID: Value(tenantId),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        } catch (e) {
+          if (e.toString().contains('no such column') &&
+              e.toString().contains('tenant_id')) {
+            await (update(
+              scoresTable,
+            )..where((t) => t.personID.equals(guestId))).write(
+              ScoresTableCompanion(
+                personID: Value(newPersonId),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          } else {
+            rethrow;
+          }
+        }
+        return;
+      }
+
+      final merged = ScoreLocalData(
+        id: userRow.id,
+        tenantID: tenantId,
+        scoreID: userRow.scoreID ?? guest.scoreID,
+        personID: userRow.personID,
+        healthGlobalScore: maxNullable(
+          userRow.healthGlobalScore,
+          guest.healthGlobalScore,
+        ),
+        socialGlobalScore: maxNullable(
+          userRow.socialGlobalScore,
+          guest.socialGlobalScore,
+        ),
+        financialGlobalScore: maxNullable(
+          userRow.financialGlobalScore,
+          guest.financialGlobalScore,
+        ),
+        careerGlobalScore: maxNullable(
+          userRow.careerGlobalScore,
+          guest.careerGlobalScore,
+        ),
+        penaltyScore: maxNullable(userRow.penaltyScore, guest.penaltyScore),
+        createdAt: userRow.createdAt,
+        updatedAt: DateTime.now(),
+      );
+      await update(scoresTable).replace(merged);
+      await (delete(
+        scoresTable,
+      )..where((t) => t.personID.equals(guestId))).go();
+    }
+
+    Future<void> migrateGuestTable(String table) async {
+      try {
+        await customUpdate(
+          'UPDATE $table SET person_id = ?, tenant_id = ? WHERE person_id = ?',
+          variables: [
+            Variable.withString(newPersonId),
+            Variable.withString(tenantId),
+            Variable.withString(guestId),
+          ],
+        );
+      } catch (e) {
+        final msg = e.toString();
+        if (msg.contains('no such column') && msg.contains('tenant_id')) {
+          await customUpdate(
+            'UPDATE $table SET person_id = ? WHERE person_id = ?',
+            variables: [
+              Variable.withString(newPersonId),
+              Variable.withString(guestId),
+            ],
+          );
+        } else {
+          rethrow;
+        }
+      }
+    }
+
     final tables = [
-      'scores',
       'achievements',
       'mind_logs',
       'habits',
@@ -2660,22 +3095,19 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     ];
 
     await transaction(() async {
+      try {
+        await migrateGuestScores();
+      } catch (e) {
+        appLog("⚠️ [Migration] Could not migrate table scores: $e");
+      }
       for (final table in tables) {
         try {
-          // Use raw SQL for speed and to avoid Companion naming discrepancies
-          await customUpdate(
-            'UPDATE $table SET person_id = ?, tenant_id = ? WHERE person_id = ?',
-            variables: [
-              Variable(newPersonId),
-              Variable(tenantId),
-              Variable(guestId),
-            ],
-          );
+          await migrateGuestTable(table);
         } catch (e) {
-          print("⚠️ [Migration] Could not migrate table $table: $e");
+          appLog("⚠️ [Migration] Could not migrate table $table: $e");
         }
       }
-      print("✅ [Migration] Comprehensive Guest data migration complete.");
+      appLog("✅ [Migration] Comprehensive Guest data migration complete.");
     });
   }
 
@@ -3473,6 +3905,9 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     AssetsTable,
     TransactionsTable,
     SubscriptionsTable,
+    RecurringIncomesTable,
+    JobPositionsTable,
+    BonusesTable,
   ],
 )
 class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
@@ -3549,9 +3984,395 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
         .watch();
   }
 
+  Stream<List<RecurringIncomeData>> watchRecurringIncomes(String personId) {
+    return (select(recurringIncomesTable)
+          ..where((t) => t.personID.equals(personId) & t.isActive.equals(true))
+          ..orderBy([(t) => OrderingTerm(expression: t.nextDueAt)]))
+        .watch();
+  }
+
+  Future<void> insertRecurringIncome(
+    RecurringIncomesTableCompanion income,
+  ) async {
+    await into(recurringIncomesTable).insert(income);
+    await _pushRecurringIncomeById(income.id.value);
+  }
+
+  Future<void> deleteRecurringIncome(String id) async {
+    await (delete(recurringIncomesTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'recurring_incomes',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
+
+  /// Mirrors the full local row to Supabase so restarts never pull back a
+  /// stale schedule (a stale next_due_at re-posts income transactions).
+  Future<void> _pushRecurringIncomeById(String id) async {
+    final row = await (select(recurringIncomesTable)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    if (row == null) return;
+    await db.pushToSupabase(
+      table: 'recurring_incomes',
+      payload: {
+        'id': row.id,
+        'person_id': row.personID,
+        'category': row.category,
+        'amount': row.amount,
+        'description': row.description,
+        'interval': row.interval,
+        'next_due_at': row.nextDueAt.toUtc().toIso8601String(),
+        'is_active': row.isActive,
+        'job_position_id': row.jobPositionId,
+        'created_at': row.createdAt.toUtc().toIso8601String(),
+      },
+    );
+  }
+
+  Future<List<RecurringIncomeData>> getDueRecurringIncomes(
+    String personId,
+    DateTime asOf,
+  ) {
+    return (select(recurringIncomesTable)
+          ..where(
+            (t) =>
+                t.personID.equals(personId) &
+                t.isActive.equals(true) &
+                t.nextDueAt.isSmallerOrEqualValue(asOf),
+          ))
+        .get();
+  }
+
+  Future<void> updateRecurringIncomeNextDue({
+    required String id,
+    required DateTime nextDueAt,
+  }) async {
+    await (update(recurringIncomesTable)..where((t) => t.id.equals(id))).write(
+      RecurringIncomesTableCompanion(nextDueAt: Value(nextDueAt)),
+    );
+    await _pushRecurringIncomeById(id);
+  }
+
+  Future<void> updateRecurringIncomeAmount({
+    required String id,
+    required double amount,
+    String? description,
+    String? category,
+  }) async {
+    // Bonus/contract are one-time: force interval so the recurring poster
+    // never treats them as a monthly schedule.
+    final oneTime = category == 'bonus' || category == 'contract';
+    await (update(recurringIncomesTable)..where((t) => t.id.equals(id))).write(
+      RecurringIncomesTableCompanion(
+        amount: Value(amount),
+        description:
+            description != null ? Value(description) : const Value.absent(),
+        category:
+            category != null ? Value(category) : const Value.absent(),
+        interval: oneTime ? const Value('once') : const Value.absent(),
+        nextDueAt:
+            oneTime ? Value(DateTime(2099, 12, 31)) : const Value.absent(),
+      ),
+    );
+    await _pushRecurringIncomeById(id);
+  }
+
+  Future<void> setRecurringIncomeActive({
+    required String id,
+    required bool isActive,
+  }) async {
+    await (update(recurringIncomesTable)..where((t) => t.id.equals(id))).write(
+      RecurringIncomesTableCompanion(isActive: Value(isActive)),
+    );
+    await _pushRecurringIncomeById(id);
+  }
+
+  Future<void> deleteRecurringIncomesForPerson(String personId) async {
+    await (delete(recurringIncomesTable)
+          ..where((t) => t.personID.equals(personId)))
+        .go();
+  }
+
+  /// Removes local recurring_incomes that no longer exist on Supabase.
+  Future<void> reconcileRecurringIncomes(
+    Set<String> cloudIds,
+    String personId,
+  ) async {
+    if (personId.isEmpty || cloudIds.isEmpty) return;
+    final localRows = await (select(recurringIncomesTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    for (final row in localRows) {
+      if (!cloudIds.contains(row.id)) {
+        await (delete(recurringIncomesTable)
+              ..where((t) => t.id.equals(row.id)))
+            .go();
+      }
+    }
+  }
+
+  // Job Positions
+  Stream<List<JobPositionData>> watchJobPositions(String personId) {
+    return (select(jobPositionsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(
+                  expression: t.endDate,
+                  mode: OrderingMode.asc,
+                ),
+          ]))
+        .watch();
+  }
+
+  Future<JobPositionData?> getCurrentJob(String personId) {
+    return (select(jobPositionsTable)
+          ..where(
+            (t) =>
+                t.personID.equals(personId) & t.endDate.isNull(),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<void> insertJobPosition(JobPositionsTableCompanion job) async {
+    await into(jobPositionsTable).insert(job);
+    await db.pushToSupabase(
+      table: 'job_positions',
+      payload: db.companionToMap(job, jobPositionsTable),
+    );
+  }
+
+  Future<void> updateJobPosition(JobPositionsTableCompanion job) async {
+    final id = job.id.value;
+    await (update(jobPositionsTable)..where((t) => t.id.equals(id))).write(job);
+    await db.pushToSupabase(
+      table: 'job_positions',
+      payload: db.companionToMap(job, jobPositionsTable),
+    );
+  }
+
+  Future<void> deleteJobPosition(String id) async {
+    await (delete(jobPositionsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'job_positions',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
+
+  Future<void> pushAllJobPositionsToCloud(String personId) async {
+    final rows = await (select(jobPositionsTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    for (final row in rows) {
+      await db.pushToSupabase(
+        table: 'job_positions',
+        payload: {
+          'id': row.id,
+          'person_id': row.personID,
+          'employer': row.employer,
+          'job_title': row.jobTitle,
+          'contract_type': row.contractType,
+          'start_date': row.startDate.toUtc().toIso8601String(),
+          'end_date': row.endDate?.toUtc().toIso8601String(),
+          'linked_income_id': row.linkedIncomeId,
+          'linked_project_id': row.linkedProjectId,
+          'notes': row.notes,
+          'created_at': row.createdAt.toUtc().toIso8601String(),
+        },
+      );
+    }
+  }
+
+  Future<void> pushAllRecurringIncomesToCloud(String personId) async {
+    final rows = await (select(recurringIncomesTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    for (final row in rows) {
+      await db.pushToSupabase(
+        table: 'recurring_incomes',
+        payload: {
+          'id': row.id,
+          'person_id': row.personID,
+          'category': row.category,
+          'amount': row.amount,
+          'description': row.description,
+          'interval': row.interval,
+          'next_due_at': row.nextDueAt.toUtc().toIso8601String(),
+          'is_active': row.isActive,
+          'job_position_id': row.jobPositionId,
+          'created_at': row.createdAt.toUtc().toIso8601String(),
+        },
+      );
+    }
+  }
+
+  Future<void> pushAllBonusesToCloud(String personId) async {
+    final rows = await (select(bonusesTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    for (final row in rows) {
+      await db.pushToSupabase(
+        table: 'bonuses',
+        payload: {
+          'id': row.id,
+          'person_id': row.personID,
+          'job_position_id': row.jobPositionId,
+          'amount': row.amount,
+          'description': row.description,
+          'bonus_date': row.bonusDate.toUtc().toIso8601String(),
+          'created_at': row.createdAt.toUtc().toIso8601String(),
+        },
+      );
+    }
+  }
+
+  // ── Sync down (Supabase → local) ──
+
+  Future<void> upsertFromSupabaseRecurringIncome(Map<String, dynamic> r) async {
+    final id = r['id'] as String;
+    final existing = await (select(recurringIncomesTable)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    var nextDue = r['next_due_at'] != null
+        ? DateTime.parse(r['next_due_at'].toString())
+        : DateTime.now();
+    // The cloud copy can lag behind the local schedule. Never roll
+    // next_due_at backwards, or the poster re-posts income after restart.
+    if (existing != null && existing.nextDueAt.isAfter(nextDue)) {
+      nextDue = existing.nextDueAt;
+    }
+    await into(recurringIncomesTable).insert(
+      RecurringIncomesTableCompanion(
+        id: Value(id),
+        personID: Value(r['person_id'] as String),
+        category: Value(r['category'] as String? ?? ''),
+        amount: Value((r['amount'] as num?)?.toDouble() ?? 0.0),
+        description: Value(r['description'] as String?),
+        interval: Value(r['interval'] as String? ?? 'monthly'),
+        nextDueAt: Value(nextDue),
+        isActive: Value(r['is_active'] == true || r['is_active'] == 1),
+        jobPositionId: Value(
+          r['job_position_id'] as String? ?? existing?.jobPositionId,
+        ),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> upsertFromSupabaseJobPosition(Map<String, dynamic> r) async {
+    await into(jobPositionsTable).insert(
+      JobPositionsTableCompanion(
+        id: Value(r['id'] as String),
+        personID: Value(r['person_id'] as String),
+        employer: Value(r['employer'] as String? ?? ''),
+        jobTitle: Value(r['job_title'] as String? ?? ''),
+        contractType: Value(r['contract_type'] as String? ?? 'full_time'),
+        startDate: Value(
+          r['start_date'] != null
+              ? DateTime.parse(r['start_date'].toString())
+              : DateTime.now(),
+        ),
+        endDate: Value(
+          r['end_date'] != null
+              ? DateTime.parse(r['end_date'].toString())
+              : null,
+        ),
+        linkedIncomeId: Value(r['linked_income_id'] as String?),
+        linkedProjectId: Value(r['linked_project_id'] as String?),
+        notes: Value(r['notes'] as String? ?? ''),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> upsertFromSupabaseBonus(Map<String, dynamic> r) async {
+    await into(bonusesTable).insert(
+      BonusesTableCompanion(
+        id: Value(r['id'] as String),
+        personID: Value(r['person_id'] as String),
+        jobPositionId: Value(r['job_position_id'] as String?),
+        amount: Value((r['amount'] as num?)?.toDouble() ?? 0.0),
+        description: Value(r['description'] as String? ?? ''),
+        bonusDate: Value(
+          r['bonus_date'] != null
+              ? DateTime.parse(r['bonus_date'].toString())
+              : DateTime.now(),
+        ),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  // Bonuses
+  Stream<List<BonusData>> watchBonuses(String personId) =>
+      (select(bonusesTable)..where((t) => t.personID.equals(personId)))
+          .watch();
+
+  Stream<List<BonusData>> watchBonusesByJob(String jobPositionId) =>
+      (select(bonusesTable)
+            ..where((t) => t.jobPositionId.equals(jobPositionId)))
+          .watch();
+
+  Future<void> insertBonus(BonusesTableCompanion bonus) async {
+    await into(bonusesTable).insert(bonus);
+    await db.pushToSupabase(
+      table: 'bonuses',
+      payload: db.companionToMap(bonus, bonusesTable),
+    );
+  }
+
+  Future<void> updateBonus(BonusesTableCompanion bonus) async {
+    final id = bonus.id.value;
+    await (update(bonusesTable)..where((t) => t.id.equals(id))).write(bonus);
+    await db.pushToSupabase(
+      table: 'bonuses',
+      payload: db.companionToMap(bonus, bonusesTable),
+    );
+  }
+
+  Future<void> deleteBonus(String id) async {
+    await (delete(bonusesTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'bonuses',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
+
   // Accounts
   Future<void> createAccount(FinancialAccountsTableCompanion account) async {
     await into(financialAccountsTable).insert(account);
+    await db.pushToSupabase(
+      table: 'financial_accounts',
+      payload: db.companionToMap(account, financialAccountsTable),
+    );
+  }
+
+  Future<void> updateFinancialAccount(
+    FinancialAccountsTableCompanion account,
+  ) async {
+    final id = account.id.value;
+    await (update(financialAccountsTable)..where((t) => t.id.equals(id))).write(
+      account.copyWith(updatedAt: Value(DateTime.now())),
+    );
     await db.pushToSupabase(
       table: 'financial_accounts',
       payload: db.companionToMap(account, financialAccountsTable),
@@ -3807,6 +4628,7 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
               : DateTime.now(),
         ),
         projectID: Value(record['project_id'] as String?),
+        sourceAccountId: Value(record['source_account_id'] as String?),
       ),
       mode: InsertMode.insertOrReplace,
     );
@@ -3819,6 +4641,26 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
       payload: {'id': id},
       isDelete: true,
     );
+  }
+
+  Future<void> pushAllTransactionsToCloud(String personId) async {
+    final rows = await (select(transactionsTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    final payloads = rows.map((row) => <String, dynamic>{
+      'id': row.id,
+      'person_id': row.personID,
+      'category': row.category,
+      'type': row.type,
+      'amount': row.amount,
+      'mood_score': row.moodScore,
+      'description': row.description,
+      'transaction_date': row.transactionDate.toUtc().toIso8601String(),
+      'created_at': row.createdAt.toUtc().toIso8601String(),
+      'project_id': row.projectID,
+      'source_account_id': row.sourceAccountId,
+    }).toList();
+    await db.pushToSupabaseBatch(table: 'transactions', payloads: payloads);
   }
 
   Stream<List<TransactionData>> watchAllTransactions(String personId) {
@@ -3882,14 +4724,104 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
                       DateTime.now()
                 : DateTime.now(),
             projectID: row.data['project_id'] as String?,
+            sourceAccountId: row.data['source_account_id'] as String?,
           ),
         )
         .toList();
   }
+
+  /// Returns true if an income transaction with matching fingerprint already
+  /// exists for the given day — used to prevent duplicate posts from the
+  /// recurring-income poster.
+  Future<bool> incomeTransactionExists({
+    required String personId,
+    required String category,
+    required double amount,
+    required DateTime date,
+    String? description,
+  }) async {
+    final dayStart = DateTime(date.year, date.month, date.day);
+    final dayEnd = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+    final q = select(transactionsTable)
+      ..where(
+        (t) =>
+            t.personID.equals(personId) &
+            t.type.equals('income') &
+            t.category.equals(category) &
+            t.amount.equals(amount) &
+            t.transactionDate
+                .isBiggerOrEqualValue(dayStart) &
+            t.transactionDate
+                .isSmallerOrEqualValue(dayEnd),
+      )
+      ..limit(1);
+    final rows = await q.get();
+    return rows.isNotEmpty;
+  }
+
+  /// Finds duplicate income transactions (same person, category, amount,
+  /// description, and transaction_date) and deletes all but the oldest,
+  /// cleaning up damage from past sync-down overwrites.
+  Future<int> deduplicateIncomeTransactions(String personId) async {
+    final dupes = await customSelect(
+      '''
+      SELECT id FROM transactions t
+      WHERE person_id = ? AND type = 'income'
+        AND EXISTS (
+          SELECT 1 FROM transactions t2
+          WHERE t2.person_id = t.person_id
+            AND t2.type = t.type
+            AND t2.category = t.category
+            AND t2.amount = t.amount
+            AND COALESCE(t2.description,'') = COALESCE(t.description,'')
+            AND DATE(t2.transaction_date) = DATE(t.transaction_date)
+            AND t2.id < t.id
+        )
+      ''',
+      variables: [Variable.withString(personId)],
+      readsFrom: {transactionsTable},
+    ).get();
+    var removed = 0;
+    for (final row in dupes) {
+      final id = row.data['id'] as String;
+      await deleteTransaction(id);
+      removed++;
+    }
+    return removed;
+  }
+
+  /// Removes duplicate recurring_incomes keeping the oldest by id.
+  /// Matches on (person, description, amount) — ignores category so that
+  /// entries created with different categories but same name+amount are
+  /// still caught as duplicates.
+  Future<int> deduplicateRecurringIncomes(String personId) async {
+    final dupes = await customSelect(
+      '''
+      SELECT id FROM recurring_incomes r
+      WHERE person_id = ?
+        AND EXISTS (
+          SELECT 1 FROM recurring_incomes r2
+          WHERE r2.person_id = r.person_id
+            AND r2.amount = r.amount
+            AND COALESCE(r2.description,'') = COALESCE(r.description,'')
+            AND r2.id < r.id
+        )
+      ''',
+      variables: [Variable.withString(personId)],
+      readsFrom: {recurringIncomesTable},
+    ).get();
+    var removed = 0;
+    for (final row in dupes) {
+      final id = row.data['id'] as String;
+      await deleteRecurringIncome(id);
+      removed++;
+    }
+    return removed;
+  }
 }
 
 // 4.6 GrowthDAO
-// GrowthDAO moved to daos/growth_dao.dart
+// GrowthDAO moved to daos/GrowthDao.dart
 
 // 4.7 AiAnalysisDAO
 @DriftAccessor(tables: [AiAnalysisTable])
@@ -5575,7 +6507,7 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    print("The date that fetch: $date");
+    appLog("The date that fetch: $date");
 
     final rows =
         await (select(mealsTable)..where(
@@ -5804,9 +6736,15 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<List<FocusSessionData>> watchSessionsByPerson(String personId) {
-    return (select(
-      focusSessionsTable,
-    )..where((t) => t.personID.equals(personId))).watch();
+    return (select(focusSessionsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.startTime,
+              mode: OrderingMode.desc,
+            ),
+          ]))
+        .watch();
   }
 
   Stream<List<FocusSessionData>> watchAllSessions() {
@@ -5855,6 +6793,7 @@ class QuotesTable extends Table {
   TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get content => text()();
   TextColumn get author => text().nullable()();
+  TextColumn get typeQuote => text().nullable().named('type_quote')();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant(true)).named('is_active')();
   DateTimeColumn get createdAt => dateTime()
@@ -5866,6 +6805,13 @@ class QuotesTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Values for [QuotesTable.typeQuote].
+abstract final class QuoteType {
+  QuoteType._();
+
+  static const focusWeek = 'focus_week';
+}
+
 @DriftAccessor(tables: [QuotesTable])
 class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
   QuoteDAO(super.db);
@@ -5873,21 +6819,82 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
   Future<void> insertQuote(QuotesTableCompanion entry) async {
     await into(quotesTable).insert(entry);
 
-    // Convert companion to map with raw values
     final Map<String, dynamic> payload = {};
     for (final col in quotesTable.$columns) {
       final value = entry.toColumns(true)[col.name];
       if (value is Variable) {
-        payload[col.name] = value.value;
+        var v = value.value;
+        if (v is DateTime) {
+          v = v.toUtc().toIso8601String();
+        }
+        payload[col.name] = v;
       }
     }
 
-    // Direct push to Supabase
     await db.pushToSupabase(table: 'quotes', payload: payload);
   }
 
-  Future<bool> updateQuote(QuoteData entry) =>
-      update(quotesTable).replace(entry);
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final active = r['is_active'];
+    final isActive = active == true ||
+        active == 1 ||
+        active == 'true' ||
+        active == 't';
+    await into(quotesTable).insertOnConflictUpdate(
+      QuotesTableCompanion.insert(
+        id: (r['id'] as String?) ?? '',
+        tenantID: Value((r['tenant_id'] as String?) ?? DEFAULT_TENANT_ID),
+        personID: Value(r['person_id'] as String?),
+        content: (r['content'] as String?) ?? '',
+        author: Value(r['author'] as String?),
+        typeQuote: Value(r['type_quote'] as String?),
+        isActive: Value(isActive),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> syncFromCloud(String personId) async {
+    if (personId.isEmpty) return;
+    await db.syncTableDown('quotes', personId);
+  }
+
+  Future<bool> updateQuote(QuoteData entry) async {
+    final ok = await update(quotesTable).replace(entry);
+    await db.pushToSupabase(table: 'quotes', payload: _quotePayload(entry));
+    return ok;
+  }
+
+  Map<String, dynamic> _quotePayload(QuoteData entry) => {
+        'id': entry.id,
+        'tenant_id': entry.tenantID,
+        'person_id': entry.personID,
+        'content': entry.content,
+        'author': entry.author,
+        'type_quote': entry.typeQuote,
+        'is_active': entry.isActive,
+        'created_at': entry.createdAt.toUtc().toIso8601String(),
+      };
+
+  Future<QuoteData?> getFocusWeekQuote(String personId) async {
+    if (personId.isEmpty) return null;
+    final rows = await (select(quotesTable)
+          ..where((t) => t.personID.equals(personId))
+          ..where((t) => t.typeQuote.equals(QuoteType.focusWeek))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.createdAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(1))
+        .get();
+    return rows.isEmpty ? null : rows.first;
+  }
 
   Future<int> deleteQuote(String id) =>
       (delete(quotesTable)..where((t) => t.id.equals(id))).go();
@@ -5912,6 +6919,7 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
             personID: row.data['person_id'] as String? ?? '',
             content: row.data['content'] as String? ?? '',
             author: row.data['author'] as String?,
+            typeQuote: row.data['type_quote'] as String?,
             isActive:
                 (row.data['is_active'] as int?) == 1 ||
                 (row.data['is_active'] as bool?) == true,
@@ -5922,9 +6930,28 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
         .toList();
   }
 
+  Stream<List<QuoteData>> watchQuotesByPerson(String personId) {
+    return (select(quotesTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.createdAt,
+              mode: OrderingMode.desc,
+            ),
+          ]))
+        .watch()
+        .map(
+          (quotes) => quotes
+              .where((q) => q.typeQuote != QuoteType.focusWeek)
+              .toList(growable: false),
+        );
+  }
+
   Stream<List<QuoteData>> watchActiveQuotes() {
     return watchAllQuotes().map(
-      (quotes) => quotes.where((q) => q.isActive).toList(),
+      (quotes) => quotes
+          .where((q) => q.isActive && q.typeQuote != QuoteType.focusWeek)
+          .toList(growable: false),
     );
   }
 
@@ -5941,6 +6968,7 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
               personID: row.data['person_id'] as String? ?? '',
               content: row.data['content'] as String? ?? '',
               author: row.data['author'] as String?,
+              typeQuote: row.data['type_quote'] as String?,
               isActive:
                   (row.data['is_active'] as int?) == 1 ||
                   (row.data['is_active'] as bool?) == true,
@@ -6170,7 +7198,55 @@ class FeedbackDAO extends DatabaseAccessor<AppDatabase>
   }
 }
 
-// QuestDAO moved to daos/progression_dao.dart
+@DriftAccessor(tables: [JobWorkingLogsTable])
+class JobWorkingLogsDAO extends DatabaseAccessor<AppDatabase>
+    with _$JobWorkingLogsDAOMixin {
+  JobWorkingLogsDAO(super.db);
+
+  Future<String> insertJob({
+    required String personId,
+    required String jobName,
+    required String status,
+  }) async {
+    final id = IDGen.UUIDV7();
+    await into(jobWorkingLogsTable).insert(
+      JobWorkingLogsTableCompanion.insert(
+        id: id,
+        personId: personId,
+        jobName: jobName,
+        status: status,
+      ),
+    );
+    return id;
+  }
+
+  Future<List<JobWorkingLogData>> forPerson(String personId) {
+    return (select(jobWorkingLogsTable)
+          ..where((t) => t.personId.equals(personId)))
+        .get();
+  }
+
+  Stream<List<JobWorkingLogData>> watchForPerson(String personId) {
+    return (select(jobWorkingLogsTable)
+          ..where((t) => t.personId.equals(personId)))
+        .watch();
+  }
+
+  Future<bool> updateStatus({
+    required String personId,
+    required String jobName,
+    required String status,
+  }) async {
+    final rows = await (update(jobWorkingLogsTable)
+          ..where(
+            (t) => t.personId.equals(personId) & t.jobName.equals(jobName),
+          ))
+        .write(JobWorkingLogsTableCompanion(status: Value(status)));
+    return rows > 0;
+  }
+}
+
+// QuestDAO moved to daos/ProgressionDao.dart
 
 /// Lightweight result class returned by [HealthLogsDAO.getDailyExerciseWithSession].
 /// Combines an exercise_logs row with the exact duration_seconds from the
@@ -6754,7 +7830,83 @@ class AiPromptsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// AiPromptsDAO moved to daos/ai_prompts_dao.dart
+// AiPromptsDAO moved to daos/AiPromptsDao.dart
+
+@DataClassName('DevQuickTabData')
+class DevQuickTabsTable extends Table {
+  @override
+  String get tableName => 'dev_quick_tabs';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get title => text().withLength(min: 1, max: 500)();
+  TextColumn get fullUrl => text().named('full_url')();
+  TextColumn get remoteUrl =>
+      text().withDefault(const Constant('')).named('remote_url')();
+  IntColumn get sortOrder =>
+      integer().withDefault(const Constant(0)).named('sort_order')();
+  BoolColumn get isPinned =>
+      boolean().withDefault(const Constant(false)).named('is_pinned')();
+  TextColumn get username =>
+      text().withDefault(const Constant('')).named('username')();
+  TextColumn get password =>
+      text().withDefault(const Constant('')).named('password')();
+  TextColumn get loginType =>
+      text().withDefault(const Constant('html_form')).named('login_type')();
+  TextColumn get passkey =>
+      text().withDefault(const Constant('')).named('passkey')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// DevQuickTabsDAO moved to daos/DevQuickTabsDao.dart
+
+@DataClassName('IntegrationAccountData')
+class IntegrationAccountsTable extends Table {
+  @override
+  String get tableName => 'integration_accounts';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get domain => text()();
+  TextColumn get provider => text()();
+  TextColumn get status => text()();
+  TextColumn get displayName => text().named('display_name')();
+  TextColumn get externalAccountId =>
+      text().nullable().named('external_account_id')();
+  TextColumn get configJson => text().nullable().named('config_json')();
+  DateTimeColumn get lastSyncAt => dateTime()
+      .nullable()
+      .named('last_sync_at')
+      .map(const DateTimeUTCConverter())();
+  TextColumn get lastError => text().nullable().named('last_error')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {personId, domain, provider},
+      ];
+}
+
 
 /// Extracted AI memory produced from a captured screen.
 /// `content` is the text injected into future AI prompts. Only rows with
@@ -6837,7 +7989,7 @@ class CaptureQueueTable extends Table {
   TextColumn get status =>
       text().withDefault(const Constant('pending')).named('status')();
   IntColumn get attempts =>
-      int().withDefault(const Constant(0)).named('attempts')(); // retry counter
+      integer().withDefault(const Constant(0)).named('attempts')(); // retry counter
   TextColumn get error => text().nullable().named('error')();
   DateTimeColumn get createdAt => dateTime()
       .nullable()
@@ -6880,17 +8032,167 @@ class ConfigsTable extends Table {
   ];
 }
 
-// ConfigsDAO moved to daos/configs_dao.dart
 
-// SSHSessionsDAO moved to daos/ssh_sessions_dao.dart
 
-// AchievementsDAO moved to daos/growth_dao.dart
+@DataClassName('JobWorkingLogData')
+class JobWorkingLogsTable extends Table {
+  @override
+  String get tableName => 'job_working_logs';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobName =>text().named('job_name')();
+  TextColumn get status =>text().named('status')();
+  
+  
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+  @override
+  List<Set<Column>> get uniqueKeys =>[{jobName,personId}];
+
+}
+
+@DataClassName('JobWorkDayData')
+class JobWorkDaysTable extends Table {
+  @override
+  String get tableName => 'job_work_days';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobPositionId => text().named('job_position_id')();
+  DateTimeColumn get workDate => dateTime()
+      .map(const DateTimeUTCConverter())
+      .named('work_date')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {personId, jobPositionId, workDate},
+      ];
+}
+
+@DataClassName('JobWorkDayPlanData')
+class JobWorkDayPlansTable extends Table {
+  @override
+  String get tableName => 'job_work_day_plans';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobPositionId => text().named('job_position_id')();
+  DateTimeColumn get workDate => dateTime()
+      .map(const DateTimeUTCConverter())
+      .named('work_date')();
+  IntColumn get plannedMinutes =>
+      integer().withDefault(const Constant(0)).named('planned_minutes')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {personId, jobPositionId, workDate},
+      ];
+}
+
+@DataClassName('JobTimeLogData')
+class JobTimeLogsTable extends Table {
+  @override
+  String get tableName => 'job_time_logs';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobPositionId => text().named('job_position_id')();
+  DateTimeColumn get workDate => dateTime()
+      .map(const DateTimeUTCConverter())
+      .named('work_date')();
+  TextColumn get taskCategory => text().named('task_category')();
+  IntColumn get minutes => integer()();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('JobSubTaskData')
+class JobSubTasksTable extends Table {
+  @override
+  String get tableName => 'job_sub_tasks';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get jobPositionId => text().named('job_position_id')();
+  TextColumn get name => text()();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('GratitudeEntryData')
+class GratitudeEntriesTable extends Table {
+  @override
+  String get tableName => 'gratitude_entries';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get name => text()();
+  /// `person` or `thing`
+  TextColumn get kind => text().withDefault(const Constant('person'))();
+  TextColumn get note => text().nullable()();
+  TextColumn get facebookUrl => text().nullable().named('facebook_url')();
+  TextColumn get avatarLocalPath =>
+      text().nullable().named('avatar_local_path')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ConfigsDAO moved to daos/ConfigsDao.dart
+
+// SSHSessionsDAO moved to daos/SshSessionsDao.dart
+
+// AchievementsDAO moved to daos/GrowthDao.dart
 
 // --- 6. Main Database Class ---
 
 @DriftDatabase(
   tables: [
     OrganizationsTable,
+    LocalMediaIndexTable,
     ExternalWidgetsTable,
     ThemesTable,
     InternalWidgetsTable,
@@ -6921,6 +8223,9 @@ class ConfigsTable extends Table {
     ProjectsTable,
     TransactionsTable,
     SubscriptionsTable,
+    RecurringIncomesTable,
+    JobPositionsTable,
+    BonusesTable,
     FocusSessionsTable,
     CustomNotificationsTable,
     QuotesTable,
@@ -6935,14 +8240,24 @@ class ConfigsTable extends Table {
     HourlyActivityLogTable,
     PortfolioSnapshotsTable,
     AchievementsTable,
+    EventsTable,
+    EventSkillsTable,
     MindLogsTable,
     JournalActivityOptionsTable,
     HeartRateLogsTable,
     OxygenSaturationLogsTable,
     AppUsageHistoryTable,
     AppTimeSpendingTable,
-    AiMemoriesTable,
+AiMemoriesTable,
     CaptureQueueTable,
+    IntegrationAccountsTable,
+    DevQuickTabsTable,
+    JobWorkingLogsTable,
+    JobWorkDaysTable,
+    JobWorkDayPlansTable,
+    JobTimeLogsTable,
+    JobSubTasksTable,
+    GratitudeEntriesTable,
   ],
   daos: [
     ThemeDAO,
@@ -6968,6 +8283,8 @@ class ConfigsTable extends Table {
     HealthLogsDAO,
     AiPromptsDAO,
     ConfigsDAO,
+    IntegrationAccountDAO,
+    DevQuickTabsDAO,
     QuestDAO,
     SSHHostsDAO,
     SSHSessionsDAO,
@@ -6975,10 +8292,16 @@ class ConfigsTable extends Table {
     FeedbackDAO,
     HourlyActivityLogDAO,
     AchievementsDAO,
+    EventsDAO,
+    EventSkillsDAO,
     MindLogsDAO,
     JournalActivityOptionsDAO,
-    AiMemoryDAO,
+AiMemoryDAO,
     CaptureQueueDAO,
+    LocalMediaIndexDAO,
+    JobWorkingLogsDAO,
+    JobWorkTrackingDAO,
+    GratitudeDAO,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -6986,9 +8309,7 @@ class AppDatabase extends _$AppDatabase {
   SupabaseService? supabaseSync;
 
   AppDatabase([QueryExecutor? executor, this.powerSync])
-    : super(executor ?? _openConnection()) {
-    print("OBVIOUS LOG: DATABASE VERSION IS 49");
-  }
+    : super(executor ?? _openConnection());
 
   /// Direct push to Supabase as requested for this branch (bypassing PowerSync upload queue)
   Future<void> pushToSupabase({
@@ -7119,9 +8440,19 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  Future<void> syncTableDown(String table, String personId) async {
+  Future<void> syncTableDown(
+    String table,
+    String personId, {
+    DateTime? occurredAfter,
+    DateTime? occurredBefore,
+  }) async {
     if (supabaseSync != null) {
-      await supabaseSync!.syncTableDown(table, personId);
+      await supabaseSync!.syncTableDown(
+        table,
+        personId,
+        occurredAfter: occurredAfter,
+        occurredBefore: occurredBefore,
+      );
     } else {
       debugPrint(
         "⚠️ [Supabase] syncTableDown called for $table but supabaseSync is NULL",
@@ -7163,6 +8494,8 @@ class AppDatabase extends _$AppDatabase {
     'focus_sessions': {'created_at', 'updated_at'},
     'feedbacks': {'status'},
     'subscriptions': {'tenant_id'},
+    'achievements': {'local_image_path'},
+    'transactions': {'tenant_id'},
   };
 
   Map<String, dynamic> _transformOpData(
@@ -7172,6 +8505,8 @@ class AppDatabase extends _$AppDatabase {
     var result = Map<String, dynamic>.from(data);
     if (table == 'project_notes') {
       result = _mapProjectNotesPayloadToSqlColumns(result);
+    } else if (table == 'projects') {
+      result = _mapProjectsPayloadToSqlColumns(result);
     }
     result.removeWhere((key, _) => _globalLocalOnlyColumns.contains(key));
     final tableSpecific = _tableLocalOnlyColumns[table];
@@ -7190,6 +8525,30 @@ class AppDatabase extends _$AppDatabase {
       'noteID': 'note_id',
       'personID': 'person_id',
       'projectID': 'project_id',
+      'localPath': 'local_path',
+      'remotePath': 'remote_path',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at',
+    };
+    final out = <String, dynamic>{};
+    row.forEach((key, value) {
+      out[dartToSql[key] ?? key] = value;
+    });
+    return out;
+  }
+
+  /// Aligns Drift / [ProjectData.toJson] keys with Postgres column names.
+  Map<String, dynamic> _mapProjectsPayloadToSqlColumns(
+    Map<String, dynamic> row,
+  ) {
+    const dartToSql = <String, String>{
+      'tenantID': 'tenant_id',
+      'projectID': 'project_id',
+      'parentProjectId': 'parent_project_id',
+      'personID': 'person_id',
+      'sshHostId': 'ssh_host_id',
+      'remotePath': 'remote_path',
+      'aiModel': 'ai_model',
       'createdAt': 'created_at',
       'updatedAt': 'updated_at',
     };
@@ -7231,6 +8590,10 @@ class AppDatabase extends _$AppDatabase {
   @override
   ConfigsDAO get configsDAO => ConfigsDAO(this);
   @override
+  IntegrationAccountDAO get integrationAccountDAO =>
+      IntegrationAccountDAO(this);
+  DevQuickTabsDAO get devQuickTabsDAO => DevQuickTabsDAO(this);
+  @override
   MindLogsDAO get mindLogsDAO => MindLogsDAO(this);
   @override
   JournalActivityOptionsDAO get journalActivityOptionsDAO =>
@@ -7260,9 +8623,32 @@ class AppDatabase extends _$AppDatabase {
   // v72 → adds needs_ai_retry to meals for offline / failed AI analysis retry
   // v74 → adds mood_score to exercise_logs (manual log / sync)
   // v75 → adds journal_activity_options (synced custom journal activities)
-  // v76 → adds ai_memories (extracted screen memory, user-confirmed before prompt injection)
-  // v77 → adds capture_queue (local pending screen captures for the auto-capture job)
-  int get schemaVersion => 77;
+  // v76 → adds recurring_incomes (local scheduled income)
+  // v77 → achievements.local_image_path (offline story photos)
+  // v78 → integration_accounts (calendar + health hub)
+  // v79 → projects.parent_project_id
+  // v80 → local_media_index.remote_path + device (ios/mac S3 sync)
+  // v81 → project_notes.local_path + remote_path + device (journal S3 sync)
+  // v84 → skills.point replaces years_of_experience
+  // v85 → events + event_skills (person events ↔ skills junction, S3 remote_path)
+  // v86 → simplify events: id, name, description, url_image, url_video, FK person_id
+  // v87 → quotes.type_quote (e.g. focus_week for Mind weekly topic)
+  // v88 → query indexes: goals (person_id, project_id), events (person_id, occurred_at)
+  // v89 → achievements.project_id (link story/feats to projects)
+  // v91 → username, password, login_type in dev_quick_tabs
+  // v92 → job_positions table
+  // v93 → bonuses table
+  // v94 → recurring_incomes.job_position_id (job = master; incomes = salary timeline)
+  // v95 → dev_quick_tabs.passkey (bearer token / API key sync)
+  // v96 → dev_quick_tabs.remote_url (off-LAN fallback)
+  // v97 → job_working_logs (per-person job name + status)
+  // v98 → job work days, plans, time logs, sub-tasks (Supabase sync)
+  // v99 → job_time_logs.notes
+  // v100 → gratitude_entries (Biết ơn tab)
+  // v101 → gratitude_entries.facebook_url + avatar_local_path
+  // v102 → adds ai_memories (extracted screen memory, user-confirmed before prompt injection)
+  // v103 → adds capture_queue (local pending screen captures for the auto-capture job)
+  int get schemaVersion => 103;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7305,6 +8691,281 @@ class AppDatabase extends _$AppDatabase {
             'ALTER TABLE focus_sessions ADD COLUMN categories TEXT;',
           );
         } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
+  /// Ensures journal sync columns exist (hot reload skips [onUpgrade]).
+  Future<void> repairProjectNotesMediaColumnsForDrift() async {
+    try {
+      final rows = await customSelect(
+        'PRAGMA table_info(project_notes)',
+        readsFrom: {projectNotesTable},
+      ).get();
+      final names = rows.map((r) => r.read<String>('name')).toSet();
+      if (!names.contains('local_path')) {
+        await customStatement(
+          'ALTER TABLE project_notes ADD COLUMN local_path TEXT;',
+        );
+      }
+      if (!names.contains('remote_path')) {
+        await customStatement(
+          'ALTER TABLE project_notes ADD COLUMN remote_path TEXT;',
+        );
+      }
+      if (!names.contains('device')) {
+        await customStatement(
+          'ALTER TABLE project_notes ADD COLUMN device TEXT;',
+        );
+      }
+    } catch (_) {}
+  }
+
+  /// Ensures [dev_quick_tabs] exists (hot reload skips [onUpgrade]).
+  Future<void> repairDevQuickTabsTableForDrift() async {
+    try {
+      final rows = await customSelect(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'dev_quick_tabs'",
+      ).get();
+      if (rows.isNotEmpty) return;
+      await customStatement('''
+CREATE TABLE IF NOT EXISTS dev_quick_tabs (
+  id TEXT NOT NULL PRIMARY KEY,
+  person_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  full_url TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_pinned INTEGER NOT NULL DEFAULT 0,
+  username TEXT NOT NULL DEFAULT '',
+  password TEXT NOT NULL DEFAULT '',
+  login_type TEXT NOT NULL DEFAULT 'html_form',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+''');
+    } catch (_) {}
+  }
+
+  /// Hot reload skips [onUpgrade]; create [job_positions] if v92 migration did not run.
+  Future<void> _ensureJobPositionsTableReady() async {
+    try {
+      final exists = await customSelect(
+        "SELECT 1 AS ok FROM sqlite_master "
+        "WHERE type = 'table' AND name = 'job_positions' LIMIT 1",
+      ).get();
+      if (exists.isEmpty) {
+        await customStatement('''
+CREATE TABLE IF NOT EXISTS "job_positions" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "employer" TEXT NOT NULL DEFAULT '',
+  "job_title" TEXT NOT NULL DEFAULT '',
+  "contract_type" TEXT NOT NULL DEFAULT 'full_time',
+  "start_date" INTEGER NOT NULL,
+  "end_date" INTEGER,
+  "linked_income_id" TEXT,
+  "linked_project_id" TEXT,
+  "notes" TEXT NOT NULL DEFAULT '',
+  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  PRIMARY KEY ("id")
+);
+''');
+      }
+    } catch (_) {}
+  }
+
+  /// Hot reload skips [onUpgrade]; create [bonuses] if the v93 migration did not run.
+  Future<void> _ensureBonusesTableReady() async {
+    try {
+      final exists = await customSelect(
+        "SELECT 1 AS ok FROM sqlite_master "
+        "WHERE type = 'table' AND name = 'bonuses' LIMIT 1",
+      ).get();
+      if (exists.isEmpty) {
+        await customStatement('''
+CREATE TABLE IF NOT EXISTS "bonuses" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT,
+  "amount" REAL NOT NULL,
+  "description" TEXT NOT NULL DEFAULT '',
+  "bonus_date" INTEGER NOT NULL,
+  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  PRIMARY KEY ("id")
+);
+''');
+      }
+    } catch (_) {}
+  }
+
+  /// Hot reload skips [onUpgrade]; create [job_working_logs] if v97 migration did not run.
+  Future<void> _ensureJobWorkingLogsTableReady() async {
+    try {
+      final exists = await customSelect(
+        "SELECT 1 AS ok FROM sqlite_master "
+        "WHERE type = 'table' AND name = 'job_working_logs' LIMIT 1",
+      ).get();
+      if (exists.isEmpty) {
+        await customStatement('''
+CREATE TABLE IF NOT EXISTS "job_working_logs" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_name" TEXT NOT NULL,
+  "status" TEXT NOT NULL,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  "updated_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id"),
+  UNIQUE ("person_id", "job_name")
+);
+''');
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _ensureJobWorkTrackingTablesReady() async {
+    const statements = [
+      '''
+CREATE TABLE IF NOT EXISTS "job_work_days" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT NOT NULL,
+  "work_date" TEXT NOT NULL,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id"),
+  UNIQUE ("person_id", "job_position_id", "work_date")
+)''',
+      '''
+CREATE TABLE IF NOT EXISTS "job_work_day_plans" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT NOT NULL,
+  "work_date" TEXT NOT NULL,
+  "planned_minutes" INTEGER NOT NULL DEFAULT 0,
+  "updated_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id"),
+  UNIQUE ("person_id", "job_position_id", "work_date")
+)''',
+      '''
+CREATE TABLE IF NOT EXISTS "job_time_logs" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT NOT NULL,
+  "work_date" TEXT NOT NULL,
+  "task_category" TEXT NOT NULL,
+  "minutes" INTEGER NOT NULL,
+  "notes" TEXT,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id")
+)''',
+      '''
+CREATE TABLE IF NOT EXISTS "job_sub_tasks" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "job_position_id" TEXT NOT NULL,
+  "name" TEXT NOT NULL,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id")
+)''',
+    ];
+    try {
+      for (final sql in statements) {
+        await customStatement(sql);
+      }
+      final cols = await customSelect('PRAGMA table_info(job_time_logs)').get();
+      final names = cols.map((r) => r.read<String>('name')).toSet();
+      if (!names.contains('notes')) {
+        await customStatement(
+          'ALTER TABLE job_time_logs ADD COLUMN notes TEXT;',
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _ensureGratitudeEntriesTableReady() async {
+    try {
+      await customStatement('''
+CREATE TABLE IF NOT EXISTS "gratitude_entries" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "name" TEXT NOT NULL,
+  "kind" TEXT NOT NULL DEFAULT 'person',
+  "note" TEXT,
+  "facebook_url" TEXT,
+  "avatar_local_path" TEXT,
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  "updated_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id")
+)''');
+      final cols = await customSelect('PRAGMA table_info(gratitude_entries)').get();
+      final names = cols.map((r) => r.read<String>('name')).toSet();
+      if (!names.contains('facebook_url')) {
+        await customStatement(
+          'ALTER TABLE gratitude_entries ADD COLUMN facebook_url TEXT;',
+        );
+      }
+      if (!names.contains('avatar_local_path')) {
+        await customStatement(
+          'ALTER TABLE gratitude_entries ADD COLUMN avatar_local_path TEXT;',
+        );
+      }
+    } catch (_) {}
+  }
+
+  /// Hot reload skips [onUpgrade]; create [dev_quick_tabs] if the v90 migration did not run.
+  Future<void> ensureDevQuickTabsTableReady() async {
+    try {
+      final exists = await customSelect(
+        "SELECT 1 AS ok FROM sqlite_master "
+        "WHERE type = 'table' AND name = 'dev_quick_tabs' LIMIT 1",
+      ).get();
+      if (exists.isEmpty) {
+        await customStatement('''
+CREATE TABLE IF NOT EXISTS "dev_quick_tabs" (
+  "id" TEXT NOT NULL,
+  "person_id" TEXT NOT NULL,
+  "title" TEXT NOT NULL,
+  "full_url" TEXT NOT NULL,
+  "sort_order" INTEGER NOT NULL DEFAULT 0,
+  "is_pinned" INTEGER NOT NULL DEFAULT 0 CHECK ("is_pinned" IN (0, 1)),
+  "username" TEXT NOT NULL DEFAULT '',
+  "password" TEXT NOT NULL DEFAULT '',
+  "login_type" TEXT NOT NULL DEFAULT 'html_form',
+  "created_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  "updated_at" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  PRIMARY KEY ("id")
+);
+''');
+        appLog('Drift: created missing dev_quick_tabs table (repair).');
+        return;
+      }
+      final cols = await customSelect(
+        'PRAGMA table_info(dev_quick_tabs)',
+      ).get();
+      final names = cols.map((r) => r.read<String>('name')).toSet();
+      if (!names.contains('username')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN username TEXT NOT NULL DEFAULT '';",
+        );
+      }
+      if (!names.contains('password')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN password TEXT NOT NULL DEFAULT '';",
+        );
+      }
+      if (!names.contains('login_type')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN login_type TEXT NOT NULL DEFAULT 'html_form';",
+        );
+      }
+      if (!names.contains('passkey')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN passkey TEXT NOT NULL DEFAULT '';",
+        );
+      }
+      if (!names.contains('remote_url')) {
+        await customStatement(
+          "ALTER TABLE dev_quick_tabs ADD COLUMN remote_url TEXT NOT NULL DEFAULT '';",
+        );
       }
     } catch (_) {}
   }
@@ -7394,6 +9055,164 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(journalActivityOptionsTable);
           } catch (_) {}
         }
+        if (from < 76) {
+          try {
+            await m.createTable(recurringIncomesTable);
+          } catch (_) {}
+        }
+        if (from < 77) {
+          try {
+            await m.addColumn(
+              achievementsTable,
+              achievementsTable.localImagePath,
+            );
+          } catch (_) {}
+        }
+        if (from < 78) {
+          try {
+            await m.createTable(integrationAccountsTable);
+          } catch (_) {}
+        }
+        if (from < 79) {
+          try {
+            await m.addColumn(
+              projectsTable,
+              projectsTable.parentProjectId,
+            );
+          } catch (_) {}
+        }
+        if (from < 80) {
+          try {
+            await m.addColumn(
+              localMediaIndexTable,
+              localMediaIndexTable.remotePath,
+            );
+          } catch (_) {}
+          try {
+            await m.addColumn(
+              localMediaIndexTable,
+              localMediaIndexTable.device,
+            );
+          } catch (_) {}
+        }
+        if (from < 81) {
+          try {
+            await m.addColumn(
+              projectNotesTable,
+              projectNotesTable.localPath,
+            );
+          } catch (_) {}
+          try {
+            await m.addColumn(
+              projectNotesTable,
+              projectNotesTable.remotePath,
+            );
+          } catch (_) {}
+          try {
+            await m.addColumn(
+              projectNotesTable,
+              projectNotesTable.device,
+            );
+          } catch (_) {}
+        }
+        if (from < 82) {
+          try {
+            await customStatement(
+              'ALTER TABLE transactions ADD COLUMN source_account_id TEXT;',
+            );
+          } catch (_) {}
+        }
+        if (from < 83) {
+          try {
+            await customStatement(
+              'ALTER TABLE skills ADD COLUMN point INTEGER DEFAULT 0;',
+            );
+          } catch (_) {}
+          try {
+            await customStatement(
+              'ALTER TABLE skills ADD COLUMN achieved_points INTEGER DEFAULT 0;',
+            );
+          } catch (_) {}
+          try {
+            await customStatement(
+              'ALTER TABLE skills ADD COLUMN event_id TEXT;',
+            );
+          } catch (_) {}
+        }
+        if (from < 86) {
+          try {
+            final rows = await customSelect(
+              'PRAGMA table_info(events)',
+              readsFrom: {eventsTable},
+            ).get();
+            final names = rows.map((r) => r.read<String>('name')).toSet();
+            if (names.contains('title') || names.contains('domain')) {
+              await customStatement(
+                'ALTER TABLE events RENAME TO events_legacy_v85;',
+              );
+              await m.createTable(eventsTable);
+              await customStatement('''
+                INSERT INTO events (
+                  id, tenant_id, person_id, name, description,
+                  url_image, url_video, occurred_at, created_at, updated_at
+                )
+                SELECT
+                  id,
+                  tenant_id,
+                  person_id,
+                  COALESCE(title, 'Untitled'),
+                  description,
+                  remote_path,
+                  NULL,
+                  occurred_at,
+                  created_at,
+                  updated_at
+                FROM events_legacy_v85;
+              ''');
+              await customStatement(
+                'DROP TABLE IF EXISTS events_legacy_v85;',
+              );
+            } else {
+              if (!names.contains('url_image')) {
+                await customStatement(
+                  'ALTER TABLE events ADD COLUMN url_image TEXT;',
+                );
+              }
+              if (!names.contains('url_video')) {
+                await customStatement(
+                  'ALTER TABLE events ADD COLUMN url_video TEXT;',
+                );
+              }
+              if (names.contains('title') && !names.contains('name')) {
+                await customStatement(
+                  'ALTER TABLE events RENAME COLUMN title TO name;',
+                );
+              }
+            }
+          } catch (_) {}
+        }
+        if (from < 85) {
+          try {
+            await m.createTable(eventsTable);
+          } catch (_) {}
+          try {
+            await m.createTable(eventSkillsTable);
+          } catch (_) {}
+        }
+        if (from < 84) {
+          // Consolidate legacy years_of_experience into point, then drop it.
+          try {
+            await customStatement(
+              'UPDATE skills SET point = years_of_experience '
+              'WHERE (point IS NULL OR point = 0) AND years_of_experience > 0;',
+            );
+          } catch (_) {}
+          try {
+            await customStatement(
+              'ALTER TABLE skills DROP COLUMN years_of_experience;',
+            );
+          } catch (_) {}
+        }
         if (from < 60) {
           try {
             await m.addColumn(
@@ -7475,7 +9294,7 @@ class AppDatabase extends _$AppDatabase {
         if (from < 47) {
           // Schema version 47 adds ai_model to the 'projects' table.
           // Since 'projects' is a PowerSync-managed table, its local representation is a view.
-          // PowerSync manages its own schema updates via powersync_schema.dart.
+          // PowerSync manages its own schema updates via PowersyncSchema.dart.
           // We must NOT use m.addColumn here for PowerSync tables.
         }
         if (from < 46) {
@@ -7531,7 +9350,7 @@ class AppDatabase extends _$AppDatabase {
               "ALTER TABLE focus_sessions ADD COLUMN taskID TEXT REFERENCES goals(goalID) ON DELETE CASCADE;",
             );
           } catch (e) {
-            print('Error adding taskID: $e');
+            appLog('Error adding taskID: $e');
           }
         }
         if (from < 5) {
@@ -7569,7 +9388,7 @@ class AppDatabase extends _$AppDatabase {
               'CREATE UNIQUE INDEX IF NOT EXISTS idx_health_metrics_unique ON health_metrics (personID, date)',
             );
           } catch (e) {
-            print('Error in version 10: $e');
+            appLog('Error in version 10: $e');
           }
         }
         if (from < 20) {
@@ -7581,7 +9400,7 @@ class AppDatabase extends _$AppDatabase {
               'CREATE UNIQUE INDEX IF NOT EXISTS idx_scores_person_unique ON scores (personID)',
             );
           } catch (e) {
-            print('Error in version 20: $e');
+            appLog('Error in version 20: $e');
           }
         }
         if (from < 11) {
@@ -7770,7 +9589,7 @@ class AppDatabase extends _$AppDatabase {
         }
 
         if (from < 52) {
-          // focus_session_id is now managed via PowerSync schema in powersync_schema.dart.
+          // focus_session_id is now managed via PowerSync schema in PowersyncSchema.dart.
           // Manual ALTER TABLE on views is illegal in SQLite.
         }
         if (from < 53) {
@@ -7821,23 +9640,148 @@ class AppDatabase extends _$AppDatabase {
         if (from < 71) {
           await m.createTable(appTimeSpendingTable);
         }
-        if (from < 77) {
-          // Screen-capture AI memory. Both tables are new, so createTable is
-          // correct; each is wrapped so a partially-applied upgrade does not
-          // abort the rest of the migration.
+if (from < 87) {
+          try {
+            await customStatement(
+              'ALTER TABLE quotes ADD COLUMN type_quote TEXT;',
+            );
+          } catch (_) {}
+        }
+        if (from < 88) {
+          try {
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_goals_person_id ON goals (person_id);',
+            );
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_goals_project_id ON goals (project_id);',
+            );
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_events_person_occurred '
+              'ON events (person_id, occurred_at);',
+            );
+          } catch (_) {}
+        }
+        if (from < 89) {
+          try {
+            await customStatement(
+              'ALTER TABLE achievements ADD COLUMN project_id TEXT;',
+            );
+          } catch (_) {}
+        }
+        if (from < 90) {
+          try {
+            await m.createTable(devQuickTabsTable);
+          } catch (_) {}
+        }
+        if (from < 91) {
+          for (final stmt in [
+            "ALTER TABLE dev_quick_tabs ADD COLUMN username TEXT NOT NULL DEFAULT '';",
+            "ALTER TABLE dev_quick_tabs ADD COLUMN password TEXT NOT NULL DEFAULT '';",
+            "ALTER TABLE dev_quick_tabs ADD COLUMN login_type TEXT NOT NULL DEFAULT 'html_form';",
+          ]) {
+            try { await customStatement(stmt); } catch (_) {}
+          }
+        }
+        if (from < 92) {
+          try {
+            await m.createTable(jobPositionsTable);
+          } catch (_) {}
+        }
+        if (from < 93) {
+          try {
+            await m.createTable(bonusesTable);
+          } catch (_) {}
+        }
+        if (from < 94) {
+          try {
+            await m.addColumn(
+              recurringIncomesTable,
+              recurringIncomesTable.jobPositionId,
+            );
+          } catch (_) {}
+          // Backfill from the old 1-to-1 link so existing jobs keep their
+          // salary after the direction flip (job ← income).
+          try {
+            await customStatement(
+              'UPDATE recurring_incomes SET job_position_id = '
+              '(SELECT jp.id FROM job_positions jp '
+              ' WHERE jp.linked_income_id = recurring_incomes.id) '
+              'WHERE job_position_id IS NULL;',
+            );
+          } catch (_) {}
+        }
+        if (from < 95) {
+          try {
+            await m.addColumn(devQuickTabsTable, devQuickTabsTable.passkey);
+          } catch (_) {}
+        }
+        if (from < 96) {
+          try {
+            await m.addColumn(devQuickTabsTable, devQuickTabsTable.remoteUrl);
+          } catch (_) {}
+        }
+        if (from < 97) {
+          try {
+            await m.createTable(jobWorkingLogsTable);
+          } catch (_) {}
+        }
+        if (from < 98) {
+          try {
+            await m.createTable(jobWorkDaysTable);
+            await m.createTable(jobWorkDayPlansTable);
+            await m.createTable(jobTimeLogsTable);
+            await m.createTable(jobSubTasksTable);
+          } catch (_) {}
+        }
+        if (from < 99) {
+          try {
+            await m.addColumn(jobTimeLogsTable, jobTimeLogsTable.notes);
+          } catch (_) {}
+        }
+        if (from < 100) {
+          try {
+            await m.createTable(gratitudeEntriesTable);
+          } catch (_) {}
+        }
+        if (from < 101) {
+          try {
+            await customStatement(
+              'ALTER TABLE gratitude_entries ADD COLUMN facebook_url TEXT;',
+            );
+          } catch (_) {}
+          try {
+            await customStatement(
+              'ALTER TABLE gratitude_entries ADD COLUMN avatar_local_path TEXT;',
+            );
+          } catch (_) {}
+        }
+        if (from < 102) {
+          // Screen-capture AI memory: extracted memories, user-confirmed before
+          // prompt injection. Table is new, so createTable is correct.
           try {
             await m.createTable(aiMemoriesTable);
           } catch (_) {}
+        }
+        if (from < 103) {
+          // Local pending screen captures for the auto-capture job.
           try {
             await m.createTable(captureQueueTable);
           } catch (_) {}
         }
       },
       beforeOpen: (details) async {
-        print(
+        appLog(
           "Drift: beforeOpen triggered. Version: ${details.versionBefore} -> ${details.versionNow}",
         );
         await repairFocusSessionsSchemaForDrift();
+        await repairProjectNotesMediaColumnsForDrift();
+        await ensureDevQuickTabsTableReady();
+        await repairDevQuickTabsTableForDrift();
+        await _ensureJobPositionsTableReady();
+        await _ensureBonusesTableReady();
+        await _ensureJobWorkingLogsTableReady();
+        await _ensureJobWorkTrackingTablesReady();
+        await _ensureGratitudeEntriesTableReady();
         // Consolidated cleanups
         try {
           await customStatement(

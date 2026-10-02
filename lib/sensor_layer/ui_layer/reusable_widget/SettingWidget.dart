@@ -9,7 +9,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/ThemeManager.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Memory/AiMemoryBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
@@ -384,6 +384,14 @@ class SettingsWidget extends StatelessWidget {
                     },
                   );
                 }),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: AppLocalizations.of(context)!.integration_hub_title,
+                  subtitle: AppLocalizations.of(context)!.integration_hub_subtitle,
+                  icon: Icons.hub_rounded,
+                  color: const Color(0xFF64D2FF),
+                  onTap: () => context.push('/integrations'),
+                ),
               ],
             ),
 
@@ -416,7 +424,7 @@ class SettingsWidget extends StatelessWidget {
                 _buildPremiumSettingTile(
                   context: context,
                   title: AppLocalizations.of(context)!.version,
-                  subtitle: '3.2.1',
+                  subtitle: '4.0.0',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),
@@ -554,16 +562,23 @@ class SettingsWidget extends StatelessWidget {
   void _showDeleteAccountPlanDialog(BuildContext context, AuthBlock authBlock) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final confirmWord = l10n.delete_account_type_key_word;
 
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         var acknowledged = false;
+        var typedKey = '';
         var busy = false;
+
+        bool keyMatches(String input) =>
+            input.trim().toUpperCase() == confirmWord.toUpperCase();
 
         return StatefulBuilder(
           builder: (context, setLocalState) {
+            final canDelete = acknowledged && keyMatches(typedKey) && !busy;
+
             return AlertDialog(
               icon: Icon(
                 Icons.warning_amber_rounded,
@@ -611,6 +626,31 @@ class SettingsWidget extends StatelessWidget {
                       ),
                       controlAffinity: ListTileControlAffinity.leading,
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.delete_account_type_key_prompt(confirmWord),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      enabled: !busy,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textCapitalization: TextCapitalization.characters,
+                      onChanged: (v) => setLocalState(() => typedKey = v),
+                      decoration: InputDecoration(
+                        hintText: confirmWord,
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                        errorText: typedKey.isEmpty || keyMatches(typedKey)
+                            ? null
+                            : l10n.delete_account_type_key_prompt(confirmWord),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -626,10 +666,9 @@ class SettingsWidget extends StatelessWidget {
                     backgroundColor: colorScheme.error,
                     foregroundColor: colorScheme.onError,
                   ),
-                  onPressed:
-                      (!acknowledged || busy)
-                          ? null
-                          : () async {
+                  onPressed: !canDelete
+                      ? null
+                      : () async {
                               setLocalState(() => busy = true);
                               final err = await authBlock.deleteAccount();
                               if (!dialogContext.mounted) return;

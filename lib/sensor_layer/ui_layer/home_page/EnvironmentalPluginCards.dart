@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/UIConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:go_router/go_router.dart';
@@ -13,12 +14,17 @@ class AQIPluginCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final envData = envBlock.currentData.watch(context);
     final isLoading = envBlock.isLoading.watch(context);
     final l10n = AppLocalizations.of(context)!;
+    final aqi = envData?.aqi ?? 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark
+        ? HealthMetricColors.textSecondary
+        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.78);
 
     return _BasePluginCard(
+      pluginId: 'aqi',
       onTap: () {
         showModalBottomSheet(
           context: context,
@@ -29,46 +35,29 @@ class AQIPluginCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (isLoading)
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          else ...[
-            Text(
-              envData?.aqi.toString() ?? '--',
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 22,
-                color: _getAQIColor(envData?.aqi ?? 0),
-              ),
+          Text(
+            isLoading ? '…' : (envData?.aqi.toString() ?? '--'),
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 22,
+              color: HealthMetricColors.aqiColor(aqi),
             ),
-            const SizedBox(height: 2),
-            AutoSizeText(
-              l10n.health_metrics_air_quality.toUpperCase(),
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 9,
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
-                letterSpacing: 0.5,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
+          ),
+          const SizedBox(height: 2),
+          AutoSizeText(
+            l10n.health_metrics_air_quality.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 9,
+              color: labelColor,
+              letterSpacing: 0.5,
             ),
-          ],
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
         ],
       ),
     );
-  }
-
-  Color _getAQIColor(int aqi) {
-    if (aqi <= 50) return Colors.green;
-    if (aqi <= 100) return Colors.yellow[700]!;
-    if (aqi <= 150) return Colors.orange;
-    if (aqi <= 200) return Colors.red;
-    if (aqi <= 300) return Colors.purple;
-    return Colors.brown;
   }
 }
 
@@ -78,58 +67,99 @@ class WeatherPluginCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final envData = envBlock.currentData.watch(context);
     final isLoading = envBlock.isLoading.watch(context);
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark
+        ? HealthMetricColors.textSecondary
+        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.78);
+    final tempColor = isDark
+        ? HealthMetricColors.tempAccent
+        : Theme.of(context).colorScheme.primary;
 
     return _BasePluginCard(
+      pluginId: 'weather',
       onTap: () => context.push('/health/temperature'),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (isLoading)
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          else ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  envData?.temperature.toStringAsFixed(0) ?? '--',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 22,
-                    color: colorScheme.primary,
-                  ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isLoading
+                    ? '…'
+                    : (envData?.temperature.toStringAsFixed(0) ?? '--'),
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
+                  color: tempColor,
                 ),
-                Text(
-                  '°',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                    color: colorScheme.primary.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            AutoSizeText(
-              l10n.health_metrics_weather.toUpperCase(),
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 9,
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
-                letterSpacing: 0.5,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
+              Text(
+                '°',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  color: labelColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          AutoSizeText(
+            l10n.health_metrics_weather.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 9,
+              color: labelColor,
+              letterSpacing: 0.5,
             ),
-          ],
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class IntegrationHubPluginCard extends StatelessWidget {
+  const IntegrationHubPluginCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark
+        ? HealthMetricColors.linkAccent
+        : Theme.of(context).colorScheme.primary;
+    final labelColor = isDark
+        ? HealthMetricColors.textSecondary
+        : colorScheme.onSurface.withValues(alpha: 0.78);
+
+    return _BasePluginCard(
+      pluginId: 'integrations',
+      onTap: () => context.push('/integrations'),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.hub_rounded, color: iconColor, size: 28),
+          const SizedBox(height: 6),
+          AutoSizeText(
+            l10n.integration_hub_connect.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 9,
+              color: labelColor,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
         ],
       ),
     );
@@ -137,15 +167,27 @@ class WeatherPluginCard extends StatelessWidget {
 }
 
 class _BasePluginCard extends StatelessWidget {
+  final String pluginId;
   final Widget child;
   final VoidCallback onTap;
 
-  const _BasePluginCard({required this.child, required this.onTap});
+  const _BasePluginCard({
+    required this.pluginId,
+    required this.child,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final sizeOfWidget = UIConstants.getSizeOfWidget(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fill = isDark
+        ? colorScheme.surfaceContainerHigh
+        : colorScheme.surfaceContainerHighest;
+    final border = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : colorScheme.outline.withValues(alpha: 0.18);
 
     return InkWell(
       onTap: onTap,
@@ -154,42 +196,18 @@ class _BasePluginCard extends StatelessWidget {
         width: sizeOfWidget,
         height: sizeOfWidget,
         decoration: BoxDecoration(
-          color: colorScheme.surface,
+          color: fill,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: border, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
+              color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.06),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(
-            color: colorScheme.primary.withValues(alpha: 0.1),
-            width: 1.5,
-          ),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        colorScheme.primary.withValues(alpha: 0.05),
-                        colorScheme.primary.withValues(alpha: 0.01),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Center(child: child),
-            ],
-          ),
-        ),
+        child: Center(child: child),
       ),
     );
   }

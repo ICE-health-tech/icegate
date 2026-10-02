@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/UIResponsiveManager.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
@@ -29,7 +32,7 @@ class WeightInputPage extends StatefulWidget {
       size: size,
       icon: Icons.add,
       mainFunction: () {
-        // print("HI");
+        // appLog("HI");
       },
     );
   }
@@ -38,6 +41,13 @@ class WeightInputPage extends StatefulWidget {
 class _WeightInputPageState extends State<WeightInputPage> {
   final TextEditingController _weightController = TextEditingController();
   late DateTime _selectedDate;
+  bool _importing = false;
+
+  bool get _isDesktop =>
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.linux;
 
   @override
   void initState() {
@@ -67,6 +77,45 @@ class _WeightInputPageState extends State<WeightInputPage> {
     }
   }
 
+  Future<void> _importFromSmartScale() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_isDesktop) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.health_smart_scale_desktop)),
+      );
+      return;
+    }
+
+    setState(() => _importing = true);
+    try {
+      final authorized = await HealthService.requestPermissions();
+      if (!authorized) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.health_smart_scale_sync_denied)),
+          );
+        }
+        return;
+      }
+
+      final weight = await HealthService.fetchLatestWeight();
+      if (!mounted) return;
+
+      if (weight > 0) {
+        _weightController.text = weight.toStringAsFixed(1);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.health_smart_scale_sync_ok)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.health_smart_scale_sync_empty)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -93,6 +142,7 @@ class _WeightInputPageState extends State<WeightInputPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final padding = UIResponsiveManager.padding(context);
@@ -151,7 +201,42 @@ class _WeightInputPageState extends State<WeightInputPage> {
                   border: InputBorder.none,
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: _importing ? null : _importFromSmartScale,
+                icon: _importing
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
+                        ),
+                      )
+                    : const Icon(Icons.bluetooth_rounded),
+                label: Text(
+                  _importing
+                      ? l10n.health_smart_scale_syncing
+                      : l10n.health_smart_scale_import,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.purpleAccent,
+                  side: BorderSide(
+                    color: Colors.purpleAccent.withValues(alpha: 0.4),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    vertical: UIResponsiveManager.inputFieldSpacing(
+                      context,
+                      factor: 1.2,
+                    ),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(buttonRadius),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
 
               // Date Selection (matches FoodInputPage TextField style but interactive)
               InkWell(

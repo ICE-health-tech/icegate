@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/Services/AutoCaptureJob.dart';
 import 'package:ice_gate/orchestration_layer/Services/CaptureSyncJob.dart';
 
@@ -44,7 +44,9 @@ class AiMemoryBlock {
     _personId = personId;
 
     _memorySub?.cancel();
-    _memorySub = db.aiMemoryDAO.watchMemories(personId).listen(memorys.value = List<AiMemoryData>.from);
+    _memorySub = db.aiMemoryDAO
+        .watchMemories(personId)
+        .listen((rows) => memories.value = List<AiMemoryData>.from(rows));
 
     _queueSub?.cancel();
     _queueSub = db.captureQueueDAO

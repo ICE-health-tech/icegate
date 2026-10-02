@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/subscription_manager.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SubscriptionManager.dart';
 
 class FinanceSubscriptionsPage extends StatelessWidget {
   final FinanceBlock financeBlock;

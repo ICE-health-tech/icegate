@@ -1,0 +1,59 @@
+{
+    "theme_name": "Royal Velvet",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFF4A148C",
+    "color_scheme": {
+        "primary": "0xFFCE93D8",
+        "onPrimary": "0xFF2A004B",
+        "primaryContainer": "0xFF4A148C",
+        "onPrimaryContainer": "0xFFF3E5F5",
+        "secondary": "0xFFFFD700",
+        "onSecondary": "0xFF2A004B",
+        "surface": "0xFF1A0A26",
+        "onSurface": "0xFFF3E5F5",
+        "surfaceContainer": "0xFF29123D",
+        "outline": "0xFF6A1B9A",
+        "outlineVariant": "0xFF8E24AA"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF1A0A26",
+            "foregroundColor": "0xFFCE93D8",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFFCE93D8",
+            "foregroundColor": "0xFF2A004B",
+            "borderRadius": 30.0,
+            "elevation": 6.0
+        },
+        "card": {
+            "backgroundColor": "0xFF29123D",
+            "elevation": 10.0,
+            "borderRadius": 24.0
+        },
+        "icon": {
+            "color": "0xFFCE93D8",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Playfair Display",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFFCE93D8"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFF3E5F5"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "bold",
+            "color": "0xFFFFFFFF"
+        }
+    }
+}

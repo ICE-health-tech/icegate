@@ -11,7 +11,8 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/widgets/HealthRemoteTrendCard.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 
 class HealthAnalysisPage extends StatelessWidget {
   const HealthAnalysisPage({super.key});
@@ -229,6 +230,10 @@ class HealthAnalysisPage extends StatelessWidget {
                             textTheme,
                             last7Days: last7Days,
                           ),
+                          const SizedBox(height: 24),
+
+                          // --- CLOUD TREND (Supabase RPC + fl_chart) ---
+                          const HealthRemoteTrendCard(days: 7),
                           const SizedBox(height: 24),
 
                           // --- WEIGHT TREND SECTION ---

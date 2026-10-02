@@ -10,8 +10,10 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
 
 class ExercisePage extends StatefulWidget {
   const ExercisePage({super.key});
@@ -56,7 +58,8 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final healthBlock = context.watch<HealthBlock>();
     final focusBlock = context.watch<FocusBlock>();
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     final dailyGoal = healthBlock.dailyExerciseGoal.watch(context);
     final currentMinutes = healthBlock.todayExerciseMinutes.watch(context);
@@ -65,8 +68,8 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
     final isRunning = focusBlock.isRunning.watch(context);
     final isExerciseActive = focusBlock.isExerciseMode.watch(context);
 
-    return Scaffold(
-      backgroundColor: Colors.black, // Immersive base
+    final scaffold = Scaffold(
+      backgroundColor: isDark ? Colors.transparent : cs.surface,
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
@@ -96,12 +99,15 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                     children: [
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                        icon: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: HealthMetricColors.ink(cs, isDark: isDark),
+                        ),
                       ),
-                      const Text(
+                      Text(
                         'EXERCISE',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: HealthMetricColors.ink(cs, isDark: isDark),
                           fontWeight: FontWeight.w900,
                           letterSpacing: 4,
                           fontSize: 18,
@@ -109,7 +115,10 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                       ),
                       IconButton(
                         onPressed: () => context.push('/health/exercise/dashboard'),
-                        icon: const Icon(Icons.analytics_rounded, color: Colors.white),
+                        icon: Icon(
+                          Icons.analytics_rounded,
+                          color: HealthMetricColors.ink(cs, isDark: isDark),
+                        ),
                       ),
                     ],
                   ),
@@ -117,14 +126,14 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                   
                   // Main Progress / Live Timer Section
                   if (isExerciseActive && isRunning)
-                    _buildLiveTimerCard(context, focusBlock, healthBlock, colorScheme)
+                    _buildLiveTimerCard(context, focusBlock, healthBlock, cs, isDark)
                   else
-                    _buildProgressCard(context, currentMinutes, dailyGoal, progress, colorScheme),
+                    _buildProgressCard(context, currentMinutes, dailyGoal, progress, cs, isDark),
 
                   const SizedBox(height: 32),
-                  _buildQuickActions(context, focusBlock),
+                  _buildQuickActions(context, focusBlock, cs, isDark),
                   const SizedBox(height: 32),
-                  _buildHistorySection(context, healthBlock),
+                  _buildHistorySection(context, healthBlock, cs, isDark),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -143,9 +152,25 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
     );
+
+    if (isDark) {
+      return RadialPremiumBackground(
+        baseColor: HealthMetricColors.pageBackground,
+        glowColor: HealthMetricColors.pillarYellow,
+        child: scaffold,
+      );
+    }
+    return scaffold;
   }
 
-  Widget _buildProgressCard(BuildContext context, int current, int goal, double progress, ColorScheme colorScheme) {
+  Widget _buildProgressCard(
+    BuildContext context,
+    int current,
+    int goal,
+    double progress,
+    ColorScheme cs,
+    bool isDark,
+  ) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(36),
       child: BackdropFilter(
@@ -153,9 +178,11 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
         child: Container(
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.05),
             borderRadius: BorderRadius.circular(36),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(
+              color: HealthMetricColors.glassBorder(cs, isDark: isDark, darkAlpha: 0.1),
+            ),
           ),
           child: Column(
             children: [
@@ -168,7 +195,7 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                     child: CircularProgressIndicator(
                       value: progress,
                       strokeWidth: 20,
-                      backgroundColor: Colors.white.withValues(alpha: 0.05),
+                      backgroundColor: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.05),
                       color: Colors.orangeAccent,
                       strokeCap: StrokeCap.round,
                     ),
@@ -182,7 +209,12 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                       ),
                       Text(
                         'of $goal min'.toUpperCase(),
-                        style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1),
+                        style: TextStyle(
+                          color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.54),
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ],
                   ),
@@ -214,7 +246,13 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildLiveTimerCard(BuildContext context, FocusBlock focusBlock, HealthBlock healthBlock, ColorScheme colorScheme) {
+  Widget _buildLiveTimerCard(
+    BuildContext context,
+    FocusBlock focusBlock,
+    HealthBlock healthBlock,
+    ColorScheme cs,
+    bool isDark,
+  ) {
     final type = focusBlock.exerciseType.watch(context);
     final isStopwatch = focusBlock.isStopwatchMode.watch(context);
     final elapsed = focusBlock.stopwatchElapsedSeconds.watch(context);
@@ -258,12 +296,23 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                   const SizedBox(height: 24),
                   Text(
                     timerText,
-                    style: const TextStyle(fontSize: 80, fontWeight: FontWeight.w900, fontFamily: 'monospace', color: Colors.white, letterSpacing: -2),
+                    style: TextStyle(
+                      fontSize: 80,
+                      fontWeight: FontWeight.w900,
+                      fontFamily: 'monospace',
+                      color: HealthMetricColors.ink(cs, isDark: isDark),
+                      letterSpacing: -2,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '${estimatedKcal.toInt()} KCAL BURNED',
-                    style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w900, letterSpacing: 1, fontSize: 13),
+                    style: TextStyle(
+                      color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.54),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 40),
                   Row(
@@ -314,22 +363,35 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
     return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  Widget _buildQuickActions(BuildContext context, FocusBlock focusBlock) {
+  Widget _buildQuickActions(
+    BuildContext context,
+    FocusBlock focusBlock,
+    ColorScheme cs,
+    bool isDark,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("START ACTIVITY", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 12, color: Colors.white38)),
+        Text(
+          "START ACTIVITY",
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+            fontSize: 12,
+            color: HealthMetricColors.faintInk(cs, isDark: isDark),
+          ),
+        ),
         const SizedBox(height: 16),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
           child: Row(
             children: [
-              _activityCard(context, focusBlock, "Running", Icons.directions_run_rounded, Colors.orangeAccent),
-              _activityCard(context, focusBlock, "Gym", Icons.fitness_center_rounded, Colors.blueAccent),
-              _activityCard(context, focusBlock, "Yoga", Icons.self_improvement_rounded, Colors.purpleAccent),
-              _activityCard(context, focusBlock, "Cycling", Icons.directions_bike_rounded, Colors.greenAccent),
-              _activityCard(context, focusBlock, "Swimming", Icons.pool_rounded, Colors.cyanAccent),
+              _activityCard(context, focusBlock, "Running", Icons.directions_run_rounded, Colors.orangeAccent, cs, isDark),
+              _activityCard(context, focusBlock, "Gym", Icons.fitness_center_rounded, Colors.blueAccent, cs, isDark),
+              _activityCard(context, focusBlock, "Yoga", Icons.self_improvement_rounded, Colors.purpleAccent, cs, isDark),
+              _activityCard(context, focusBlock, "Cycling", Icons.directions_bike_rounded, Colors.greenAccent, cs, isDark),
+              _activityCard(context, focusBlock, "Swimming", Icons.pool_rounded, Colors.cyanAccent, cs, isDark),
             ],
           ),
         ),
@@ -337,7 +399,15 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
     );
   }
 
-  Widget _activityCard(BuildContext context, FocusBlock focusBlock, String title, IconData icon, Color color) {
+  Widget _activityCard(
+    BuildContext context,
+    FocusBlock focusBlock,
+    String title,
+    IconData icon,
+    Color color,
+    ColorScheme cs,
+    bool isDark,
+  ) {
     return GestureDetector(
       onTap: () => _showStartOption(context, focusBlock, title, icon),
       child: ClipRRect(
@@ -349,15 +419,24 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
             margin: const EdgeInsets.only(right: 12),
             padding: const EdgeInsets.symmetric(vertical: 24),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
+              color: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.03),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              border: Border.all(
+                color: HealthMetricColors.glassBorder(cs, isDark: isDark, darkAlpha: 0.08),
+              ),
             ),
             child: Column(
               children: [
                 Icon(icon, color: color, size: 36),
                 const SizedBox(height: 16),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Colors.white70)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                    color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.7),
+                  ),
+                ),
               ],
             ),
           ),
@@ -367,28 +446,45 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
   }
 
   void _showStartOption(BuildContext context, FocusBlock focusBlock, String title, IconData icon) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(32),
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+        decoration: BoxDecoration(
+          color: HealthMetricColors.sheetFill(cs, isDark: isDark),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.12),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             const SizedBox(height: 32),
-            Text(title.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 4, fontSize: 20)),
+            Text(
+              title.toUpperCase(),
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 4,
+                fontSize: 20,
+                color: HealthMetricColors.ink(cs, isDark: isDark),
+              ),
+            ),
             const SizedBox(height: 40),
-            _modeOption(Icons.timer_outlined, "LIVE STOPWATCH", "Count up until you finish", () {
+            _modeOption(context, Icons.timer_outlined, "LIVE STOPWATCH", "Count up until you finish", () {
               focusBlock.startStopwatchExercise(title);
               Navigator.pop(context);
             }),
             const SizedBox(height: 16),
-            _modeOption(Icons.hourglass_bottom_rounded, "FIXED GOAL", "Count down from 30 minutes", () {
+            _modeOption(context, Icons.hourglass_bottom_rounded, "FIXED GOAL", "Count down from 30 minutes", () {
               focusBlock.startExercise(title, 30);
               Navigator.pop(context);
             }),
@@ -399,30 +495,69 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
     );
   }
 
-  Widget _modeOption(IconData icon, String title, String sub, VoidCallback onTap) {
+  Widget _modeOption(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String sub,
+    VoidCallback onTap,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
-      color: Colors.white.withValues(alpha: 0.05),
+      color: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.05),
       borderRadius: BorderRadius.circular(24),
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         leading: Icon(icon, color: Colors.orangeAccent, size: 32),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1, fontSize: 14)),
-        subtitle: Text(sub, style: const TextStyle(fontSize: 12, color: Colors.white38)),
-        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.white24),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+            fontSize: 14,
+            color: HealthMetricColors.ink(cs, isDark: isDark),
+          ),
+        ),
+        subtitle: Text(
+          sub,
+          style: TextStyle(
+            fontSize: 12,
+            color: HealthMetricColors.faintInk(cs, isDark: isDark),
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 16,
+          color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.24),
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
     );
   }
 
-  Widget _buildHistorySection(BuildContext context, HealthBlock healthBlock) {
+  Widget _buildHistorySection(
+    BuildContext context,
+    HealthBlock healthBlock,
+    ColorScheme cs,
+    bool isDark,
+  ) {
     final dao = context.read<HealthLogsDAO>();
     final personId = context.read<PersonBlock>().information.value.profiles.id ?? "";
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("ACTIVITY HISTORY", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 12, color: Colors.white38)),
+        Text(
+          "ACTIVITY HISTORY",
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+            fontSize: 12,
+            color: HealthMetricColors.faintInk(cs, isDark: isDark),
+          ),
+        ),
         const SizedBox(height: 16),
         StreamBuilder<List<ExerciseLogData>>(
           stream: dao.watchDailyExerciseLogs(personId, DateTime.now()),
@@ -434,9 +569,21 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                   padding: const EdgeInsets.all(48.0),
                   child: Column(
                     children: [
-                      Icon(Icons.history, size: 48, color: Colors.white10),
+                      Icon(
+                        Icons.history,
+                        size: 48,
+                        color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.1),
+                      ),
                       const SizedBox(height: 16),
-                      const Text("NO ACTIVITIES RECORDED", style: TextStyle(color: Colors.white10, fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 10)),
+                      Text(
+                        "NO ACTIVITIES RECORDED",
+                        style: TextStyle(
+                          color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.1),
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                          fontSize: 10,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -457,9 +604,11 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.03),
+                        color: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.03),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        border: Border.all(
+                          color: HealthMetricColors.glassBorder(cs, isDark: isDark, darkAlpha: 0.05),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -473,10 +622,22 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(log.type.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1, fontSize: 14)),
+                                Text(
+                                  log.type.toUpperCase(),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1,
+                                    fontSize: 14,
+                                    color: HealthMetricColors.ink(cs, isDark: isDark),
+                                  ),
+                                ),
                                 Text(
                                   DateFormat('HH:mm').format(log.timestamp),
-                                  style: const TextStyle(fontSize: 12, color: Colors.white38, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: HealthMetricColors.faintInk(cs, isDark: isDark),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
@@ -586,7 +747,10 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                       child: Text(
                         l10n.finance_quick_mood_prompt,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.55),
+                          color: HealthMetricColors.mutedInk(
+                            Theme.of(context).colorScheme,
+                            isDark: Theme.of(context).brightness == Brightness.dark,
+                          ),
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
@@ -695,6 +859,8 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
   Future<void> _showPostExerciseMoodSheet(BuildContext context, String exerciseLogId) async {
     final l10n = AppLocalizations.of(context)!;
     final moodBox = <int?>[null];
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -707,9 +873,9 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
               padding: EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
               child: Container(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF1A1A1A),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                decoration: BoxDecoration(
+                  color: HealthMetricColors.sheetFill(cs, isDark: isDark),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 ),
                 child: SafeArea(
                   child: Column(
@@ -718,8 +884,8 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                     children: [
                       Text(
                         l10n.finance_quick_mood_prompt,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: HealthMetricColors.ink(cs, isDark: isDark),
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
                         ),

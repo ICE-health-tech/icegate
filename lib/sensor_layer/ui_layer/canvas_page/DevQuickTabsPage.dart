@@ -1,0 +1,527 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/DevTools/DevQuickTabLoginType.dart';
+import 'package:ice_gate/data_layer/Protocol/DevTools/DevQuickTabProtocol.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
+import 'package:ice_gate/orchestration_layer/Services/DevQuickTabStore.dart';
+import 'package:ice_gate/orchestration_layer/Services/DevQuickTabUrlResolver.dart';
+import 'package:ice_gate/orchestration_layer/Services/WebViewCredentialStore.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DevQuickTabCredentialsSheet.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/HubEntryCard.dart';
+import 'package:provider/provider.dart';
+
+/// Dev-tool browser tabs — quick access from Bảng ghép hub.
+class DevQuickTabsPage extends StatefulWidget {
+  const DevQuickTabsPage({super.key});
+
+  @override
+  State<DevQuickTabsPage> createState() => _DevQuickTabsPageState();
+}
+
+class _DevQuickTabsPageState extends State<DevQuickTabsPage> {
+  List<DevQuickTabProtocol> _tabs = const [];
+  bool _loaded = false;
+
+  String get _personId =>
+      context.read<PersonBlock>().currentPersonID.value ?? '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
+  }
+
+  Future<void> _reload() async {
+    if (!mounted) return;
+    final db = context.read<AppDatabase>();
+    final personId =
+        context.read<PersonBlock>().currentPersonID.value ?? '';
+    if (personId.isNotEmpty && db.supabaseSync != null) {
+      await db.supabaseSync!.syncTableDown('dev_quick_tabs', personId);
+    }
+    if (!mounted) return;
+    final rows = await DevQuickTabStore.list(db, personId);
+    if (!mounted) return;
+    setState(() {
+      _tabs = rows;
+      _loaded = true;
+    });
+  }
+
+  Future<void> _openTab(DevQuickTabProtocol tab) async {
+    final openUrl = await DevQuickTabUrlResolver.resolveOpenUrl(tab);
+    if (openUrl == null || !mounted) return;
+
+    if (kDebugMode) {
+      debugPrint('DevQuickTab open: $openUrl');
+    }
+
+    final type = DevQuickTabLoginType.fromStorage(tab.loginType);
+    if (type.opensExternally) {
+      final uri = Uri.tryParse(openUrl);
+      if (uri != null && await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      return;
+    }
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final urlOptions = <WebViewUrlOption>[
+      if (tab.fullUrl.trim().isNotEmpty)
+        WebViewUrlOption(
+          label: l10n.dev_quick_tabs_url,
+          url: tab.fullUrl.trim(),
+        ),
+      if (tab.remoteUrl.trim().isNotEmpty)
+        WebViewUrlOption(
+          label: l10n.dev_quick_tabs_remote_url,
+          url: tab.remoteUrl.trim(),
+        ),
+    ];
+
+    final db = context.read<AppDatabase>();
+    final personId = _personId;
+    if (personId.isNotEmpty) {
+      await DevQuickTabStore.syncSslTrustForOpenUrl(db, personId, openUrl);
+    }
+    if (!mounted) return;
+
+    // Direct route — avoids go_router dropping URL from extra (Map<String,String>).
+    WidgetNavigatorAction.navigateExternalUrl(
+      context,
+      openUrl,
+      title: tab.title,
+      urlOptions: urlOptions,
+    );
+  }
+
+  Future<void> _persistHostCredentials({
+    required String fullUrl,
+    required DevQuickTabLoginType loginType,
+    required String username,
+    required String password,
+    required String passkey,
+  }) async {
+    final host = Uri.tryParse(fullUrl)?.host ?? '';
+    if (host.isEmpty) return;
+    final store = WebViewCredentialStore();
+    final existing = await store.readHostCredentials(host);
+    await store.saveHostCredentials(
+      host: host,
+      username: username,
+      password: password,
+      passkey: loginType.usesTokenField ? passkey : existing.passkey,
+      sslTrusted: existing.sslTrusted,
+      loginType: loginType,
+    );
+  }
+
+  Future<void> _showEditor({DevQuickTabProtocol? existing}) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isEdit = existing != null;
+    final titleCtrl = TextEditingController(text: existing?.title ?? '');
+    final urlCtrl = TextEditingController(text: existing?.fullUrl ?? '');
+    final remoteUrlCtrl = TextEditingController(text: existing?.remoteUrl ?? '');
+    final userCtrl = TextEditingController(text: existing?.username ?? '');
+    final passCtrl = TextEditingController(text: existing?.password ?? '');
+    var initialPasskey = existing?.passkey ?? '';
+    var loginType = existing != null
+        ? DevQuickTabLoginType.fromStorage(existing.loginType)
+        : DevQuickTabLoginType.htmlForm;
+
+    if (isEdit && initialPasskey.isEmpty) {
+      final host = Uri.tryParse(existing.fullUrl)?.host ?? '';
+      if (host.isNotEmpty) {
+        initialPasskey =
+            (await WebViewCredentialStore().readHostCredentials(host)).passkey;
+      }
+    }
+    final passkeyCtrl = TextEditingController(text: initialPasskey);
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final showUserPass = !loginType.usesTokenField &&
+              loginType != DevQuickTabLoginType.oauth &&
+              loginType != DevQuickTabLoginType.none &&
+              !loginType.opensExternally;
+          final showPasskey = loginType.usesTokenField;
+          final showExternalHint = loginType.opensExternally;
+          final showOAuthHint = loginType == DevQuickTabLoginType.oauth;
+
+          return AlertDialog(
+            title: Text(
+              isEdit ? l10n.dev_quick_tabs_edit : l10n.dev_quick_tabs_add,
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleCtrl,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(labelText: l10n.dev_quick_tabs_label),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: urlCtrl,
+                    decoration: InputDecoration(labelText: l10n.dev_quick_tabs_url),
+                    keyboardType: TextInputType.url,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: remoteUrlCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.dev_quick_tabs_remote_url,
+                      hintText: l10n.dev_quick_tabs_remote_url_hint,
+                    ),
+                    keyboardType: TextInputType.url,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<DevQuickTabLoginType>(
+                    value: loginType,
+                    decoration: InputDecoration(
+                      labelText: l10n.dev_quick_tabs_login_type,
+                      isDense: true,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: DevQuickTabLoginType.values
+                        .map((t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(_loginTypeLabel(l10n, t)),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v == null) return;
+                      setDialogState(() => loginType = v);
+                    },
+                  ),
+                  if (showExternalHint) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      l10n.dev_quick_tabs_login_type_external_browser_hint,
+                      style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (showOAuthHint) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      l10n.dev_quick_tabs_login_type_oauth_hint,
+                      style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (showPasskey) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: passkeyCtrl,
+                      obscureText: loginType != DevQuickTabLoginType.bearerToken,
+                      maxLines: loginType == DevQuickTabLoginType.bearerToken
+                          ? 4
+                          : 1,
+                      decoration: InputDecoration(
+                        labelText: loginType == DevQuickTabLoginType.bearerToken
+                            ? l10n.dev_quick_tabs_credentials_bearer_token
+                            : l10n.dev_quick_tabs_credentials_passkey,
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                  if (showUserPass) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: userCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.dev_quick_tabs_credentials_username,
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: passCtrl,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: l10n.dev_quick_tabs_credentials_password,
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (titleCtrl.text.trim().isEmpty ||
+                      (urlCtrl.text.trim().isEmpty &&
+                          remoteUrlCtrl.text.trim().isEmpty)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.dev_quick_tabs_validation_error),
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pop(ctx, true);
+                },
+                child: Text(l10n.projects_calendar_save),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (saved != true || !mounted) return;
+    final title = titleCtrl.text.trim();
+    final url = urlCtrl.text.trim();
+    final remoteUrl = remoteUrlCtrl.text.trim();
+    if (title.isEmpty || (url.isEmpty && remoteUrl.isEmpty)) return;
+
+    for (final openUrl in [url, remoteUrl]) {
+      if (openUrl.isEmpty) continue;
+      await _persistHostCredentials(
+        fullUrl: openUrl,
+        loginType: loginType,
+        username: userCtrl.text.trim(),
+        password: passCtrl.text,
+        passkey: passkeyCtrl.text.trim(),
+      );
+    }
+
+    if (!mounted) return;
+    final db = context.read<AppDatabase>();
+    final personId = _personId;
+    if (isEdit) {
+      await DevQuickTabStore.update(
+        db,
+        personId,
+        existing.copyWith(
+          title: title,
+          fullUrl: url,
+          remoteUrl: remoteUrl,
+          username: userCtrl.text.trim(),
+          password: passCtrl.text,
+          passkey: passkeyCtrl.text.trim(),
+          loginType: loginType.storageKey,
+        ),
+      );
+    } else {
+      await DevQuickTabStore.create(
+        db,
+        personId,
+        DevQuickTabProtocol(
+          id: IDGen.generateUuid(),
+          title: title,
+          fullUrl: url,
+          remoteUrl: remoteUrl,
+          sortOrder: _tabs.length,
+          username: userCtrl.text.trim(),
+          password: passCtrl.text,
+          passkey: passkeyCtrl.text.trim(),
+          loginType: loginType.storageKey,
+        ),
+      );
+    }
+    await _reload();
+  }
+
+  String _loginTypeLabel(AppLocalizations l10n, DevQuickTabLoginType type) {
+    switch (type) {
+      case DevQuickTabLoginType.htmlForm:
+        return l10n.dev_quick_tabs_login_type_html_form;
+      case DevQuickTabLoginType.emailPassword:
+        return l10n.dev_quick_tabs_login_type_email_password;
+      case DevQuickTabLoginType.httpBasic:
+        return l10n.dev_quick_tabs_login_type_http_basic;
+      case DevQuickTabLoginType.apiKey:
+        return l10n.dev_quick_tabs_login_type_api_key;
+      case DevQuickTabLoginType.bearerToken:
+        return l10n.dev_quick_tabs_login_type_bearer_token;
+      case DevQuickTabLoginType.externalBrowser:
+        return l10n.dev_quick_tabs_login_type_external_browser;
+      case DevQuickTabLoginType.oauth:
+        return l10n.dev_quick_tabs_login_type_oauth;
+      case DevQuickTabLoginType.none:
+        return l10n.dev_quick_tabs_login_type_none;
+    }
+  }
+
+  Future<void> _confirmDelete(DevQuickTabProtocol tab) async {
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.dev_quick_tabs_delete_title),
+        content: Text(l10n.dev_quick_tabs_delete_message(tab.title)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.dev_quick_tabs_delete_confirm),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final db = context.read<AppDatabase>();
+    final personId = _personId;
+    await DevQuickTabStore.delete(db, personId, tab.id);
+    await _reload();
+  }
+
+  Widget _crudMenu(DevQuickTabProtocol tab, Color accent) {
+    final l10n = AppLocalizations.of(context)!;
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.more_vert_rounded,
+        color: accent.withValues(alpha: 0.8),
+        size: 22,
+      ),
+      padding: EdgeInsets.zero,
+      onSelected: (action) {
+        switch (action) {
+          case 'open':
+            _openTab(tab);
+          case 'edit':
+            _showEditor(existing: tab);
+          case 'delete':
+            _confirmDelete(tab);
+        }
+      },
+      itemBuilder: (ctx) => [
+        PopupMenuItem(
+          value: 'open',
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.open_in_browser_rounded, size: 20),
+            title: Text(l10n.dev_quick_tabs_open),
+            dense: true,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'edit',
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.edit_outlined, size: 20),
+            title: Text(l10n.dev_quick_tabs_edit),
+            dense: true,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              Icons.delete_outline_rounded,
+              size: 20,
+              color: Theme.of(ctx).colorScheme.error,
+            ),
+            title: Text(
+              l10n.dev_quick_tabs_delete_confirm,
+              style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+            ),
+            dense: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openCredentialsManager() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DevQuickTabCredentialsSheet(tabs: _tabs),
+    );
+  }
+
+  static const _accents = [
+    HealthMetricColors.pillarBlue,
+    HealthMetricColors.pillarViolet,
+    HealthMetricColors.pillarGreen,
+    HealthMetricColors.pillarYellow,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      backgroundColor: cs.surface,
+      appBar: AppBar(
+        title: Text(l10n.dev_quick_tabs_title),
+        backgroundColor: cs.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        actions: [
+          IconButton(
+            tooltip: l10n.dev_quick_tabs_credentials,
+            icon: const Icon(Icons.vpn_key_outlined),
+            onPressed: _openCredentialsManager,
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showEditor(),
+        child: const Icon(Icons.add_rounded),
+      ),
+      body: !_loaded
+          ? const Center(child: CircularProgressIndicator())
+          : _tabs.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  l10n.dev_quick_tabs_empty,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+              itemCount: _tabs.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final tab = _tabs[index];
+                return HubEntryCard(
+                  title: tab.title,
+                  subtitle: tab.listSubtitle,
+                  icon: Icons.language_rounded,
+                  accent: _accents[index % _accents.length],
+                  onTap: () => _openTab(tab),
+                  trailing: _crudMenu(tab, _accents[index % _accents.length]),
+                );
+              },
+            ),
+    );
+  }
+}

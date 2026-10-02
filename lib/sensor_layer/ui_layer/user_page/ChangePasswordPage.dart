@@ -5,9 +5,10 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/link_layer/ui_route/internal_route.dart';
+import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -76,7 +77,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
       // 1. Re-authenticate to verify current password (if required)
       if (_requiresCurrentPassword) {
-        print("🔐 [ChangePassword] Verifying current password for $email...");
+        appLog("🔐 [ChangePassword] Verifying current password for $email...");
         try {
           await client.auth.signInWithPassword(
             email: email,
@@ -87,13 +88,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           throw Exception('VERIFICATION_FAILED');
         }
       } else {
-        print(
+        appLog(
           "🔐 [ChangePassword] Skipping current password verification (External Auth/No Password).",
         );
       }
 
       // 2. Update password
-      print("🔐 [ChangePassword] Updating to new password...");
+      appLog("🔐 [ChangePassword] Updating to new password...");
       final currentUser = client.auth.currentUser;
       if (currentUser == null) {
         throw Exception("User session lost during update");
@@ -112,7 +113,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           !_requiresCurrentPassword) {
         final currentUser = Supabase.instance.client.auth.currentUser;
         if (currentUser != null) {
-          print(
+          appLog(
             "🔐 [ChangePassword] Password is already set to this value in Supabase. Proceeding to sync metadata.",
           );
           await _syncMetadataAndPop(currentUser);
@@ -150,7 +151,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       final passwordBytes = utf8.encode(_passwordController.text);
       final passwordHash = sha256.convert(passwordBytes).toString();
 
-      print("🌐 [ChangePassword] Syncing user_accounts record on Supabase...");
+      appLog("🌐 [ChangePassword] Syncing user_accounts record on Supabase...");
       await Supabase.instance.client
           .from('user_accounts')
           .update({
@@ -183,7 +184,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             passwordHash: Drift.Value(passwordHash),
           );
           await db.personManagementDAO.updateAccount(updatedAccount);
-          print("💾 [ChangePassword] Local user_accounts record updated.");
+          appLog("💾 [ChangePassword] Local user_accounts record updated.");
         }
       } catch (dbErr) {
         debugPrint("Local DB update failed: $dbErr");

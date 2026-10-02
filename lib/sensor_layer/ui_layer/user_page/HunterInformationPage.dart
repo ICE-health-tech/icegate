@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/DepartmentCard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
@@ -10,22 +9,14 @@ import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 // --- DASHBOARD WIDGET ---
 
 // --- DASHBOARD WIDGET ---
-class UserInformationPage extends StatefulWidget {
-  const UserInformationPage({super.key});
+class HunterInformationPage extends StatefulWidget {
+  const HunterInformationPage({super.key});
 
   @override
-  State<UserInformationPage> createState() => _UserInformationPageState();
+  State<HunterInformationPage> createState() => _HunterInformationPageState();
 }
 
-class _UserInformationPageState extends State<UserInformationPage> {
-  // bool _isInteractingWithCard = false; // Unused
-
-  void _setCardInteraction(bool isInteracting) {
-    // setState(() {
-    //   _isInteractingWithCard = isInteracting;
-    // });
-  }
-
+class _HunterInformationPageState extends State<HunterInformationPage> {
   @override
   Widget build(BuildContext context) {
     // Watch PersonBlock
@@ -168,8 +159,6 @@ class _UserInformationPageState extends State<UserInformationPage> {
                 ),
               ),
 
-              // Interactive Canvas
-              SliverToBoxAdapter(child: _buildInteractiveCanvas()),
               SliverToBoxAdapter(child: DragCanvasGrid()),
               const SliverToBoxAdapter(child: SizedBox(height: 40)),
             ],
@@ -752,211 +741,6 @@ class _UserInformationPageState extends State<UserInformationPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // Interactive Canvas with enhanced styling
-  Widget _buildInteractiveCanvas() {
-    return Container(
-      height: 600,
-      width: 2000,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          // panEnabled: false, // Disable panning
-          // scaleEnabled: false, // Disable scaling/zooming
-          // boundaryMargin: EdgeInsets.zero, // No boundary margin
-          // minScale: 4.0, // Fixed scale
-          // maxScale: 4.0, // Fixed scale
-          // constrained: true, // Constrain to container size
-          child: Stack(
-            children: [
-              DraggableCard(
-                initialLeft: 10,
-                initialTop: 50,
-                title: "Health",
-                onInteractionChanged: _setCardInteraction,
-              ),
-              DraggableCard(
-                initialLeft: 200,
-                initialTop: 100,
-                title: "Mana",
-                onInteractionChanged: _setCardInteraction,
-              ),
-              DraggableCard(
-                initialLeft: 100,
-                initialTop: 250,
-                title: "Stamina",
-                onInteractionChanged: _setCardInteraction,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// --- Enhanced DraggableCard Widget ---
-class DraggableCard extends StatefulWidget {
-  final double initialLeft;
-  final double initialTop;
-  final String title;
-  final Function(bool) onInteractionChanged;
-
-  const DraggableCard({
-    super.key,
-    required this.initialLeft,
-    required this.initialTop,
-    required this.title,
-    required this.onInteractionChanged,
-  });
-
-  @override
-  State<DraggableCard> createState() => _DraggableCardState();
-}
-
-class _DraggableCardState extends State<DraggableCard> {
-  late double currentLeft;
-  late double currentTop;
-  double currentWidthPercent = 0.5;
-  double currentHeightPercent = 0.5;
-  bool onDragMode = true;
-  double cardWidth = 200.0;
-  double cardHeight = 200.0;
-  @override
-  void initState() {
-    super.initState();
-    currentLeft = widget.initialLeft;
-    currentTop = widget.initialTop;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final canvasWidth = MediaQuery.of(context).size.width;
-    final canvasHeight = MediaQuery.of(context).size.height;
-
-    return Positioned(
-      left: currentLeft,
-      top: currentTop,
-      child: Listener(
-        onPointerDown: (event) => widget.onInteractionChanged(true),
-        onPointerUp: (event) => widget.onInteractionChanged(false),
-        onPointerCancel: (event) => widget.onInteractionChanged(false),
-        onPointerMove: (event) {
-          setState(() {
-            if (onDragMode) {
-              currentLeft += event.delta.dx;
-              currentTop += event.delta.dy;
-              currentLeft = currentLeft.clamp(0.0, canvasWidth - cardWidth);
-              currentTop = currentTop.clamp(0.0, canvasHeight - cardHeight);
-            } else {
-              if (cardHeight > 100 && cardWidth > 100) {
-                cardWidth = cardWidth + event.delta.dx;
-                cardHeight = cardHeight + event.delta.dy;
-              } else {
-                cardHeight = 200;
-                cardWidth = 200;
-              }
-
-              currentWidthPercent = (cardWidth / canvasWidth).clamp(0.5, 1);
-              currentHeightPercent = (cardHeight / canvasHeight).clamp(0.5, 1);
-              // print("Hi hi hi");
-            }
-          });
-        },
-        child: GestureDetector(
-          onDoubleTap: () {
-            setState(() {
-              onDragMode = !onDragMode;
-            });
-          },
-          child: SizedBox(
-            width: cardWidth,
-            height: cardHeight,
-            child: Stack(
-              children: [
-                DepartmentCard(
-                  title: widget.title,
-                  cardWidth: cardWidth,
-                  cardHeight: cardHeight,
-                ),
-                Positioned(
-                  bottom: 10,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: onDragMode
-                              ? [
-                                  const Color(0xFF8B5CF6),
-                                  const Color(0xFF7C3AED),
-                                ]
-                              : [
-                                  const Color(0xFFF59E0B),
-                                  const Color(0xFFD97706),
-                                ],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                (onDragMode
-                                        ? const Color(0xFF8B5CF6)
-                                        : const Color(0xFFF59E0B))
-                                    .withValues(alpha: 0.5),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            onDragMode ? Icons.open_with : Icons.aspect_ratio,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            onDragMode ? 'DRAG MODE' : 'RESIZE MODE',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

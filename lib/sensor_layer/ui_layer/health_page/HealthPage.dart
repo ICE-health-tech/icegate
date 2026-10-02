@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricsData.dart';
@@ -8,11 +10,12 @@ import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dar
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
 
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricCard.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/health_page/models/HealthMetric.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
+import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricProtocol.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
@@ -75,16 +78,15 @@ class HealthPage extends StatefulWidget {
   State<HealthPage> createState() => _HealthPageState();
 }
 
-/// Horizontal inset and grid gutters — keep in sync so row gaps match section gaps.
-const double _healthPageGutter = 16;
-const double _healthGridSpacing = 16;
+/// Horizontal inset — matches [MainShell] island padding and Projects `hPad` (20).
+const double _healthPageGutter = 20;
+const double _healthGridSpacing = 10;
 
 class _HealthPageState extends State<HealthPage>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   late AppDatabase database;
-  Map<String, HealthMetric> _healthMetrics = {};
+  Map<String, HealthMetricProtocol> _healthMetrics = {};
   bool _isLoading = false;
-  late bool compact;
   late AnimationController _gridAnimationController;
 
   /// Cached in [didChangeDependencies] so [dispose] can call
@@ -100,6 +102,7 @@ class _HealthPageState extends State<HealthPage>
     _gridAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
+      value: 1.0,
     );
 
     // Load after the first frame so AppLocalizations is fully resolved.
@@ -137,6 +140,15 @@ class _HealthPageState extends State<HealthPage>
     }
   }
 
+  void _runGridAnimationIfNeeded() {
+    if (!mounted || _healthMetrics.isEmpty) return;
+    if (_gridAnimationController.isAnimating ||
+        _gridAnimationController.status == AnimationStatus.completed) {
+      return;
+    }
+    _gridAnimationController.forward(from: 0);
+  }
+
   Future<void> _loadHealthData() async {
     if (!mounted) return;
 
@@ -155,21 +167,18 @@ class _HealthPageState extends State<HealthPage>
 
       // 1. Fetch aggregated metrics from LOCAL DB first (Fast)
       // This ensures we show SOMETHING immediately if it exists
-      final localData = await HealthMetricsData.getMetricsByDay(
+      final localData = await HealthMetricsData.shared.getMetricsByDay(
         personId,
         today,
         context,
       );
 
       if (mounted) {
-        final isInitialLoad = _healthMetrics.isEmpty;
         setState(() {
           _healthMetrics = localData;
           if (localData.isNotEmpty) _isLoading = false;
         });
-        if (isInitialLoad && localData.isNotEmpty) {
-          _gridAnimationController.forward(from: 0.0);
-        }
+        _runGridAnimationIfNeeded();
       }
 
       // 2. Trigger fresh sync from Apple Health / Google Fit in background
@@ -183,7 +192,7 @@ class _HealthPageState extends State<HealthPage>
       if (!mounted) return;
 
       // 3. Final refresh of local data after sync completes
-      final syncedData = await HealthMetricsData.getMetricsByDay(
+      final syncedData = await HealthMetricsData.shared.getMetricsByDay(
         personId,
         today,
         context,
@@ -194,6 +203,7 @@ class _HealthPageState extends State<HealthPage>
           _healthMetrics = syncedData;
           _isLoading = false;
         });
+        _runGridAnimationIfNeeded();
         // Start periodic "real-time" polling while on this page
         healthBlock.startRealtimeSync(interval: const Duration(seconds: 30));
       }
@@ -262,17 +272,16 @@ class _HealthPageState extends State<HealthPage>
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
-    compact = MediaQuery.of(context).size.width < 600;
     final topSafe = MediaQuery.paddingOf(context).top;
-    // Clear floating shell header + status bar (fixed 80 was short on some notches).
-    final headerClearance = topSafe + 72;
+    // Match Projects hub: island (~50) + small gap.
+    final headerClearance = topSafe + 58;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return SwipeablePage(
-      onSwipe: () => Navigator.maybePop(context),
-      direction: SwipeablePageDirection.leftToRight,
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        floatingActionButton: QuickActionButton(
+    final healthSubcolor = HealthMetricColors.pillarGreen;
+
+    final scaffold = Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: QuickActionButton(
           actions: [
             QuickAction(
               label: l10n.health_log_water,
@@ -300,26 +309,10 @@ class _HealthPageState extends State<HealthPage>
             ),
           ],
         ),
-        body: Stack(
-          children: [
-            // Background aesthetics
-            Positioned(
-              top: -60,
-              left: -50,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colorScheme.primary.withValues(alpha: 0.02),
-                ),
-              ),
-            ),
-
-            RefreshIndicator(
-              onRefresh: _loadHealthData,
-              displacement: 40,
-              child: CustomScrollView(
+        body: RefreshIndicator(
+          onRefresh: _loadHealthData,
+          displacement: 40,
+          child: CustomScrollView(
                 physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
@@ -332,44 +325,26 @@ class _HealthPageState extends State<HealthPage>
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
                         _healthPageGutter,
-                        24,
+                        8,
                         _healthPageGutter,
                         0,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                DateFormat(
-                                  'EEEE, MMMM d',
-                                ).format(DateTime.now()),
-                                style: textTheme.labelLarge?.copyWith(
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              // const SizedBox(height: 4),
-                              _buildHeaderButton(
-                                context,
-                                icon: Icons.hub_rounded,
-                                onPressed: () =>
-                                    context.push('/health/integrations'),
-                              ),
-                            ],
-                          ),
-
-                          Text(
-                            "Your health at a glance.",
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Watch((context) {
+                            final hb = context.read<HealthBlock>();
+                            final steps = hb.todaySteps.watch(context);
+                            final kcal = hb.todayCaloriesConsumed.watch(context);
+                            final water = hb.todayWater.watch(context);
+                            return _buildHealthSummaryStrip(
+                              context,
+                              steps: steps,
+                              kcal: kcal,
+                              waterMl: water,
+                              onHubTap: () => context.push('/integrations'),
+                            );
+                          }),
                         ],
                       ),
                     ),
@@ -404,7 +379,7 @@ class _HealthPageState extends State<HealthPage>
                           final currentCaloriesBurned =
                               healthBlock.todayCaloriesBurned.value;
 
-                          final List<HealthMetric>
+                          final List<HealthMetricProtocol>
                           displayMetrics = _healthMetrics.values.map((m) {
                             if (m.id == 'steps') {
                               return m.copyWith(
@@ -497,7 +472,7 @@ class _HealthPageState extends State<HealthPage>
 
                           // Add Environmental Metrics
                           if (envData != null) {
-                            displayMetrics.add(HealthMetric(
+                            displayMetrics.add(HealthMetricProtocol(
                               id: 'weather',
                               name: l10n.health_weather,
                               value: '${envData.temperature.toStringAsFixed(1)}°C',
@@ -511,7 +486,7 @@ class _HealthPageState extends State<HealthPage>
                               detailPage: '/health/temperature',
                             ));
 
-                            displayMetrics.add(HealthMetric(
+                            displayMetrics.add(HealthMetricProtocol(
                               id: 'air_quality',
                               name: l10n.health_air_quality,
                               value: envData.aqi.toString(),
@@ -529,78 +504,308 @@ class _HealthPageState extends State<HealthPage>
                           return SliverPadding(
                             padding: const EdgeInsets.fromLTRB(
                               _healthPageGutter,
-                              _healthGridSpacing,
+                              6,
                               _healthPageGutter,
                               _healthGridSpacing,
                             ),
-                            sliver: SliverGrid(
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: compact ? 2 : 3,
-                                    crossAxisSpacing: _healthGridSpacing,
-                                    mainAxisSpacing: _healthGridSpacing,
-                                    childAspectRatio: compact ? 0.88 : 1.1,
-                                  ),
-                              delegate: SliverChildBuilderDelegate((
-                                context,
-                                index,
-                              ) {
-                                final animation =
-                                    Tween<double>(begin: 0.0, end: 1.0).animate(
-                                      CurvedAnimation(
-                                        parent: _gridAnimationController,
-                                        curve: Interval(
-                                          (1 / displayMetrics.length) * index,
-                                          1.0,
-                                          curve: Curves.easeOutCubic,
+                            sliver: SliverToBoxAdapter(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final spacing = _healthGridSpacing;
+                                  final maxW = constraints.maxWidth;
+                                  final contentMaxW = maxW > 1200 ? 1200.0 : maxW;
+
+                                  late final int crossAxisCount;
+                                  // Slightly taller tiles — room for subtitle + progress.
+                                  const aspect = 0.88;
+                                  if (contentMaxW >= 1200) {
+                                    crossAxisCount = 5;
+                                  } else if (contentMaxW >= 960) {
+                                    crossAxisCount = 4;
+                                  } else if (contentMaxW >= 720) {
+                                    crossAxisCount = 3;
+                                  } else {
+                                    crossAxisCount = 2;
+                                  }
+
+                                  final cellW =
+                                      (contentMaxW -
+                                              spacing *
+                                                  (crossAxisCount - 1)) /
+                                          crossAxisCount;
+                                  final cellH = cellW / aspect;
+
+                                  final rows = <Widget>[];
+                                  for (var start = 0;
+                                      start < displayMetrics.length;
+                                      start += crossAxisCount) {
+                                    final rowTiles = <Widget>[];
+                                    for (var col = 0;
+                                        col < crossAxisCount;
+                                        col++) {
+                                      if (col > 0) {
+                                        rowTiles.add(SizedBox(width: spacing));
+                                      }
+                                      final index = start + col;
+                                      rowTiles.add(
+                                        Expanded(
+                                          child: SizedBox(
+                                            height: cellH,
+                                            child: index <
+                                                    displayMetrics.length
+                                                ? _animatedMetricGridTile(
+                                                    index,
+                                                    displayMetrics.length,
+                                                    displayMetrics[index],
+                                                  )
+                                                : const SizedBox.shrink(),
+                                          ),
                                         ),
+                                      );
+                                    }
+                                    rows.add(
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: rowTiles,
                                       ),
                                     );
+                                    if (start + crossAxisCount <
+                                        displayMetrics.length) {
+                                      rows.add(SizedBox(height: spacing));
+                                    }
+                                  }
 
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: Transform.translate(
-                                    offset: Offset(
-                                      0,
-                                      20 * (1.0 - animation.value),
+                                  final grid = Center(
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: contentMaxW,
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: rows,
+                                      ),
                                     ),
-                                    child: HealthMetricCard(
-                                      metrics: displayMetrics[index],
-                                    ),
-                                  ),
-                                );
-                              }, childCount: displayMetrics.length),
+                                  );
+
+                                  return grid;
+                                },
+                              ),
                             ),
                           );
                         }),
 
                   // Bottom padding to avoid FAB overlap
-                  const SliverToBoxAdapter(child: SizedBox(height: 140)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 96)),
                 ],
               ),
             ),
-          ],
+    );
+
+    return SwipeablePage(
+      onSwipe: () => Navigator.maybePop(context),
+      direction: SwipeablePageDirection.leftToRight,
+      child: RadialPremiumBackground(
+        glowColor: healthSubcolor,
+        center: const Alignment(0.75, -0.35),
+        radius: 1.35,
+        showGlow: isDark,
+        child: ColoredBox(
+          color: isDark ? Colors.transparent : colorScheme.surface,
+          child: scaffold,
         ),
       ),
     );
   }
 
-  Widget _buildHeaderButton(
-    BuildContext context, {
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return IconButton(
-      icon: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
-          shape: BoxShape.circle,
+  Widget _animatedMetricGridTile(
+    int index,
+    int total,
+    HealthMetricProtocol metric,
+  ) {
+    final safeTotal = total <= 0 ? 1 : total;
+    final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _gridAnimationController,
+        curve: Interval(
+          (1 / safeTotal) * index,
+          1.0,
+          curve: Curves.easeOutCubic,
         ),
-        child: Icon(icon, size: 22, color: colorScheme.onSurface),
       ),
-      onPressed: onPressed,
+    );
+
+    return FadeTransition(
+      opacity: animation,
+      child: Transform.translate(
+        offset: Offset(0, 20 * (1.0 - animation.value)),
+        child: HealthMetricCard(metrics: metric),
+      ),
+    );
+  }
+
+  Widget _buildHealthSummaryStrip(
+    BuildContext context, {
+    required int steps,
+    required int kcal,
+    required int waterMl,
+    VoidCallback? onHubTap,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final healthSubcolor = HealthMetricColors.pillarGreen;
+    final hubColor = healthSubcolor;
+
+    Widget item(String value, String label, IconData icon, Color color) {
+      return Expanded(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 16),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: isDark
+                          ? HealthMetricColors.textPrimary
+                          : cs.onSurface,
+                      letterSpacing: -0.35,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark
+                          ? HealthMetricColors.textEtchedStrong
+                          : cs.onSurface.withValues(alpha: 0.55),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.alphaBlend(
+                  healthSubcolor.withValues(
+                    alpha: isDark ? 0.12 : 0.08,
+                  ),
+                  HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.04),
+                ),
+                HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.025),
+              ],
+              stops: const [0, 0.5],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: HealthMetricColors.glassBorder(cs, isDark: isDark, darkAlpha: 0.1),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0x00000f1e).withValues(alpha: isDark ? 0.2 : 0.06),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              if (onHubTap != null) ...[
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onHubTap,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Tooltip(
+                      message: l10n.integration_hub_connect,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: hubColor.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: hubColor.withValues(alpha: 0.22),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.hub_rounded,
+                            color: hubColor,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 34,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  color: HealthMetricColors.glassBorder(cs, isDark: isDark)
+                      .withValues(alpha: 0.7),
+                ),
+              ],
+              item(
+                '$steps',
+                l10n.steps,
+                Icons.directions_walk_rounded,
+                HealthMetricColors.pillarGreen,
+              ),
+              item(
+                '$kcal',
+                l10n.kcal_consume,
+                Icons.restaurant_rounded,
+                HealthMetricColors.pillarYellow,
+              ),
+              item(
+                '$waterMl ml',
+                l10n.home_index_water,
+                Icons.water_drop_rounded,
+                HealthMetricColors.pillarBlue,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

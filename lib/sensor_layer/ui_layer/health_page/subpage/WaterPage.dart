@@ -7,7 +7,9 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     show
         HealthLogsDAO,
         WaterLogData;
@@ -63,14 +65,15 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final healthBlock = context.watch<HealthBlock>();
     final todayWaterValue = healthBlock.todayWater.watch(context);
     final goal = 2500; // Target goal in ml
     final progress = (todayWaterValue / goal).clamp(0.0, 1.0);
 
-    return Scaffold(
-      backgroundColor: Colors.black, // Immersive base
+    final scaffold = Scaffold(
+      backgroundColor: isDark ? Colors.transparent : cs.surface,
       body: Stack(
         children: [
           // Ambient Glow Background
@@ -122,18 +125,18 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
             child: Column(
               children: [
                 const SizedBox(height: 80), // Increased Dynamic Island Gap
-                _buildAppBar(context),
+                _buildAppBar(context, cs, isDark),
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
                         const SizedBox(height: 40),
-                        _buildWaterProgress(todayWaterValue, goal, progress, colorScheme),
+                        _buildWaterProgress(todayWaterValue, goal, progress, cs, isDark),
                         const SizedBox(height: 60),
-                        _buildQuickAddActions(colorScheme),
+                        _buildQuickAddActions(cs, isDark),
                         const SizedBox(height: 40),
-                        _buildHistorySection(context, colorScheme),
+                        _buildHistorySection(context, cs, isDark),
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -145,9 +148,18 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
         ],
       ),
     );
+
+    if (isDark) {
+      return RadialPremiumBackground(
+        baseColor: HealthMetricColors.pageBackground,
+        glowColor: HealthMetricColors.pillarBlue,
+        child: scaffold,
+      );
+    }
+    return scaffold;
   }
 
-  Widget _buildAppBar(BuildContext context) {
+  Widget _buildAppBar(BuildContext context, ColorScheme cs, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -155,15 +167,18 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: HealthMetricColors.ink(cs, isDark: isDark),
+            ),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.05),
+              backgroundColor: HealthMetricColors.iconChipFill(cs, isDark: isDark),
             ),
           ),
           Text(
             'WATER INTAKE',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: HealthMetricColors.ink(cs, isDark: isDark),
               fontWeight: FontWeight.w900,
               letterSpacing: 4,
               fontSize: 14,
@@ -171,9 +186,12 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
           ),
           IconButton(
             onPressed: () {}, // Settings
-            icon: const Icon(Icons.settings_outlined, color: Colors.white),
+            icon: Icon(
+              Icons.settings_outlined,
+              color: HealthMetricColors.ink(cs, isDark: isDark),
+            ),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.05),
+              backgroundColor: HealthMetricColors.iconChipFill(cs, isDark: isDark),
             ),
           ),
         ],
@@ -181,7 +199,13 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildWaterProgress(int current, int goal, double progress, ColorScheme colorScheme) {
+  Widget _buildWaterProgress(
+    int current,
+    int goal,
+    double progress,
+    ColorScheme cs,
+    bool isDark,
+  ) {
     return Column(
       children: [
         Stack(
@@ -194,7 +218,7 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
               child: CircularProgressIndicator(
                 value: progress,
                 strokeWidth: 16,
-                backgroundColor: Colors.white.withValues(alpha: 0.05),
+                backgroundColor: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.05),
                 strokeCap: StrokeCap.round,
                 color: Colors.blueAccent,
               ),
@@ -207,10 +231,10 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
                 const SizedBox(height: 16),
                 Text(
                   '$current',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 72,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: HealthMetricColors.ink(cs, isDark: isDark),
                     height: 1,
                     letterSpacing: -2,
                   ),
@@ -220,7 +244,7 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
                   'ml / $goal ml'.toUpperCase(),
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.4),
+                    color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.4),
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1,
                   ),
@@ -251,23 +275,28 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildQuickAddActions(ColorScheme colorScheme) {
+  Widget _buildQuickAddActions(ColorScheme cs, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'QUICK ADD',
-            style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 11, color: Colors.white38),
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+              fontSize: 11,
+              color: HealthMetricColors.faintInk(cs, isDark: isDark),
+            ),
           ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _addBtn(250, 'Glass', Icons.local_drink_rounded),
-              _addBtn(500, 'Bottle', Icons.wine_bar_rounded),
-              _addBtn(750, 'Large', Icons.liquor_rounded),
+              _addBtn(250, 'Glass', Icons.local_drink_rounded, cs, isDark),
+              _addBtn(500, 'Bottle', Icons.wine_bar_rounded, cs, isDark),
+              _addBtn(750, 'Large', Icons.liquor_rounded, cs, isDark),
             ],
           ),
         ],
@@ -275,7 +304,7 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _addBtn(int ml, String label, IconData icon) {
+  Widget _addBtn(int ml, String label, IconData icon, ColorScheme cs, bool isDark) {
     return GestureDetector(
       onTap: () => _addWater(ml),
       child: ClipRRect(
@@ -286,9 +315,11 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
             width: 105,
             padding: const EdgeInsets.symmetric(vertical: 24),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
+              color: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.03),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              border: Border.all(
+                color: HealthMetricColors.glassBorder(cs, isDark: isDark, darkAlpha: 0.08),
+              ),
             ),
             child: Column(
               children: [
@@ -296,8 +327,8 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
                 const SizedBox(height: 16),
                 Text(
                   '${ml}ML',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: HealthMetricColors.ink(cs, isDark: isDark),
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
                   ),
@@ -305,7 +336,7 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
                 Text(
                   label.toUpperCase(),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.3),
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1,
@@ -319,7 +350,7 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildHistorySection(BuildContext context, ColorScheme colorScheme) {
+  Widget _buildHistorySection(BuildContext context, ColorScheme cs, bool isDark) {
     final personId = context.read<PersonBlock>().information.value.profiles.id ?? "";
     
     return Padding(
@@ -327,9 +358,14 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'LOG HISTORY',
-            style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 11, color: Colors.white38),
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+              fontSize: 11,
+              color: HealthMetricColors.faintInk(cs, isDark: isDark),
+            ),
           ),
           const SizedBox(height: 20),
           StreamBuilder<List<WaterLogData>>(
@@ -341,9 +377,21 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
                     padding: const EdgeInsets.all(48.0),
                     child: Column(
                       children: [
-                        Icon(Icons.history, size: 48, color: Colors.white.withValues(alpha: 0.05)),
+                        Icon(
+                          Icons.history,
+                          size: 48,
+                          color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.05),
+                        ),
                         const SizedBox(height: 16),
-                        const Text('NO RECORDS TODAY', style: TextStyle(color: Colors.white10, fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 10)),
+                        Text(
+                          'NO RECORDS TODAY',
+                          style: TextStyle(
+                            color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.1),
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                            fontSize: 10,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -365,9 +413,11 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.03),
+                          color: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.03),
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                          border: Border.all(
+                            color: HealthMetricColors.glassBorder(cs, isDark: isDark, darkAlpha: 0.05),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -386,13 +436,18 @@ class _WaterPageState extends State<WaterPage> with TickerProviderStateMixin {
                                 children: [
                                   Text(
                                     '${log.amount} ML',
-                                    style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 16, letterSpacing: -0.5),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      color: HealthMetricColors.ink(cs, isDark: isDark),
+                                      fontSize: 16,
+                                      letterSpacing: -0.5,
+                                    ),
                                   ),
                                   Text(
                                     DateFormat('HH:mm').format(log.timestamp),
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.white38,
+                                      color: HealthMetricColors.faintInk(cs, isDark: isDark),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),

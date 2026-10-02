@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/UIConstants.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
@@ -257,7 +257,6 @@ class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
     final shortMin = focusBlock.shortBreakDuration.watch(context);
     final longMin = focusBlock.longBreakDuration.watch(context);
 
-    final timeStr = formatTime(focusBlock.remainingTime.watch(context));
     final isRunning = focusBlock.isRunning.watch(context);
     final sessionType = focusBlock.currentSessionType.watch(context);
     final totalStudyTime = focusBlock.totalStudyTimeToday.watch(context);
@@ -299,10 +298,6 @@ class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
     if (sessionType == 'Short Break') totalDuration = shortMin * 60;
     if (sessionType == 'Long Break') totalDuration = longMin * 60;
 
-    double progress = totalDuration > 0
-        ? (totalDuration - focusBlock.remainingTime.value) / totalDuration
-        : 1.0;
-
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: Stack(
@@ -330,148 +325,142 @@ class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
             child: _BlurCircle(color: modeColor.withValues(alpha: 0.1), size: 350),
           ),
 
-          SafeArea(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                // Header
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        // Custom Back Button with Glassy feel
-                        Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest
-                                .withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            onPressed: () => context.pop(),
-                            icon: const Icon(
-                              Icons.arrow_back_ios_new,
-                              size: 20,
-                            ),
-                            color: Theme.of(context).colorScheme.onSurface,
-                            tooltip: "Back",
-                          ),
+          Column(
+            children: [
+              SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
                         ),
-
-                        // Centered Title (Removed - integrated into DI elsewhere or hidden)
-                        const Spacer(),
-
-                        // Balance Space (matches back button size approx)
-                        const SizedBox(width: 48),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Center(
-                    child: _SessionTypeToggle(focusBlock: focusBlock),
-                  ),
-                ),
-                // Minimal Selection Status (Text only)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 8,
-                    ),
-                    child: _ActiveSessionContext(
-                      focusBlock: focusBlock,
-                      projectBlock: projectBlock,
-                      growthBlock: growthBlock,
-                    ),
-                  ),
-                ),
-
-                // Timer Main Component
-                // const SizedBox(height: 40),
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Spacer(),
-                        _TimerCircle(
-                          progress: progress,
-                          timeStr: timeStr,
-                          modeColor: modeColor,
-                          sessionType: sessionType,
-                          isRunning: isRunning,
-                          focusBlock: focusBlock,
-                          totalDuration: totalDuration,
-                          themeName: themeName,
-                          isExerciseMode: isExerciseMode,
-                          exerciseType: exerciseType,
-                          isMuskMode: isMuskMode,
-                          isSyncing: isSyncing,
-                          pulse: isRunning ? _breathingController : null,
-                        ),
-                        const Spacer(),
-
-                        // Detailed Controls Consolidated into Circle
-                        const SizedBox(height: 30),
-
-                        _SpecialOpsRow(focusBlock: focusBlock),
-
-                        const SizedBox(height: 30),
-
-                        // Stats & History Preview
-                        _StatsGrid(
-                          sessionsCount: sessionsCount,
-                          totalStudyTime: totalStudyTime,
-                          modeColor: modeColor,
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        _RecentHistoryHeader(),
-                        const SizedBox(
-                          height: 24,
-                        ), // Add bottom padding for balance
-                      ],
-                    ),
-                  ),
-                ),
-
-                // History List
-                StreamBuilder<List<FocusSessionData>>(
-                  stream: context
-                      .read<FocusSessionsDAO>()
-                      .watchSessionsByPerson(focusBlock.currentPersonId),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const SliverToBoxAdapter(child: SizedBox.shrink());
-                    }
-                    final sessions = snapshot.data!.reversed.take(5).toList();
-                    return SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => _HistoryItem(
-                            session: sessions[index],
-                            modeColor: modeColor,
+                        child: IconButton(
+                          onPressed: () => context.pop(),
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new,
+                            size: 20,
                           ),
-                          childCount: sessions.length,
+                          color: colorScheme.onSurface,
+                          tooltip: "Back",
                         ),
                       ),
-                    );
-                  },
+                      const Spacer(),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
                 ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 100)),
-              ],
-            ),
+              ),
+              Expanded(
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Center(
+                        child: _SessionTypeToggle(focusBlock: focusBlock),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
+                        child: _ActiveSessionContext(
+                          focusBlock: focusBlock,
+                          projectBlock: projectBlock,
+                          growthBlock: growthBlock,
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: (MediaQuery.sizeOf(context).height * 0.42)
+                            .clamp(280.0, 400.0),
+                        child: Column(
+                          children: [
+                            const Spacer(),
+                            _FocusTimerCircleHost(
+                              focusBlock: focusBlock,
+                              totalDuration: totalDuration,
+                              modeColor: modeColor,
+                              sessionType: sessionType,
+                              isRunning: isRunning,
+                              themeName: themeName,
+                              isExerciseMode: isExerciseMode,
+                              exerciseType: exerciseType,
+                              isMuskMode: isMuskMode,
+                              isSyncing: isSyncing,
+                              pulse: isRunning ? _breathingController : null,
+                              formatTime: formatTime,
+                            ),
+                            const Spacer(),
+                            _SpecialOpsRow(focusBlock: focusBlock),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: _StatsGrid(
+                        sessionsCount: sessionsCount,
+                        totalStudyTime: totalStudyTime,
+                        modeColor: modeColor,
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                    SliverToBoxAdapter(child: _RecentHistoryHeader()),
+                    const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                    StreamBuilder<List<FocusSessionData>>(
+                      stream: context
+                          .read<FocusSessionsDAO>()
+                          .watchSessionsByPerson(focusBlock.currentPersonId),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const SliverToBoxAdapter(
+                            child: SizedBox.shrink(),
+                          );
+                        }
+                        final sessions = snapshot.data!
+                            .where(
+                              (s) =>
+                                  s.sessionType == 'Focus' &&
+                                  s.status == 'completed',
+                            )
+                            .take(5)
+                            .toList();
+                        if (sessions.isEmpty) {
+                          return const SliverToBoxAdapter(
+                            child: SizedBox.shrink(),
+                          );
+                        }
+                        return SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) => _HistoryItem(
+                                session: sessions[index],
+                                modeColor: modeColor,
+                              ),
+                              childCount: sessions.length,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1164,6 +1153,62 @@ class _ActiveSessionContext extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Rebuilds only the timer ring when [FocusBlock.remainingTime] changes.
+class _FocusTimerCircleHost extends StatelessWidget {
+  final FocusBlock focusBlock;
+  final int totalDuration;
+  final Color modeColor;
+  final String sessionType;
+  final bool isRunning;
+  final String themeName;
+  final bool isExerciseMode;
+  final String exerciseType;
+  final bool isMuskMode;
+  final bool isSyncing;
+  final Animation<double>? pulse;
+  final String Function(int totalSeconds) formatTime;
+
+  const _FocusTimerCircleHost({
+    required this.focusBlock,
+    required this.totalDuration,
+    required this.modeColor,
+    required this.sessionType,
+    required this.isRunning,
+    required this.themeName,
+    required this.isExerciseMode,
+    required this.exerciseType,
+    required this.isMuskMode,
+    required this.isSyncing,
+    this.pulse,
+    required this.formatTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Watch((context) {
+      final remaining = focusBlock.remainingTime.value;
+      final progress = totalDuration > 0
+          ? (totalDuration - remaining) / totalDuration
+          : 1.0;
+      return _TimerCircle(
+        progress: progress,
+        timeStr: formatTime(remaining),
+        modeColor: modeColor,
+        sessionType: sessionType,
+        isRunning: isRunning,
+        focusBlock: focusBlock,
+        totalDuration: totalDuration,
+        themeName: themeName,
+        isExerciseMode: isExerciseMode,
+        exerciseType: exerciseType,
+        isMuskMode: isMuskMode,
+        isSyncing: isSyncing,
+        pulse: pulse,
+      );
+    });
   }
 }
 
@@ -3115,7 +3160,7 @@ class _HistoryItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "${mins}m Focus Session",
+                  "${mins}m ${session.sessionType} Session",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -3464,6 +3509,15 @@ class _SessionResultDialog extends StatefulWidget {
 class _SessionResultDialogState extends State<_SessionResultDialog> {
   final TextEditingController _notesController = TextEditingController();
   bool _markTaskCompleted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.focusBlock.sessionNotes.value.trim();
+    if (initial.isNotEmpty) {
+      _notesController.text = initial;
+    }
+  }
 
   @override
   void dispose() {

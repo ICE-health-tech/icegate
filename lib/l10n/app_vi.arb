@@ -1,10 +1,253 @@
 {
-  "quick_actions": "Hành động nhanh",
+  "quick_actions": "Ghi chú & thời gian",
+  "projects_page_tagline": "Tập trung theo phiên, nhiệm vụ và ghi chú cùng một nơi.",
+  "projects_summary_workspaces": "Không gian",
+  "projects_summary_plugins": "Tiện ích",
+  "projects_quick_more": "Lối tắt thêm",
   "new_label": "Tạo mới",
-  "my_projects_label": "Dự án của tôi",
+  "my_projects_label": "Không gian làm việc",
   "completed_projects_label": "Dự án đã xong",
   "active_tasks_label": "Nhiệm vụ đang chạy",
   "recent_notes_label": "Ghi chú gần đây",
+  "projects_tile_reminders": "Lời nhắc",
+  "projects_tile_calendar": "Lịch",
+  "projects_calendar_projects_created": "Dự án được tạo",
+  "projects_calendar_google_events": "Google Calendar",
+  "projects_calendar_reminders": "Nhắc nhở",
+  "projects_calendar_connect_google": "Kết nối Google Calendar",
+  "projects_calendar_disconnect_google": "Ngắt Google Calendar",
+  "projects_calendar_google_connected": "Đã kết nối Google Calendar",
+  "projects_calendar_sign_in_failed": "Không thể kết nối Google Calendar",
+  "projects_calendar_sign_in_cancelled": "Đã hủy đăng nhập Google",
+  "projects_calendar_scope_denied": "Chưa cấp quyền Lịch. Hãy cho phép trong tài khoản Google của bạn.",
+  "projects_calendar_api_not_enabled": "Google Calendar API chưa bật cho app macOS (dự án GCP {projectId}). Vào Google Cloud Console → bật \"Google Calendar API\" cho dự án đó, đợi vài phút rồi thử lại.",
+  "@projects_calendar_api_not_enabled": {
+    "placeholders": {
+      "projectId": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_calendar_insufficient_scopes": "Chưa cấp quyền Lịch. Ngắt kết nối Google, kết nối lại và chấp nhận đủ quyền.",
+  "projects_calendar_connect_hint": "Đăng nhập Google để đồng bộ mọi lịch Google lên màn hình Lịch.",
+  "projects_calendar_add_reminder": "Thêm nhắc nhở",
+  "projects_calendar_add_event": "Thêm sự kiện",
+  "projects_calendar_event_title": "Tiêu đề sự kiện",
+  "projects_calendar_event_title_required": "Nhập tiêu đề sự kiện",
+  "projects_calendar_event_start": "Bắt đầu",
+  "projects_calendar_event_end": "Kết thúc",
+  "projects_calendar_event_saved": "Đã lưu sự kiện vào lịch",
+  "projects_calendar_event_moved": "Đã chuyển sang {time}",
+  "@projects_calendar_event_moved": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_calendar_event_deleted": "Đã xóa sự kiện",
+  "projects_calendar_event_failed": "Không thể lưu sự kiện",
+  "projects_calendar_edit_event": "Sửa sự kiện",
+  "projects_calendar_delete_event": "Xóa sự kiện",
+  "projects_calendar_env_title": "Kiểm tra bối cảnh",
+  "projects_calendar_env_ready": "Phù hợp — bạn có thể hoàn thành ngay.",
+  "projects_calendar_env_caution": "Có thể làm, nhưng vài yếu tố cần lưu ý.",
+  "projects_calendar_env_not_ready": "Khó hoàn thành lúc này — cân nhắc đổi giờ.",
+  "projects_calendar_env_score": "Sẵn sàng {score}%",
+  "@projects_calendar_env_score": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "projects_calendar_env_start_focus": "Bắt đầu phiên tập trung",
+  "projects_calendar_env_past": "Khung giờ này đã qua",
+  "projects_calendar_env_too_early": "Còn hơn 2 giờ nữa mới tới",
+  "projects_calendar_env_starting_soon": "Sắp bắt đầu trong 15 phút",
+  "projects_calendar_env_low_mood": "Tâm trạng gần đây thấp",
+  "projects_calendar_env_neutral_mood": "Tâm trạng trung tính",
+  "projects_calendar_env_good_mood": "Tâm trạng hỗ trợ tập trung",
+  "projects_calendar_env_no_mood": "Chưa ghi tâm trạng hôm nay",
+  "projects_calendar_env_heavy_overlap": "Trùng lịch nhiều",
+  "projects_calendar_env_some_overlap": "Có sự kiện trùng giờ",
+  "projects_calendar_env_focus_fatigue": "Đã tập trung 2+ giờ hôm nay",
+  "projects_calendar_env_low_sleep": "Ngủ ít đêm qua",
+  "projects_calendar_env_good_sleep": "Ngủ đủ",
+  "projects_calendar_edit_reminder": "Sửa nhắc nhở",
+  "projects_calendar_save": "Lưu",
+  "projects_calendar_select_calendar": "Lịch",
+  "projects_calendar_tap_day_add_hint": "Chạm lại ngày đã chọn để thêm sự kiện",
+  "projects_calendar_hold_day_add_hint": "Giữ ngày để thêm sự kiện",
+  "projects_calendar_timeline_empty": "Không có sự kiện theo giờ trong ngày",
+  "projects_calendar_timeline_tap_slot": "Chạm khung giờ để thêm · chạm sự kiện để sửa · kéo đổi giờ (↑↓ + Enter trên desktop, giữ trên mobile)",
+  "projects_calendar_scroll_for_more": "Cuộn xem nhiệm vụ",
+  "projects_calendar_drag_hint_desktop": "Kéo để đổi giờ. Phím mũi tên chỉnh giờ, Enter xác nhận, Escape hủy.",
+  "projects_calendar_drag_hint_mobile": "Giữ rồi kéo sang khung giờ khác.",
+  "projects_calendar_drag_move_to": "Chuyển sang {time}",
+  "@projects_calendar_drag_move_to": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_calendar_timeline_remove": "Ẩn khỏi timeline",
+  "projects_calendar_timeline_remove_confirm": "Ẩn \"{title}\" khỏi timeline ngày này?",
+  "projects_calendar_day_timeline": "Dòng thời gian",
+  "projects_calendar_reminder_title": "Tiêu đề nhắc nhở",
+  "projects_calendar_sync_google": "Đồng bộ sự kiện",
+  "projects_calendar_all_day": "Cả ngày",
+  "projects_calendar_integrations": "Kết nối lịch",
+  "projects_calendar_connect_device": "Kết nối lịch trên máy",
+  "projects_calendar_connect_apple": "Kết nối Apple Calendar",
+  "projects_calendar_disconnect_device": "Ngắt lịch trên máy",
+  "projects_calendar_disconnect_apple": "Ngắt Apple Calendar",
+  "projects_calendar_device_connected": "Đã kết nối lịch trên máy",
+  "projects_calendar_apple_connected": "Đã kết nối Apple Calendar",
+  "projects_calendar_device_events": "Lịch trên máy",
+  "projects_calendar_apple_events": "Apple Calendar",
+  "projects_calendar_device_hint": "Cho phép truy cập Lịch để xem sự kiện từ các lịch trên thiết bị.",
+  "projects_calendar_sync_device": "Đồng bộ sự kiện máy",
+  "projects_calendar_device_denied": "Chưa cấp quyền Lịch. Bật trong Cài đặt.",
+  "integration_hub_title": "Trung tâm kết nối",
+  "integration_hub_subtitle": "Lịch, sức khỏe và thiết bị — một trung tâm kết nối.",
+  "integration_hub_google_fit": "Google Fit",
+  "integration_hub_google_fit_hint": "Dùng chung đăng nhập Google với Lịch và Drive.",
+  "integration_hub_sensors_section": "Thiết bị & cảm biến",
+  "integration_hub_open_sensor_hub": "Mở Sensor Hub",
+  "integration_hub_sensor_hub_hint": "Đồng hồ, IoT, SSH và cấu hình Huawei.",
+  "integration_hub_huawei_sensor_hint": "Cấu hình Huawei trong Sensor Hub trước.",
+  "projects_calendar_all_calendars_events": "Mọi lịch",
+  "projects_calendar_synced_count": "Đã tải {count} sự kiện trong tháng này",
+  "@projects_calendar_synced_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projects_calendar_sync_empty_month": "Đã kết nối — không có sự kiện trong tháng này. Thử tháng khác hoặc kiểm tra Google Calendar.",
+  "integration_hub_calendars_section": "Lịch",
+  "integration_hub_health_section": "Sức khỏe",
+  "integration_hub_notes_section": "Ghi chú & tài liệu",
+  "integration_hub_google_drive_hint": "Đồng bộ ghi chú dự án và tệp vault từ Google Drive.",
+  "integration_hub_notion_hint": "Nhập trang và cơ sở dữ liệu Notion được chia sẻ vào vault.",
+  "integration_hub_connect": "Kết nối",
+  "integration_hub_status_connected": "Đã kết nối",
+  "integration_hub_apple_health": "Apple Health",
+  "integration_hub_apple_health_hint": "Bước chân, giấc ngủ, nhịp tim từ HealthKit.",
+  "integration_hub_huawei_health": "Huawei Health",
+  "integration_hub_huawei_health_hint": "Đồng bộ từ tài khoản Huawei cloud.",
+  "integration_hub_phase2_notice": "Lịch và đăng nhập Google hoạt động tại đây. Cấu hình Huawei: dùng Sensor Hub bên dưới.",
+  "integration_hub_sign_in_required": "Hãy đăng nhập icegate trước, rồi kết nối tích hợp.",
+  "integration_hub_health_coming_soon": "Nguồn sức khỏe này chưa khả dụng.",
+  "integration_hub_open": "Mở trung tâm kết nối",
+  "projects_calendar_day_empty": "Không có nhiệm vụ hay dự án mới trong ngày này.",
+  "projects_calendar_day_empty_not_connected": "Chưa kết nối lịch. Dùng “Kết nối lịch” phía trên, rồi đồng bộ.",
+  "projects_calendar_day_empty_other_days": "Không có sự kiện trong ngày này. Có {count} sự kiện ở ngày khác trong tháng — thử các ô được tô trên lịch.",
+  "@projects_calendar_day_empty_other_days": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projects_tile_focus": "Tập trung",
+  "projects_tile_pomodoro": "Cà chua",
+  "projects_tile_canvas": "Bảng ghép",
+  "projects_tile_whiteboard": "Bảng trắng",
+  "projects_whiteboard_clear_title": "Xóa bảng trắng?",
+  "projects_whiteboard_clear_message": "Mọi nét vẽ sẽ bị xóa. Không thể hoàn tác.",
+  "projects_whiteboard_clear_confirm": "Xóa hết",
+  "undo": "Hoàn tác",
+  "projects_plan_section_title": "Kế hoạch",
+  "projects_diagrams_title": "Sơ đồ dự án",
+  "projects_diagrams_empty": "Chưa có sơ đồ. Chạm + chọn dự án để vẽ.",
+  "projects_diagrams_new": "Sơ đồ mới",
+  "projects_diagrams_pick_project": "Chọn dự án",
+  "projects_diagrams_no_projects": "Hãy tạo dự án trước.",
+  "projects_diagrams_steps": "bước",
+  "plan_workspace_breadcrumb": "KHÔNG GIAN • DỰ ÁN",
+  "plan_schedule_card_title": "Lịch trình",
+  "plan_schedule_empty": "Chưa có bước nào.",
+  "plan_focus_notes_title": "Ghi chú tập trung",
+  "plan_notes_hint": "Gõ ghi chú tại đây…",
+  "plan_add_step": "Thêm bước",
+  "plan_drop_steps": "Thả bước vào đây",
+  "plan_add_first_step": "Thêm bước đầu tiên",
+  "plan_add_block_schedule": "Khối lịch trình",
+  "plan_add_block_notes": "Khối ghi chú tập trung",
+  "plan_add_block_goals": "Khối mục tiêu",
+  "plan_add_block_flow": "Khối quy trình",
+  "plan_connect_hint": "Chạm block nguồn, rồi chạm block đích để nối.",
+  "plan_link_added": "Đã nối block",
+  "plan_goals_empty": "Chưa có mục tiêu.",
+  "plan_add_goal": "Thêm mục tiêu",
+  "plan_manage_blocks": "Quản lý khối",
+  "projects_tile_sdlc": "SDLC",
+  "projects_tile_social_blocker": "Chặn mạng xã hội",
+  "social_shield_turn_on": "Bật Shield",
+  "social_shield_subtitle_no_auth": "Chạm dòng để cấp quyền Thời gian sử dụng",
+  "social_shield_subtitle_pick_apps": "Chạm dòng chọn app — chặn theo quy tắc bên dưới",
+  "social_shield_subtitle_ready": "Đang bật — chỉ chặn khi quy tắc khớp giờ",
+  "social_shield_subtitle_off": "Đang tắt — tạm dừng lịch và quy tắc focus",
+  "social_shield_choose_apps": "Chọn app cần chặn",
+  "social_shield_choose_apps_done": "Chạm để đổi danh sách app",
+  "social_shield_pick_apps_required": "Chọn ít nhất một app (hoặc tắt Shield).",
+  "social_shield_apps_saved": "Đã cập nhật danh sách app chặn.",
+  "social_shield_unsupported_platform": "Chặn app chỉ có trên iOS và macOS.",
+  "projects_plugin_open": "Mở",
+  "projects_plugin_location_tracker": "Theo dõi vị trí",
+  "projects_plugin_live_map": "Bản đồ trực tiếp",
+  "projects_remove_plugin_title": "Gỡ lối tắt?",
+  "projects_remove_plugin_body": "Gỡ \"{name}\" khỏi lối tắt nhanh?",
+  "@projects_remove_plugin_body": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_remove_plugin_confirm": "Gỡ",
+  "integrations_title": "Tích hợp",
+  "integrations_subtitle": "Quản lý nguồn tài liệu của bạn",
+  "integrations_active_services": "Dịch vụ đang bật",
+  "integrations_total_notes": "Tổng ghi chú",
+  "integrations_search_hint": "Tìm nguồn...",
+  "integrations_enabled_connections": "KẾT NỐI ĐANG BẬT",
+  "integrations_filters": "Bộ lọc",
+  "integrations_internal_notes": "Ghi chú nội bộ",
+  "integrations_primary_vault": "Kho chính (cục bộ)",
+  "integrations_explore": "Khám phá",
+  "integrations_google_drive": "Google Drive",
+  "integrations_synced_cloud": "Đã đồng bộ đám mây",
+  "integrations_cloud_storage": "Lưu trữ đám mây",
+  "integrations_sync_now": "Đồng bộ ngay",
+  "integrations_connect": "Kết nối",
+  "integrations_notion_sync": "Đồng bộ Notion",
+  "integrations_database_pipeline": "Luồng cơ sở dữ liệu",
+  "integrations_fetch": "Tải về",
+  "integrations_setup": "Thiết lập",
+  "integrations_slack_docs": "Tài liệu Slack",
+  "integrations_shared_channels": "Kênh dùng chung",
+  "integrations_notify_me": "Báo khi có",
+  "integrations_notion_config_title": "Cấu hình Notion",
+  "integrations_notion_secret_label": "Mã tích hợp nội bộ",
+  "integrations_save_fetch": "Lưu & tải về",
+  "integrations_marketplace_soon": "Chợ nguồn sắp ra mắt!",
+  "vault_breadcrumb_root": "Kho ghi chú",
+  "vault_section_folders": "Thư mục",
+  "vault_section_notes": "Ghi chú",
+  "vault_section_media": "Ảnh & media",
+  "vault_section_other": "Tệp khác",
+  "vault_search_files": "Tìm trong thư mục…",
+  "vault_empty_folder": "Thư mục trống",
+  "vault_stats_folders": "{count, plural, =1{1 thư mục} other{{count} thư mục}}",
+  "vault_stats_notes": "{count, plural, =1{1 ghi chú} other{{count} ghi chú}}",
+  "vault_stats_media": "{count, plural, =1{1 tệp} other{{count} tệp}}",
+  "projects_workspace_empty": "Chưa có không gian làm việc nào được thiết lập.",
+  "projects_workspace_start": "Bắt đầu ngay",
   "project_drive_sync": "Đồng bộ Mây",
   "project_drive_sync_tooltip": "Đồng bộ với Google Drive",
   "project_sync_success": "Đồng bộ thành công!",
@@ -54,7 +297,31 @@
   "health_sync_msg": "Đang đồng bộ dữ liệu sức khỏe...",
   "health_sync_success": "Đồng bộ dữ liệu thành công!",
   "health_sync_failed": "Đồng bộ thất bại. Vui lòng thử lại.",
+  "health_motivation_engine_title": "Động cơ động lực",
+  "health_notification_engine_title": "Động cơ thông báo",
+  "health_notification_engine_desc": "{count} nhắc nhở đang bật",
+  "@health_notification_engine_desc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "health_motivation_all_done": "Đã chạm mọi mục tiêu hôm nay—đà của bạn đang lên.",
+  "health_motivation_strong": "Tiến độ tốt—giữ chuỗi thói quen nhé.",
+  "health_motivation_mid": "Đang đi đều—thêm một chiến thắng nhỏ nữa.",
+  "health_motivation_low": "Bắt đầu bằng nước hoặc vài bước chân—từng chút đều có ích.",
+  "health_motivation_empty": "Đặt mục tiêu và chúng tôi sẽ đồng hành cả ngày.",
   "health_update_weight": "Cập nhật cân nặng",
+  "health_smart_scale_title": "Cân thông minh",
+  "health_smart_scale_desc": "Đồng bộ từ Apple Health hoặc Health Connect (Withings, Eufy, Xiaomi, v.v.)",
+  "health_smart_scale_sync": "Đồng bộ cân thông minh",
+  "health_smart_scale_syncing": "Đang đồng bộ…",
+  "health_smart_scale_sync_ok": "Đã đồng bộ cân nặng từ cân thông minh",
+  "health_smart_scale_sync_empty": "Chưa có dữ liệu. Cân trước, rồi nhấn đồng bộ.",
+  "health_smart_scale_sync_denied": "Chưa cấp quyền Health. Bật trong Cài đặt.",
+  "health_smart_scale_desktop": "Đồng bộ cân thông minh chỉ có trên iPhone và Android.",
+  "health_smart_scale_import": "Nhập từ cân thông minh",
   "health_log_water": "Ghi nhận nước",
   "health_daily_goal_reached": "Bạn đã đạt mục tiêu hàng ngày!",
   "health_almost_there": "Gần đạt rồi! Một chút nữa thôi.",
@@ -311,6 +578,8 @@
       }
     }
   },
+  "health_at_a_glance": "Tổng quan sức khỏe của bạn.",
+  "health_analyzing_meal": "Đang phân tích bữa ăn…",
   "health_subtitle_health_first": "Sức khỏe là trên hết",
   "health_kcal_label": "kcal",
   "health_subtitle_todays_intake": "Lượng nạp hôm nay",
@@ -376,6 +645,8 @@
   "err_network_fail": "Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.",
   "err_auth_timeout": "Đăng nhập quá lâu. Vui lòng thử lại.",
   "err_passkey_canceled": "Đã hủy đăng nhập bằng Passkey.",
+  "err_google_canceled": "Đã hủy đăng nhập Google.",
+  "err_google_failed": "Đăng nhập Google thất bại. Bật Google trên Supabase và thêm web client ID.",
   "err_passkey_failed": "Xác thực bảo mật thất bại. Vui lòng thử lại.",
   "err_biometric_unsupported": "Thiết bị không hỗ trợ đăng nhập sinh trắc học.",
   "err_biometric_disabled": "Đăng nhập sinh trắc học chưa được bật cho tài khoản này.",
@@ -504,7 +775,7 @@
   "personal_info_identification": "Định danh",
   "first_name_label": "Tên",
   "last_name_label": "Họ",
-  "email_label": "Email",
+  "email_label": "Địa chỉ email",
   "phone_number_label": "Số điện thoại",
   "personal_info_professional_matrix": "Tổ chức",
   "role_label": "Vai trò",
@@ -615,6 +886,103 @@
   "social_delete_bond": "Xóa liên kết",
   "social_no_achievements": "Chưa có thành tích nào",
   "social_no_achievements_msg": "Chưa có thành tích nào được ghi nhận.",
+  "achievement_story_section": "Khoảnh khắc",
+  "achievement_story_empty_hint": "Chạm + để giữ lại một khoảnh khắc.",
+  "achievement_story_add": "Thêm",
+  "achievement_feats_section": "Dòng thời gian",
+  "achievement_insights_title": "Nhìn lại",
+  "achievement_insights_summary": "Tổng kết tháng: {count} thành tích. Ý nghĩa TB: {meaning}, Tác động TB: {impact}",
+  "@achievement_insights_summary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "meaning": {
+        "type": "String"
+      },
+      "impact": {
+        "type": "String"
+      }
+    }
+  },
+  "achievement_story_title_dialog": "Đặt tên thành tích",
+  "achievement_story_title_hint": "Bạn đã làm gì?",
+  "achievement_story_added": "Đã lưu story vào thành tích.",
+  "achievement_story_save_failed": "Không lưu được ảnh.",
+  "achievement_filter_label": "Lọc",
+  "achievement_filter_all_months": "Mọi tháng",
+  "achievement_filter_all_projects": "Mọi dự án",
+  "plan_action_tab": "KẾ HOẠCH",
+  "plan_action_empty": "Lên kế hoạch hành động với điểm kỳ vọng, sau đó ghi điểm thực tế khi hoàn thành.",
+  "plan_action_timeline": "Dòng thời gian",
+  "plan_action_scoreboard": "Bảng điểm",
+  "plan_action_pending": "Chờ ghi",
+  "plan_action_no_pending": "Đã ghi hết hành động trong khung nhìn này.",
+  "plan_action_add": "Lên kế hoạch",
+  "plan_action_edit": "Sửa hành động",
+  "plan_action_log_real": "Ghi thực tế",
+  "plan_action_title_label": "Bạn sẽ làm gì?",
+  "plan_action_title_required": "Nhập tên hành động.",
+  "plan_action_expected_label": "Điểm kỳ vọng (0–100)",
+  "plan_action_real_label": "Điểm thực tế (0–100)",
+  "plan_action_real_hint": "Để trống cho đến khi xong",
+  "plan_action_points_invalid": "Điểm phải từ 0–100.",
+  "plan_action_expected_short": "Kỳ vọng",
+  "plan_action_real_short": "Thực tế",
+  "plan_action_expected_value": "Kỳ vọng: {points} điểm",
+  "@plan_action_expected_value": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_action_delta_value": "{delta, plural, =0{bằng} other{{delta}}}",
+  "@plan_action_delta_value": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_action_month_summary": "{count} hành động trong khung nhìn này",
+  "@plan_action_month_summary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_action_total_expected": "Tổng kỳ vọng",
+  "plan_action_total_real": "Tổng thực tế",
+  "plan_action_delta": "Chênh lệch",
+  "achievement_on_this_day_title": "Ngày này năm ấy",
+  "achievement_on_this_day_subtitle": "Kỷ niệm ngày {date}",
+  "@achievement_on_this_day_subtitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "achievement_years_ago": "Cách đây {years} năm",
+  "@achievement_years_ago": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "achievement_archive_empty": "Chưa có kỷ niệm. Ghi chép và ảnh journal sẽ hiện ở đây.",
+  "achievement_archive_month_summary": "{count} kỷ niệm trong khung nhìn này",
+  "@achievement_archive_month_summary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievement_open_project": "Mở dự án",
   "social_delete_feat_title": "Xóa thành tích",
   "social_delete_feat_body": "Xóa mục này? Không thể hoàn tác.",
   "social_feat": "Chiến công",
@@ -645,7 +1013,317 @@
   "mind_status": "Trạng thái",
   "mind_stable": "Ổn định",
   "mind_needs_care": "Quan tâm",
+  "mind_focus_current": "Tập trung",
+  "mind_focus_none": "Chưa chọn",
   "mind_quick_entry_hint": "Bạn đang nghĩ gì thế?",
+  "mindset_learn_title": "Nhật ký tư duy",
+  "mindset_learn_subtitle": "Ghi lại nguyên tắc và bài học bạn đang nội hóa.",
+  "mindset_learn_topic": "Chủ đề / nguyên tắc",
+  "mindset_learn_topic_hint": "vd. Kiên nhẫn, ship nhỏ, tư duy phát triển",
+  "mindset_learn_lesson": "Tôi học được gì",
+  "mindset_learn_feeling": "Chấm (0–5)",
+  "mindset_learn_save": "Lưu bài học",
+  "mindset_learn_saved": "Đã lưu bài học tư duy",
+  "mindset_learn_validation": "Hãy nhập chủ đề và bài học.",
+  "mindset_learn_history": "Bài học trước",
+  "mindset_learn_empty": "Chưa có ghi chú tư duy. Hãy ghi bài học đầu tiên ở trên.",
+  "mindset_learn_open": "Tư duy",
+  "mind_focus_title": "KHU VỰC TẬP TRUNG",
+  "mind_focus_weekly_title": "Trọng tâm tuần này",
+  "mind_focus_monthly_title": "Trọng tâm tháng này",
+  "mind_focus_goal_level": "Mục tiêu: Lv. {level}",
+  "@mind_focus_goal_level": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_xp_progress": "{current} / {cap} XP",
+  "@mind_focus_xp_progress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "cap": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_badge": "FOCUS",
+  "mind_total_level": "Level tổng",
+  "mind_streak_label": "Chuỗi",
+  "mind_streak_days": "{days} ngày",
+  "@mind_streak_days": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_streak_bonus": "+15% EXP bonus",
+  "mind_skill_tree_title": "Cây kỹ năng",
+  "mind_skill_certificates_title": "Chứng nhận",
+  "mind_focus_subtitle": "Định nghĩa xu hướng theo tuần để biết nên tập trung vào đâu.",
+  "mind_focus_empty": "Chưa có khu vực tập trung. Chọn mẫu hoặc tạo mới.",
+  "mind_focus_add": "Khu vực mới",
+  "mind_focus_edit": "Sửa khu vực",
+  "mind_focus_save": "Lưu khu vực",
+  "mind_focus_weekly_goal": "Số nhật ký / tuần (mục tiêu)",
+  "mind_focus_this_week": "Tuần này",
+  "mind_focus_select_hint": "Chạm để tập trung. Nhật ký gần đây khớp khu vực này:",
+  "mind_focus_template_gym": "Tuần gym",
+  "mind_focus_template_learn": "Tuần học",
+  "mind_focus_template_invest": "Tuần đầu tư",
+  "mind_focus_name_hint": "Tên (vd. Tuần gym)",
+  "mind_focus_activities_label": "Hoạt động liên kết",
+  "mind_focus_name_required": "Nhập tên khu vực tập trung",
+  "mind_focus_activities_required": "Chọn ít nhất một hoạt động",
+  "mind_focus_icon_label": "Biểu tượng",
+  "mind_focus_color_label": "Màu",
+  "mind_focus_no_logs_yet": "Chưa có nhật ký khớp khu vực này.",
+  "mind_focus_log_now": "Ghi nhật ký",
+  "mind_focus_log_for_area": "Khu vực: {name}",
+  "@mind_focus_log_for_area": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_focus_todos": "Việc cần làm",
+  "mind_focus_open_projects": "Dự án",
+  "mind_focus_no_todos": "Chưa có việc trong dự án. Thêm ở trang Dự án.",
+  "mind_focus_more_todos": "+{count} việc khác trong Dự án",
+  "mind_dashboard_today": "Hôm nay",
+  "mind_dashboard_title": "Kỹ năng của tôi",
+  "mind_dashboard_weekly_topic": "Chủ đề tuần này",
+  "mind_dashboard_edit_topic": "Sửa chủ đề tuần này",
+  "mind_dashboard_topic_title": "Tiêu đề chủ đề",
+  "mind_dashboard_topic_title_hint": "vd. Tuần thuyết trình",
+  "mind_dashboard_topic_quote_hint": "Câu quote hoặc ghi chú tập trung tuần này",
+  "mind_dashboard_topic_saved": "Đã lưu chủ đề tuần vào quotes",
+  "mind_dashboard_target_skills": "Kỹ năng mục tiêu",
+  "mind_dashboard_in_progress": "Đang thực hiện",
+  "mind_dashboard_focus_week": "Tập trung tuần này",
+  "mind_dashboard_add_task": "+ Thêm nhiệm vụ",
+  "mind_dashboard_no_linked_projects": "Gắn kỹ năng mục tiêu với dự án để xem việc cần làm ở đây.",
+  "mind_dashboard_status_done": "XONG",
+  "mind_dashboard_status_waiting": "CHỜ",
+  "mind_dashboard_certificates": "Chứng chỉ kỹ năng",
+  "mind_dashboard_see_all": "Xem tất cả",
+  "mind_dashboard_verified": "Verified",
+  "@mind_focus_more_todos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_avg_mood": "Tâm trạng TB tuần này: {score}",
+  "@mind_focus_avg_mood": {
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_focus_history": "Lịch sử tuần",
+  "mind_focus_history_title": "Lịch sử khu vực tập trung",
+  "mind_focus_history_week_range": "{start} – {end}",
+  "@mind_focus_history_week_range": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_focus_history_logs": "{count} / {goal} nhật ký",
+  "@mind_focus_history_logs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_history_no_logs": "Chưa có nhật ký",
+  "mind_focus_linked_project": "Dự án liên kết",
+  "mind_focus_linked_project_none": "Không (mọi dự án)",
+  "mind_focus_linked_project_label": "Dự án: {name}",
+  "@mind_focus_linked_project_label": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_focus_add_task_title": "Thêm việc",
+  "mind_focus_add_task_name": "Tên việc",
+  "mind_focus_add_task_desc": "Mô tả (tuỳ chọn)",
+  "mind_focus_add_task_confirm": "Thêm",
+  "mind_focus_add_task_need_project": "Tạo dự án trước, rồi thêm việc ở đây.",
+  "mind_focus_assign_project": "Dự án",
+  "mind_focus_all_tasks_mood": "Hoàn thành mọi việc — đã ghi tâm trạng +6.",
+  "mind_focus_daily_cap": "Giới hạn: {max} việc mỗi ngày trong khu vực này.",
+  "@mind_focus_daily_cap": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_daily_progress": "Hôm nay {added}/{max} · xong {done}",
+  "@mind_focus_daily_progress": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_daily_hint": "Thêm 2–5 việc mỗi ngày. Hoàn thành hơn 3 việc để nhận tâm trạng +6.",
+  "mind_focus_weekly_hint": "Thêm 2–5 việc mỗi tuần. Hoàn thành hơn 3 việc để nhận tâm trạng +6.",
+  "mind_focus_monthly_hint": "Thêm 2–5 việc mỗi tháng. Hoàn thành hơn 3 việc để nhận tâm trạng +6.",
+  "mind_focus_special_mood": "Hơn 3 việc xong — đã ghi tâm trạng +6!",
+  "mind_skills_session_title": "Phiên kỹ năng",
+  "mind_skills_session_subtitle": "Chọn kỹ năng, tập trung, ghi lại điều học được.",
+  "mind_skills_session_start": "Bắt đầu phiên",
+  "mind_skills_session_empty_month": "Chưa có phiên kỹ năng trong tháng này.",
+  "mind_skills_session_skill_meta": "{sessions} phiên · {minutes} phút",
+  "@mind_skills_session_skill_meta": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_session_empty": "Chưa có phiên kỹ năng trong {days} ngày qua.",
+  "@mind_skills_session_empty": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_session_stats": "{sessions} phiên · {minutes} phút · nổi bật: {skill}",
+  "@mind_skills_session_stats": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_skills_session_live": "ĐANG TẬP TRUNG",
+  "mind_skills_session_tap_start": "CHẠM GIỮA ĐỂ BẮT ĐẦU",
+  "mind_skills_session_tap_finish": "CHẠM GIỮA ĐỂ DỪNG SỚM",
+  "mind_skills_session_listening": "ĐANG TẬP TRUNG · TỰ GHI KHI NHẠC KẾT THÚC",
+  "mind_skills_session_pick_skills": "Chọn ít nhất một kỹ năng trước khi bắt đầu.",
+  "mind_skills_my_list": "Kỹ năng của tôi",
+  "mind_skills_add_skill": "Thêm kỹ năng",
+  "mind_skills_tap_list": "Chạm kỹ năng trong danh sách để chọn",
+  "mind_skills_tap_list_project": "Chọn kỹ năng · XP dự án khi ghi",
+  "mind_skills_status_in_session": "Đang tập trung",
+  "mind_skills_status_selected": "Đã chọn",
+  "mind_skills_level_short": "Cấp {level}",
+  "@mind_skills_level_short": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_session_logged": "Đã ghi phiên · {minutes} phút · +{xp} XP",
+  "@mind_skills_session_logged": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_celebration_title": "Đã lưu bằng chứng luyện tập",
+  "mind_skills_celebration_proof": "Bạn tập trung {minutes} phút và +{xp} XP — đã ghi vào hồ sơ kỹ năng.",
+  "@mind_skills_celebration_proof": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_celebration_level_up": "Lên cấp: {skills}",
+  "@mind_skills_celebration_level_up": {
+    "placeholders": {
+      "skills": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_skills_celebration_streak": "Chuỗi {days} ngày — giữ nhịp luyện tập.",
+  "@mind_skills_celebration_streak": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_celebration_goal": "Phiên hôm nay là nền cho phiên bản bạn ngày mai.",
+  "mind_skill_name_invalid": "Tên kỹ năng từ 1–24 ký tự.",
+  "mind_skill_name_duplicate": "Kỹ năng này đã có trong danh sách.",
+  "mind_skill_add_title": "Thêm kỹ năng",
+  "mind_skill_edit_title": "Sửa tên kỹ năng",
+  "mind_skill_delete_title": "Xóa kỹ năng?",
+  "mind_skill_delete_body": "Gỡ “{name}” khỏi thư viện kỹ năng?",
+  "@mind_skill_delete_body": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_skill_certificate_header": "CHỨNG NHẬN LUYỆN TẬP",
+  "mind_skill_certificate_subtitle": "Năng lực con người · tiến độ đã xác minh",
+  "mind_skill_certificate_awarded_to": "Trao tặng cho quá trình rèn luyện kỹ năng",
+  "mind_skill_certificate_level": "Cấp bậc",
+  "mind_skill_certificate_xp": "Kinh nghiệm",
+  "mind_skill_certificate_streak": "Chuỗi ngày",
+  "mind_skill_certificate_proof": "Bản ghi này từ các phiên thật trên ice_gate — bằng chứng tiến bộ của bạn.",
+  "mind_skill_certificate_seal": "ẤN ICEGATE",
+  "mind_skill_certificate_select_session": "Chọn cho phiên",
+  "mind_skill_certificate_close": "Đóng",
+  "mind_skill_certificate_created": "Ngày tạo",
+  "mind_skill_certificate_updated": "Cập nhật lần cuối",
+  "mind_skill_certificate_description": "Mô tả",
+  "mind_skill_certificate_description_hint": "Ý nghĩa kỹ năng này với bạn, hoặc cách bạn đạt được…",
+  "mind_skill_certificate_edit": "Sửa chứng nhận",
+  "mind_skill_certificate_save": "Lưu chứng nhận",
+  "mind_skill_certificates_table_title": "Chứng nhận luyện tập",
+  "mind_skill_certificates_table_empty": "Chưa có kỹ năng trong thư viện. Mở Kỹ năng để bắt đầu tích lũy chứng nhận.",
+  "mind_skill_certificates_col_skill": "Kỹ năng",
   "mood_trends_title": "XU HƯỚNG TÂM TRẠNG",
   "social_notes_title": "GHI CHÉP TINH THẦN",
   "social_empty_state_title": "Câu chuyện của bạn bắt đầu tại đây",
@@ -677,6 +1355,75 @@
   "stat_entries": "MỤC NHẬP",
   "stat_images": "HÌNH ẢNH",
   "stat_sentiment": "TÂM TRẠNG",
+  "stat_mind_logs": "Log (30 ngày)",
+  "stat_active_days": "Ngày có log",
+  "stat_avg_mood": "Mood TB",
+  "journal_hourly_logs": "Log theo giờ (hôm nay)",
+  "mind_insights_skill_title": "Luyện kỹ năng (30 ngày)",
+  "mind_insights_skill_summary": "{sessions} phiên · {minutes} phút",
+  "@mind_insights_skill_summary": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_insights_top_skill_streak": "Chuỗi · {skill} · {days} ngày",
+  "@mind_insights_top_skill_streak": {
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_insights_open_notes": "Ghi chép tinh thần",
+  "mind_insights_open_skills": "Chứng nhận kỹ năng",
+  "mind_insights_open_gratitude": "Biết ơn",
+  "gratitude_page_subtitle": "Ghi lại những người và vật bạn trân trọng mỗi ngày.",
+  "gratitude_section_people": "Người biết ơn",
+  "gratitude_section_things": "Vật biết ơn",
+  "gratitude_count": "{count} mục",
+  "@gratitude_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gratitude_quick_entry_hint": "Ghi nhật ký biết ơn hôm nay...",
+  "gratitude_empty_title": "Cờ biết ơn của bạn",
+  "gratitude_empty_subtitle": "Chạm nút bên dưới để ghi tên người hoặc vật bạn biết ơn.",
+  "gratitude_kind_person": "Người",
+  "gratitude_kind_thing": "Vật",
+  "gratitude_add_title": "Thêm biết ơn",
+  "gratitude_name_label": "Tên",
+  "gratitude_note_hint": "Lời biết ơn (tuỳ chọn)",
+  "gratitude_facebook_link_label": "Link Facebook",
+  "gratitude_facebook_link_hint": "Dán link profile Facebook",
+  "gratitude_pick_avatar": "Chọn ảnh đại diện",
+  "gratitude_change_photo": "Đổi ảnh",
+  "gratitude_open_facebook": "Mở Facebook",
+  "gratitude_update_flag": "Cập nhật cờ",
+  "gratitude_edit_title": "Sửa biết ơn",
+  "gratitude_tags_label": "Nhãn",
+  "gratitude_filter_all": "Tất cả",
+  "gratitude_filter_things": "Vật",
+  "gratitude_tag_play": "Chơi",
+  "gratitude_tag_learn": "Học",
+  "gratitude_tag_work": "Làm việc",
+  "gratitude_tag_health": "Sức khỏe",
+  "gratitude_tag_social": "Xã hội",
+  "gratitude_tag_family": "Gia đình",
+  "gratitude_invalid_facebook_link": "Link Facebook không hợp lệ",
+  "gratitude_delete_confirm": "Xoá mục biết ơn này?",
+  "gratitude_pick_title": "Bạn biết ơn ai / vật gì?",
+  "gratitude_pick_required": "Chọn người hoặc vật biết ơn trước khi lưu.",
   "weekly_mood_trend": "XU HƯỚNG TÂM TRẠNG TUẦN",
   "no_records_last_7_days": "Không có dữ liệu trong 7 ngày qua",
   "frequent_activities": "HOẠT ĐỘNG THƯỜNG XUYÊN",
@@ -698,10 +1445,13 @@
   "act_friends": "Bạn bè",
   "act_dating": "Hẹn hò",
   "act_kindness": "Tử tế",
+  "act_gratitude": "Biết ơn",
   "act_gaming": "Chơi game",
   "act_reading": "Đọc sách",
   "act_cinema": "Xem phim",
   "act_walking": "Đi dạo",
+  "act_focus_todos_streak": "Hoàn thành 4+ việc tập trung",
+  "act_focus_todos_complete": "Hoàn thành việc tập trung",
   "add_app_plugin": "Thêm Plugin ứng dụng",
   "plugin_desc": "Thêm tính năng mới cho giao diện của bạn",
   "plugin_ssh": "SSH",
@@ -863,7 +1613,236 @@
   "canvas_notification_center": "Thông báo",
   "canvas_notification_desc": "Điều khiển và kiểm soát mọi thông báo hệ thống",
   "canvas_goal_center": "Mục tiêu",
+  "dev_quick_tabs_title": "Software Dev",
+  "dev_quick_tabs_subtitle": "Tab trình duyệt — Northflank, Supabase, n8n và hơn thế.",
+  "dev_quick_tabs_empty": "Chưa có tab. Bấm + để thêm.",
+  "dev_quick_tabs_add": "Thêm tab",
+  "dev_quick_tabs_validation_error": "Tên và ít nhất một URL không được để trống",
+  "dev_quick_tabs_open": "Mở",
+  "dev_quick_tabs_edit": "Sửa tab",
+  "dev_quick_tabs_label": "Tên",
+  "dev_quick_tabs_url": "URL cục bộ (LAN)",
+  "dev_quick_tabs_remote_url": "URL từ xa",
+  "dev_quick_tabs_remote_url_hint": "Dùng khi không vào được LAN (VPN, Tailscale, host công khai).",
+  "dev_quick_tabs_delete_title": "Xóa tab?",
+  "dev_quick_tabs_delete_message": "Xóa \"{title}\" khỏi truy cập nhanh.",
+  "@dev_quick_tabs_delete_message": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "dev_quick_tabs_delete_confirm": "Xóa",
+  "dev_quick_tabs_credentials": "Đăng nhập đã lưu",
+  "dev_quick_tabs_credentials_subtitle": "HTTP login và tin SSL theo từng host.",
+  "dev_quick_tabs_credentials_login": "Đã lưu đăng nhập",
+  "dev_quick_tabs_credentials_ssl": "Đã tin SSL",
+  "dev_quick_tabs_credentials_none": "Chưa lưu gì",
+  "dev_quick_tabs_credentials_set_login": "Đặt đăng nhập",
+  "dev_quick_tabs_credentials_username": "Tên đăng nhập",
+  "dev_quick_tabs_credentials_password": "Mật khẩu",
+  "dev_quick_tabs_credentials_passkey": "Passkey / API key",
+  "dev_quick_tabs_credentials_saved": "Đã lưu thông tin đăng nhập",
+  "dev_quick_tabs_credentials_ssl_hint": "Cho HTTPS homelab tự ký (vd. OPNsense).",
+  "dev_quick_tabs_credentials_clear": "Xóa hết",
+  "dev_quick_tabs_credentials_clear_title": "Xóa dữ liệu đã lưu?",
+  "dev_quick_tabs_credentials_clear_message": "Xóa đăng nhập và tin SSL cho {host}.",
+  "@dev_quick_tabs_credentials_clear_message": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "dev_quick_tabs_credentials_revoke_ssl": "Thu hồi tin SSL",
+  "dev_quick_tabs_login_type": "Kiểu đăng nhập",
+  "dev_quick_tabs_login_type_html_form": "Form HTML (OPNsense, homelab)",
+  "dev_quick_tabs_login_type_email_password": "Email + mật khẩu (SPA)",
+  "dev_quick_tabs_login_type_http_basic": "Chỉ HTTP Basic",
+  "dev_quick_tabs_login_type_api_key": "API key / token",
+  "dev_quick_tabs_login_type_bearer_token": "Bearer token (K8s Dashboard)",
+  "dev_quick_tabs_login_type_external_browser": "Mở Safari / Chrome",
+  "dev_quick_tabs_login_type_oauth": "OAuth / SSO (WebView thủ công)",
+  "dev_quick_tabs_login_type_none": "Không tự điền",
+  "dev_quick_tabs_credentials_email": "Email",
+  "dev_quick_tabs_credentials_bearer_token": "Bearer token",
+  "dev_quick_tabs_login_type_external_browser_hint": "Mở bằng trình duyệt hệ thống — phù hợp GitHub, Google SSO và passkey.",
+  "dev_quick_tabs_login_type_oauth_hint": "Đăng nhập GitHub/Google không tự điền được. Đăng nhập thủ công.",
+  "webview_connection_error": "Lỗi kết nối",
+  "webview_retry": "Thử lại",
+  "webview_ssl_trust_title": "Tin chứng chỉ homelab?",
+  "webview_ssl_trust_message": "Chứng chỉ của {host} không được tin (thường gặp với OPNsense/LAN). Chỉ tiếp tục trên mạng bạn tin tưởng.",
+  "@webview_ssl_trust_message": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "webview_ssl_trust_continue": "Tin và tiếp tục",
+  "webview_choose_url": "Chọn URL",
+  "webview_ssl_protocol_hint": "Thường do máy chủ chỉ dùng HTTP, không phải HTTPS. Sửa URL tab sang http:// hoặc bấm Thử HTTP bên dưới.",
+  "webview_ssl_protocol_tailscale_hint": "HTTPS trên Tailscale thường qua tên máy (https://ten.tailnet.ts.net cổng 443, Tailscale Serve), không phải https://100.x.x.x:9001. Cổng 9001 thường chỉ HTTP phía sau proxy — hãy dùng URL Serve trong URL từ xa.",
+  "webview_try_http": "Thử HTTP",
   "canvas_goal_desc": "Điều chỉnh mục tiêu",
+  "canvas_finance_reports_title": "Báo cáo tài chính",
+  "canvas_finance_reports_desc": "Tóm tắt trong ngày, nhắc nhở cục bộ và lối tắt",
+  "canvas_finance_n8n_title": "Báo cáo qua email",
+  "canvas_finance_n8n_desc": "Tóm tắt tài chính và sức khỏe gửi qua n8n",
+  "canvas_finance_n8n_send_success": "Đã gửi báo cáo tới n8n.",
+  "canvas_finance_n8n_send_failed": "Không gửi được báo cáo. Thử lại sau.",
+  "canvas_finance_n8n_not_configured": "Chưa cấu hình webhook n8n trong môi trường ứng dụng.",
+  "canvas_finance_n8n_no_email": "Thêm email vào hồ sơ trước khi gửi báo cáo.",
+  "canvas_finance_n8n_confirm_title": "Gửi báo cáo qua email?",
+  "canvas_finance_n8n_confirm_message": "Tóm tắt tài chính và sức khỏe hôm nay sẽ được gửi tới n8n để chuyển tới {email}.",
+  "canvas_mail_summary_recipient": "Người nhận",
+  "canvas_mail_summary_finance": "Tài chính hôm nay",
+  "canvas_mail_summary_health": "Sức khỏe hôm nay",
+  "canvas_mail_summary_send": "Gửi báo cáo email",
+  "canvas_mail_summary_auto_title": "Email tự động hàng ngày",
+  "canvas_mail_summary_auto_subtitle": "Sau giờ này, gửi một lần mỗi ngày khi ứng dụng đang mở",
+  "mail_suggestion_title": "Gợi ý báo cáo",
+  "mail_suggestion_ai_loading": "AI đang phân tích ngày của bạn…",
+  "mail_suggestion_ai_fallback": "Gợi ý ngoại tuyến — cấu hình MAIL_SUGGESTIONS_AGENT_URL để dùng AI.",
+  "mail_suggestion_negative_net": "Chi tiêu hôm nay vượt thu nhập — xem lại giao dịch gần đây.",
+  "mail_suggestion_no_transactions": "Chưa ghi giao dịch hôm nay — thêm chi tiêu để báo cáo chính xác.",
+  "mail_suggestion_budget_high": "Đã dùng {percent}% ngân sách tháng — cân nhắc tiết chế chi tiêu.",
+  "@mail_suggestion_budget_high": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mail_suggestion_monthly_deficit": "Chi tiêu tháng vượt thu nhập — cân nhắc cắt giảm chi phí cố định.",
+  "mail_suggestion_steps_low": "Bước chân đạt {percent}% mục tiêu — đi bộ ngắn giúp bạn tiến gần hơn.",
+  "@mail_suggestion_steps_low": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mail_suggestion_water_low": "Lượng nước dưới một nửa mục tiêu — uống đều trong ngày.",
+  "mail_suggestion_sleep_low": "Giấc ngủ dưới mục tiêu — thử đi ngủ sớm hơn tối nay.",
+  "mail_suggestion_log_mood": "Chưa ghi mood hôm nay — check-in nhanh giúp theo dõi xu hướng.",
+  "mail_suggestion_focus_low": "Thời gian tập trung còn thấp — lên lịch một phiên deep work ngắn.",
+  "mail_suggestion_tasks_many": "{count} task đang mở — chọn một ưu tiên cho ngày mai.",
+  "@mail_suggestion_tasks_many": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "reports_hub_title": "Báo cáo qua mail",
+  "reports_hub_subtitle": "Báo cáo tài chính trên máy, gửi email qua n8n",
+  "system_monitor_title": "Giám sát hệ thống",
+  "system_monitor_subtitle": "Homelab, tài khoản dev, DB & đồng bộ — chỉ quản trị viên.",
+  "system_monitor_denied_title": "Cần quyền quản trị",
+  "system_monitor_denied_body": "Trang này chỉ dành cho tài khoản có vai trò admin.",
+  "system_monitor_denied_roles": "Cục bộ: {local} · Máy chủ: {remote}",
+  "@system_monitor_denied_roles": {
+    "placeholders": {
+      "local": {
+        "type": "String"
+      },
+      "remote": {
+        "type": "String"
+      }
+    }
+  },
+  "system_monitor_denied_hint": "Đặt role = admin trong Supabase → Table Editor → user_accounts (không phải Auth metadata). Sau đó bấm Làm mới vai trò.",
+  "system_monitor_retry": "Làm mới vai trò",
+  "system_monitor_overview_section": "Tổng quan",
+  "system_monitor_db_section": "Cơ sở dữ liệu cục bộ",
+  "system_monitor_sync_section": "Động cơ đồng bộ",
+  "system_monitor_app_version": "Phiên bản app",
+  "system_monitor_platform": "Nền tảng",
+  "system_monitor_role": "Vai trò",
+  "system_monitor_auth_status": "Trạng thái đăng nhập",
+  "system_monitor_supabase_user": "Người dùng Supabase",
+  "system_monitor_running_checks": "Đang chạy kiểm tra…",
+  "system_monitor_healthy": "Cơ sở dữ liệu ổn định",
+  "system_monitor_issues": "Phát hiện sự cố",
+  "system_monitor_smoke_test": "Kiểm tra nhanh",
+  "system_monitor_sync_active": "Đang đồng bộ",
+  "system_monitor_sync_status": "Trạng thái gần nhất",
+  "system_monitor_uptime": "Thời gian phiên",
+  "system_monitor_open_sync_engine": "Mở Sync Engine",
+  "dev_launcher_web_title": "Web app (homelab)",
+  "dev_launcher_accounts_title": "Tài khoản dev & cloud",
+  "dev_launcher_accounts_empty": "Lưu OPNsense, Supabase, Northflank, n8n. Mật khẩu chỉ trên máy.",
+  "dev_launcher_add_web": "Thêm web app",
+  "dev_launcher_add_account": "Thêm tài khoản dev",
+  "dev_launcher_name": "Tên",
+  "dev_launcher_url": "URL",
+  "dev_launcher_service": "Dịch vụ",
+  "dev_launcher_username": "Tên đăng nhập",
+  "dev_launcher_password": "Mật khẩu / API key",
+  "dev_launcher_copied": "Đã sao chép",
+  "dev_launcher_pin_canvas": "Ghim lên Canvas",
+  "dev_launcher_pinned": "Đã thêm vào widget Canvas",
+  "dev_launcher_add_from_catalog": "Từ danh mục plugin",
+  "dev_launcher_pick_plugin": "Plugin web homelab",
+  "infra_api_section_title": "API hạ tầng",
+  "infra_api_section_subtitle": "Kết nối Cloudflare, Tailscale, Northflank. Token chỉ lưu trên máy.",
+  "infra_api_configure": "Cấu hình {provider}",
+  "@infra_api_configure": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "infra_api_token_label": "API token / key",
+  "infra_api_tailnet_label": "Tên tailnet",
+  "infra_api_tailnet_hint": "Dùng - cho tailnet mặc định",
+  "infra_api_clear": "Xóa",
+  "infra_api_test": "Thử kết nối",
+  "infra_api_not_configured": "Chưa cấu hình",
+  "infra_api_connected": "Đã kết nối",
+  "infra_api_token_saved": "Đã lưu token — bấm Thử",
+  "infra_api_test_ok": "OK · {summary}",
+  "@infra_api_test_ok": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "infra_api_test_fail": "Lỗi · {message}",
+  "@infra_api_test_fail": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "island_system_monitor": "GIÁM SÁT HỆ THỐNG",
+  "reports_mail_section_title": "Gửi qua n8n",
+  "reports_mail_section_subtitle": "Tóm tắt tài chính và sức khỏe gửi bằng email",
+  "reports_finance_section": "Báo cáo tài chính trên máy",
+  "reports_recipient_hint": "nguoi-nhan@example.com",
+  "reports_recipient_save": "Lưu người nhận",
+  "reports_recipient_saved": "Đã lưu người nhận báo cáo.",
+  "reports_recipient_profile_fallback": "Mặc định từ hồ sơ: {email}",
+  "@reports_recipient_profile_fallback": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "@canvas_finance_n8n_confirm_message": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "canvas_finance_n8n_confirm_send": "Gửi",
   "gps_permissions_required": "Yêu cầu quyền GPS để theo dõi.",
   "gps_title": "THEO DÕI GPS",
   "gps_disconnect_tooltip": "Ngắt kết nối thiết bị",
@@ -990,12 +1969,176 @@
   "project_complete_label": "HOÀN THÀNH",
   "project_no_tasks": "Chưa có nhiệm vụ nào. Nhấn + để thêm.",
   "project_notes_label": "Ghi chú",
+  "note_type_picker_title": "Chọn loại ghi chú",
+  "note_type_markdown": "Markdown (.md)",
+  "note_type_plain_text": "Văn bản thuần (.txt)",
+  "note_type_word": "Word (.docx)",
+  "project_journal_label": "Nhật ký",
+  "project_no_journal": "Chưa có nhật ký. Nhấn + để ghi mood và tiến độ.",
+  "project_journal_entry": "Nhật ký dự án",
+  "project_log_context": "Dự án: {name}",
+  "@project_log_context": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "project_journal_mood_label": "Tâm trạng",
+  "project_journal_desc_label": "Mô tả",
+  "project_journal_save": "Lưu nhật ký",
+  "project_journal_composer_hint": "Chạm để ghi lại cảm giác khi làm dự án.",
+  "project_journal_count": "{count}",
+  "@project_journal_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "project_no_notes": "Chưa có ghi chú nào. Nhấn + để tạo.",
   "project_no_notes_list": "Không tìm thấy ghi chú nào",
+  "project_choose_document_type": "Chọn loại tài liệu",
+  "project_doc_blank_note": "Ghi chú trống",
+  "project_doc_blank_note_desc": "Bắt đầu từ trang trắng",
+  "project_doc_tech": "Tài liệu kỹ thuật",
+  "project_doc_tech_desc": "Mẫu kiến trúc và triển khai",
+  "project_doc_api": "Đặc tả API",
+  "project_doc_api_desc": "Mẫu endpoint và schema",
+  "project_doc_tech_title": "Tài liệu kỹ thuật",
+  "project_doc_api_title": "Đặc tả API",
   "project_finance_label": "Tài chính",
   "project_no_finance": "Chưa có bản ghi tài chính nào cho dự án này.",
+  "project_skills_label": "Kỹ năng",
+  "project_no_skills": "Chưa có kỹ năng nào. Nhấn + để theo dõi thứ bạn cải thiện khi làm dự án.",
+  "project_add_skill_title": "Thêm kỹ năng",
+  "project_skill_name_hint": "VD: Flutter, debug, thiết kế hệ thống",
+  "project_skill_streak_days": "{count} ngày liên tiếp",
+  "@project_skill_streak_days": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_streak_none": "Chưa có chuỗi",
+  "project_skill_xp_hint": "{total} XP · còn {remaining} XP lên cấp",
+  "@project_skill_xp_hint": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_xp_on_complete": "Hoàn thành nhiệm vụ để nhận +15 XP mỗi kỹ năng",
+  "project_skill_log_session": "Ghi phiên Skill Boost để tăng cấp kỹ năng này.",
+  "project_skill_practice": "Mở Skill Boost",
+  "project_skill_tap_to_start": "Chọn một hoặc nhiều kỹ năng, rồi bắt đầu phiên",
+  "project_skill_start_session": "Bắt đầu phiên ({count})",
+  "@project_skill_start_session": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_catalog_hint": "Chọn từ các kỹ năng giống tab Skills trong Mind.",
+  "project_auto_add_all_skills": "Tạo kỹ năng mới",
+  "project_auto_add_all_skills_subtitle": "Tạo kỹ năng hoàn toàn mới cho Mind và dự án này",
+  "project_skill_already_exists": "Kỹ năng này đã tồn tại",
+  "project_skill_name_too_long": "Tên kỹ năng quá dài (tối đa 24 ký tự)",
+  "project_skills_all_on_project": "Tất cả kỹ năng Mind đã có trong dự án",
+  "project_skills_added_count": "Đã thêm {count} kỹ năng",
+  "@project_skills_added_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_delete_confirm": "Xóa \"{name}\" khỏi dự án này?",
+  "@project_skill_delete_confirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "project_skill_added": "Đã thêm kỹ năng",
+  "project_skill_xp_granted": "Kỹ năng +{xp} XP",
+  "@project_skill_xp_granted": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "project_sub_projects_label": "Dự án con",
+  "project_no_sub_projects": "Chưa có dự án con. Nhấn + để thêm.",
+  "project_add_sub_project_title": "Dự án con mới",
+  "project_sub_project_name_hint": "Tên dự án con",
   "project_add_task_title": "Nhiệm vụ mới",
+  "project_task_assign_to": "Gán cho dự án",
   "project_task_title_hint": "Tiêu đề nhiệm vụ",
+  "project_sdlc_board_title": "Bảng SDLC",
+  "project_sdlc_open": "Mở bảng SDLC",
+  "project_sdlc_add_task_title": "Thêm nhiệm vụ SDLC",
+  "project_sdlc_move_phase": "Giai đoạn SDLC",
+  "project_sdlc_due_date": "Hạn hoàn thành",
+  "project_sdlc_due_date_none": "Chưa đặt hạn",
+  "project_sdlc_clear_due_date": "Xóa hạn",
+  "project_sdlc_default_purpose": "Xác định dự án cần giao gì và vì sao.",
+  "project_sdlc_empty": "Chưa có nhiệm vụ đang làm. Chạm + để thêm vào một giai đoạn.",
+  "project_sdlc_column_empty": "Chưa có nhiệm vụ",
+  "project_sdlc_add_to_phase": "Thêm nhiệm vụ vào giai đoạn này",
+  "project_sdlc_drop_here": "Thả để chuyển sang đây",
+  "project_sdlc_task_moved": "Đã chuyển sang {phase}",
+  "@project_sdlc_task_moved": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      }
+    }
+  },
+  "project_sdlc_phase_stat": "P{phase}: {count}",
+  "@project_sdlc_phase_stat": {
+    "placeholders": {
+      "phase": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_sdlc_phase_planning_title": "Lập kế hoạch & yêu cầu",
+  "project_sdlc_phase_planning_hint": "SRS, khả thi",
+  "project_sdlc_phase_design_title": "Kiến trúc & thiết kế",
+  "project_sdlc_phase_design_hint": "Tech stack, UI",
+  "project_sdlc_phase_implementation_title": "Triển khai",
+  "project_sdlc_phase_implementation_hint": "Code, Git, review",
+  "project_sdlc_phase_testing_title": "Kiểm thử & QA",
+  "project_sdlc_phase_testing_hint": "Unit, tích hợp, UAT",
+  "project_sdlc_phase_deployment_title": "Triển khai sản phẩm",
+  "project_sdlc_phase_deployment_hint": "CI/CD, phát hành",
+  "project_sdlc_phase_maintenance_title": "Vận hành & bảo trì",
+  "project_sdlc_phase_maintenance_hint": "Giám sát, vá lỗi, mở rộng",
+  "project_sdlc_no_project": "Hãy tạo dự án trước khi mở bảng SDLC.",
+  "project_sdlc_pick_project": "Chọn dự án cho bảng SDLC",
+  "task_delete_tooltip": "Xóa nhiệm vụ",
+  "task_delete_confirm_title": "Xóa nhiệm vụ",
+  "task_delete_confirm_msg": "Bạn có chắc chắn muốn xóa \"{name}\"? Không thể hoàn tác.",
+  "@task_delete_confirm_msg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "task_deleted_msg": "Đã xóa nhiệm vụ",
   "project_add_investment_title": "Thêm khoản đầu tư",
   "project_add_investment_desc": "Ghi nhận chi phí hoặc khoản đầu tư cho dự án này.",
   "amount": "Số tiền",
@@ -1017,6 +2160,34 @@
   "project_delete_note_title": "Xóa ghi chú",
   "project_delete_note_msg": "Bạn có chắc chắn muốn xóa ghi chú này không?",
   "project_note_no_content": "Không có nội dung",
+  "note_editor_write_hint": "Bắt đầu viết ghi chú…",
+  "note_editor_saved_label": "Đã lưu {when}",
+  "@note_editor_saved_label": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "note_editor_saved_just_now": "vừa xong",
+  "note_editor_saved_minutes": "{count} phút trước",
+  "@note_editor_saved_minutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "note_editor_saved_hours": "{count} giờ trước",
+  "@note_editor_saved_hours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "note_editor_unsaved": "Chưa lưu",
+  "note_editor_saving": "Đang lưu…",
   "focus_select_project": "CHẠM ĐỂ CHỌN DỰ ÁN",
   "focus_select_task": "CHỌN NHIỆM VỤ",
   "focus_active_exercise": "BÀI TẬP ĐANG HOẠT ĐỘNG: {type}",
@@ -1125,13 +2296,22 @@
   "delete_account_plan_step2": "Nếu dự án triển khai Edge Function Supabase \"delete-account\", tài khoản xác thực và dòng liên quan có thể được xóa phía máy chủ.",
   "delete_account_plan_step3": "Trước khi có endpoint đó, dữ liệu đám mây có thể vẫn tồn tại — liên hệ hỗ trợ hoặc yêu cầu xóa đầy đủ theo chính sách bảo mật.",
   "delete_account_acknowledge": "Tôi hiểu tài khoản có thể chưa bị xóa hoàn toàn trên máy chủ cho đến khi backend bật xóa.",
+  "delete_account_type_key_word": "XOA-TAI-KHOAN",
+  "delete_account_type_key_prompt": "Nhập {word} để xác nhận:",
+  "@delete_account_type_key_prompt": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
   "delete_account_confirm": "Xóa và đăng xuất",
   "delete_account_cancel": "Hủy",
   "delete_account_success": "Bạn đã đăng xuất. Việc xóa hoàn toàn trên đám mây có thể mất tới 48 giờ sau khi bật.",
   "delete_account_err_not_signed_in": "Không có phiên đăng nhập.",
   "remaining": "Còn lại",
   "notification_manager_title": "Thông báo",
-  "notification_hunter_hub": "Trung tâm Thợ săn",
+  "notification_hunter_hub": "Trung tâm thông báo",
   "notification_tab_active": "ĐANG CHẠY",
   "notification_tab_reminders": "NHẮC NHỞ",
   "notification_tab_wisdom": "TRÍ TUỆ",
@@ -1140,6 +2320,7 @@
   "notification_ai_waiting": "Đang thu thập tình báo...",
   "notification_ai_analysis": "PHÂN TÍCH AI",
   "notification_daily_quest": "NHIỆM VỤ HÀNG NGÀY",
+  "notification_no_active_quests": "Chưa có nhiệm vụ đang hoạt động. Hoàn thành công việc trong Dự án để nhận nhiệm vụ hàng ngày.",
   "notification_quest_completed_snack": "Đã hoàn thành: {title} (+{exp} EXP)",
   "@notification_quest_completed_snack": {
     "placeholders": {
@@ -1155,6 +2336,14 @@
   "notification_add_new": "THÊM MỚI",
   "notification_no_reminders": "Chưa có nhắc nhở nào.",
   "notification_disabled_desc": "Thông báo hệ thống đang bị tắt.",
+  "notification_system_preferences": "TÙY CHỌN HỆ THỐNG",
+  "notification_pomodoro_reminder_title": "Nhắc Pomodoro",
+  "notification_pomodoro_reminder_subtitle": "Nhận thông báo khi hoàn thành một phiên Pomodoro hoặc kết thúc giờ nghỉ.",
+  "notification_live_activities_title": "Hoạt động trực tiếp",
+  "notification_live_activities_subtitle": "Theo dõi bộ đếm tập trung trên Màn hình khóa.",
+  "notification_morning_briefing_subtitle": "Lịch hôm nay, tóm tắt hôm qua và động lực khi mở Home lần đầu (5:00–11:59).",
+  "notification_status_on": "bật",
+  "notification_status_off": "tắt",
   "notification_wisdom_board": "Bảng trí tuệ",
   "notification_add_quote": "THÊM TRÍ TUỆ",
   "notification_quote_empty": "Bảng trí tuệ đang trống.",
@@ -1165,6 +2354,7 @@
   "notification_mission_history": "Lịch sử nhiệm vụ",
   "notification_mission_success": "NHIỆM VỤ THÀNH CÔNG",
   "notification_focus_complete": "TẬP TRUNG HOÀN TẤT",
+  "notification_task_success": "NHIỆM VỤ XONG",
   "notification_reminder": "NHẮC NHỞ",
   "notification_no_logs": "LỊCH SỬ TRỐNG",
   "notification_empty_desc": "Tất cả các sự kiện hệ thống sẽ được lưu trữ tại đây.",
@@ -1189,6 +2379,43 @@
   "finance_label_amount": "Số tiền",
   "finance_label_category": "Hạng mục",
   "finance_label_description_optional": "Mô tả (tùy chọn)",
+  "finance_txn_source_account": "Chi từ",
+  "finance_txn_source_account_none": "Không chọn",
+  "finance_txn_source_account_empty": "Hãy lưu ví/tài khoản trước, sau đó chọn nguồn khi ghi chi tiêu.",
+  "finance_txn_source_account_add": "Thêm tài khoản",
+  "finance_txn_source_account_required": "Hãy chọn ví/tài khoản chi tiền.",
+  "finance_recurring_income": "Thu nhập định kỳ",
+  "finance_recurring_interval": "Lặp lại mỗi",
+  "finance_fixed_income_title": "Thu nhập cố định",
+  "finance_fixed_income_subtitle": "Vốn con người (kỹ năng), lương, tiền thuê và các khoản thu ổn định khác",
+  "finance_fixed_income_monthly_total": "Tổng / tháng",
+  "finance_fixed_income_empty": "Chưa có thu nhập cố định",
+  "finance_shortcut_transaction": "Giao dịch",
+  "finance_shortcut_account": "Tài khoản",
+  "finance_shortcut_asset": "Tài sản",
+  "finance_shortcut_income": "Thu nhập",
+  "finance_fixed_income_add": "Thêm thu nhập cố định",
+  "finance_fixed_income_new": "Thu nhập cố định mới",
+  "finance_fixed_income_edit": "Sửa thu nhập cố định",
+  "finance_fixed_income_name": "Tên khoản thu",
+  "finance_fixed_income_next": "Lần nhận tiếp theo",
+  "finance_fixed_income_delete_confirm": "Xóa lịch thu nhập cố định này?",
+  "finance_insight_title": "Phân tích",
+  "finance_insight_suggestions": "Gợi ý",
+  "finance_insight_enter_amount": "Nhập số tiền để xem ảnh hưởng tới tháng này.",
+  "finance_insight_fixed_after": "Sau khi lưu: khoảng {amount}/tháng thu nhập cố định.",
+  "finance_insight_covers_spending": "Bao phủ khoảng {percent}% chi tiêu đã ghi trong tháng ({spent}).",
+  "finance_insight_shortfall": "Vẫn thiếu khoảng {amount} so với chi tiêu tháng.",
+  "finance_insight_surplus": "Còn khoảng {amount}/tháng sau chi tiêu thường.",
+  "finance_insight_duplicate_fixed": "Bạn đã có thu nhập cố định “{name}” — tránh ghi trùng.",
+  "finance_insight_expense_share": "Khoản này chiếm khoảng {percent}% chi tiêu tháng này.",
+  "finance_insight_expense_large": "Chi tiêu lớn một lần — kiểm tra lại danh mục.",
+  "finance_insight_income_share": "Tăng khoảng {percent}% thu nhập đã ghi trong tháng.",
+  "finance_insight_recurring_equiv": "Nếu lặp lại: thêm khoảng {amount}/tháng ngoài thu cố định.",
+  "finance_insight_savings_total": "Số dư tiết kiệm sẽ khoảng {amount}.",
+  "finance_interval_weekly": "Tuần",
+  "finance_interval_monthly": "Tháng",
+  "finance_interval_yearly": "Năm",
   "finance_btn_add": "Thêm",
   "finance_total_net_worth": "TỔNG TÀI SẢN RÒNG",
   "finance_monthly_breakdown": "Phân bổ {month}",
@@ -1220,6 +2447,17 @@
     }
   },
   "finance_see_all": "XEM TẤT CẢ",
+  "finance_daily_report_title": "Báo cáo trong ngày",
+  "finance_daily_report_reminder": "Nhắc hàng ngày",
+  "finance_daily_report_reminder_subtitle": "Thông báo cục bộ mở báo cáo này",
+  "finance_daily_report_open": "Mở báo cáo trong ngày",
+  "finance_daily_report_income": "Thu nhập",
+  "finance_daily_report_expense": "Chi tiêu",
+  "finance_daily_report_net": "Chênh lệch",
+  "finance_daily_report_spending_by_category": "Chi tiêu theo hạng mục",
+  "finance_daily_report_today_transactions": "Hoạt động hôm nay",
+  "finance_daily_report_empty_day": "Chưa có giao dịch trong ngày.",
+  "finance_daily_report_notifications_off": "Bật thông báo hệ thống trong Cài đặt để dùng nhắc nhở.",
   "finance_cat_food": "Ăn uống",
   "finance_cat_coffee": "Cà phê",
   "finance_cat_transport": "Di chuyển",
@@ -1228,11 +2466,113 @@
   "finance_cat_bills": "Hóa đơn",
   "finance_cat_rent": "Tiền thuê",
   "finance_cat_subscriptions": "Đăng ký dịch vụ",
+  "finance_subscriptions_active_header": "ĐĂNG KÝ ĐANG HOẠT ĐỘNG",
+  "finance_subscriptions_monthly_total": "TỔNG HÀNG THÁNG",
+  "finance_subscriptions_next_month_header": "KẾ HOẠCH THÁNG SAU",
+  "finance_subscriptions_next_month_total": "TỔNG DỰ KIẾN",
+  "finance_subscriptions_next_month_empty": "Không có khoản đăng ký nào trong tháng sau.",
+  "finance_subscriptions_next_month_remove_tooltip": "Bỏ khỏi kế hoạch tháng này",
+  "finance_subscriptions_next_month_remove_title": "BỎ KHỎI KẾ HOẠCH",
+  "finance_subscriptions_next_month_remove_message": "Chỉ bỏ khoản này khỏi kế hoạch tháng sau. Đăng ký vẫn hoạt động và sẽ hiện lại khi đến tháng thanh toán đó.",
+  "finance_subscriptions_next_month_remove_confirm": "BỎ",
+  "finance_subscriptions_next_month_remove_action": "BỎ KHỎI KẾ HOẠCH",
+  "finance_subscription_due_today": "HẾT HẠN HÔM NAY",
+  "finance_subscription_days_left": "CÒN {days} NGÀY",
+  "@finance_subscription_days_left": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "finance_cat_entertainment": "Giải trí",
   "finance_cat_health": "Sức khỏe",
   "finance_cat_education": "Giáo dục",
   "finance_cat_investing": "Đầu tư",
   "finance_cat_general": "Chung",
+  "finance_cat_human_capital": "Vốn con người",
+  "finance_inflow_pillar_human_capital": "Vốn con người",
+  "finance_inflow_pillar_liquidity": "Thanh khoản",
+  "finance_inflow_pillar_fixed_income": "Thu nhập cố định",
+  "finance_inflow_pillar_investment": "Đầu tư",
+  "finance_inflow_pillar_cashflow": "Dòng tiền",
+  "finance_inflow_pillars_title": "Các lớp thu vào",
+  "finance_inflow_pillars_subtitle": "Kỹ năng & việc làm, tiền mặt, thu ổn định, tài sản tăng trưởng, hệ thống định kỳ",
+  "finance_asset_pillars_title": "Lớp tài sản",
+  "finance_asset_pillars_subtitle": "Thanh khoản, thu nhập cố định, đầu tư, dòng tiền",
+  "finance_asset_pillar_liquidity": "Thanh khoản",
+  "finance_asset_pillar_fixed_income": "Thu nhập cố định",
+  "finance_asset_pillar_investment": "Đầu tư",
+  "finance_asset_pillar_cashflow": "Dòng tiền",
+  "finance_record_section_title": "Ghi nhận",
+  "finance_record_section_subtitle": "Thêm tài khoản, tài sản, vốn con người và subscription",
+  "finance_record_human_capital": "Vốn con người",
+  "finance_record_human_capital_hint": "Năng lực / capacity (ước tính)",
+  "finance_record_liquidity_account": "TK thanh khoản",
+  "finance_record_liquidity_hint": "Tiền mặt, ngân hàng",
+  "finance_record_fixed_income_asset": "TS thu nhập cố định",
+  "finance_record_fixed_income_hint": "Trái phiếu, tiết kiệm",
+  "finance_record_investment_account": "TK đầu tư",
+  "finance_record_investment_account_hint": "CTCK, crypto, ví broker",
+  "finance_record_investment_holding": "TS đầu tư",
+  "finance_record_investment_holding_hint": "Cổ phiếu, crypto, BĐS",
+  "finance_account_type_checking": "Thanh toán",
+  "finance_account_type_savings": "Tiết kiệm",
+  "finance_account_type_cash": "Tiền mặt",
+  "finance_account_type_credit_card": "Thẻ tín dụng",
+  "finance_account_type_deposit": "Gửi có kỳ hạn",
+  "finance_account_type_investment": "Tài khoản đầu tư",
+  "finance_budget_limit_title": "Giới hạn chi tiêu",
+  "finance_budget_limit_label": "Số tiền giới hạn",
+  "finance_budget_limit_per_week": "Theo tuần",
+  "finance_budget_limit_per_month": "Theo tháng",
+  "finance_add_account_title": "Thêm tài khoản",
+  "finance_account_type_section": "Loại tài khoản",
+  "finance_accounts_liquidity_title": "Tài khoản thanh khoản",
+  "finance_accounts_investment_title": "Tài khoản đầu tư",
+  "finance_account_investment_name_hint": "VD: VNDirect, SSI, Binance",
+  "finance_record_cashflow_asset": "TS dòng tiền",
+  "finance_record_cashflow_hint": "SaaS, hệ thống định kỳ",
+  "finance_record_subscription": "Subscription",
+  "finance_record_subscription_hint": "Chi phí lặp lại",
+  "finance_record_contract_hint": "Thu nhập một lần theo hợp đồng",
+  "finance_record_bonus_hint": "Thưởng một lần",
+  "finance_bonus_section_title": "Thưởng & Hợp đồng",
+  "finance_bonus_section_subtitle": "Thu nhập một lần từ thưởng và hợp đồng",
+  "finance_bonus_section_total": "Tổng",
+  "finance_bonus_section_empty": "Chưa có thu nhập thưởng hay hợp đồng",
+  "finance_total_income_title": "Tổng thu nhập",
+  "finance_total_income_recurring": "Định kỳ / tháng",
+  "finance_total_income_onetime": "Một lần",
+  "finance_hc_capacity_label": "Capacity",
+  "finance_hc_realized_label": "Đã nhận",
+  "finance_hc_gap_title": "Vốn con người",
+  "finance_hc_gap_message": "Capacity {capacity} · nhận {received} · chênh {gap}",
+  "@finance_hc_gap_message": {
+    "placeholders": {
+      "capacity": {
+        "type": "String"
+      },
+      "received": {
+        "type": "String"
+      },
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_add_asset_title": "Thêm tài sản",
+  "finance_add_asset_category": "Loại tài sản",
+  "finance_add_asset_name": "Tên / mã",
+  "finance_add_asset_value": "Giá trị ước tính",
+  "finance_add_asset_save": "Lưu tài sản",
+  "finance_asset_cat_stock": "Cổ phiếu",
+  "finance_asset_cat_crypto": "Crypto",
+  "finance_asset_cat_bond": "Trái phiếu",
+  "finance_asset_cat_deposit": "Tiết kiệm",
+  "finance_asset_cat_real_estate": "Bất động sản",
+  "finance_asset_cat_cashflow": "Dòng tiền (SaaS)",
+  "finance_cat_skills": "Kỹ năng",
   "finance_cat_salary": "Lương",
   "finance_cat_freelance": "Làm tự do",
   "finance_cat_investment": "Đầu tư",
@@ -1325,11 +2665,68 @@
   "ssh_type_command": "Nhập lệnh...",
   "ssh_disconnect": "Ngắt Kết Nối",
   "ssh_search_hint": "Tìm kiếm...",
+  "ssh_connect_host_first": "Hãy kết nối máy chủ trước khi quản lý phiên tmux.",
+  "ssh_cursor_api_title": "Cursor API",
+  "ssh_cursor_api_subtitle": "Lưu API key để dùng cursor-agent trên máy chủ từ xa.",
+  "ssh_cursor_api_key_hint": "cursor_…",
+  "ssh_cursor_api_key_stored": "Đã lưu API key trên thiết bị.",
+  "ssh_cursor_api_save": "Lưu key",
+  "ssh_cursor_api_test": "Kiểm tra kết nối",
+  "ssh_cursor_api_open_terminal": "Mở SSH (chế độ Cursor)",
+  "ssh_cursor_api_saved": "Đã lưu Cursor API key.",
+  "ssh_cursor_api_test_ok": "Cursor API key hợp lệ.",
+  "ssh_cursor_api_missing_key": "Nhập hoặc lưu Cursor API key trước.",
+  "cursor_hub_title": "Cursor",
+  "cursor_hub_page_subtitle": "Điều khiển Cursor trên Mac qua My Machines và Cloud Agents — không cần SSH.",
+  "cursor_hub_canvas_subtitle": "Worker My Machines, gửi task API, bảng agents",
+  "cursor_hub_integration_subtitle": "API key, thiết lập worker, gửi task từ điện thoại",
+  "cursor_hub_section_title": "AI & tự động hóa",
+  "cursor_hub_key_ready": "API key đã xác minh",
+  "cursor_hub_open_full": "Mở Cursor Hub",
+  "cursor_hub_open_agents": "Mở Agents",
+  "cursor_hub_worker_title": "Worker My Machine",
+  "cursor_hub_worker_body": "Trên Mac, chạy lệnh sau trong Terminal và giữ cửa sổ mở. Máy sẽ hiện tại cursor.com/agents.",
+  "cursor_hub_copy_worker_cmd": "Sao chép lệnh",
+  "cursor_hub_worker_copied": "Đã sao chép: agent worker start",
+  "cursor_hub_send_title": "Gửi tác vụ",
+  "cursor_hub_target_machine": "Mac của tôi",
+  "cursor_hub_target_cloud": "Repo cloud",
+  "cursor_hub_machine_name": "Tên máy (tùy chọn)",
+  "cursor_hub_machine_name_hint": "Như trong menu môi trường Agents",
+  "cursor_hub_pick_repo": "Kho lưu trữ của bạn",
+  "cursor_hub_refresh_repos": "Làm mới danh sách repo",
+  "cursor_hub_repos_empty": "Không tìm thấy repo. Nhập URL bên dưới hoặc dùng trên Mac để quét ~/Code.",
+  "cursor_hub_usage_limit": "Cloud agent bị chặn: bật usage-based pricing trên cursor.com (~$2). Dùng chế độ Mac của tôi.",
+  "cursor_hub_repo_url": "URL repo GitHub",
+  "cursor_hub_prompt_label": "Agent cần làm gì?",
+  "cursor_hub_send_task": "Gửi tới Cursor",
+  "cursor_hub_task_sent": "Đã gửi — đang mở agent…",
+  "cursor_hub_task_failed": "Không khởi chạy agent: {reason}",
+  "@cursor_hub_task_failed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "cursor_hub_recent_title": "Agents gần đây",
+  "island_cursor_ssh_standby": "Chờ kết nối SSH",
+  "island_cursor_no_api_key": "Thiếu API key",
+  "ssh_cursor_api_test_fail": "Kết nối thất bại: {reason}",
+  "@ssh_cursor_api_test_fail": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "ssh_go_to_terminal": "MỞ TERMINAL",
+  "ssh_no_tmux_sessions": "Không có phiên tmux đang chạy.",
   "journal": "Nhật ký",
   "social_notes": "Ghi chú Tinh thần",
   "btn_send_feedback": "Gửi phản hồi",
   "feedback_subtitle": "Báo lỗi hoặc đề xuất tính năng mới",
-  "sync_engine_title": "Sync Engine",
+  "sync_engine_title": "Động cơ đồng bộ",
   "system_health": "SỨC KHỎE HỆ THỐNG",
   "uptime": "THỜI GIAN HOẠT ĐỘNG",
   "sync_method": "PHƯƠNG THỨC ĐỒNG BỘ",
@@ -1349,7 +2746,7 @@
   "database_schema_id": "ID SƠ ĐỒ CƠ SỞ DỮ LIỆU",
   "add_widget": "Thêm Widget",
   "app_shortcut": "Lối tắt ứng dụng",
-  "web_widget": "Web Widget",
+  "web_widget": "Tiện ích web",
   "please_select_app_page": "Vui lòng chọn một trang ứng dụng",
   "widget_added_success": "Đã thêm widget thành công",
   "error_adding_widget": "Lỗi khi thêm widget: {error}",
@@ -1364,7 +2761,7 @@
   "please_fill_all_fields": "Vui lòng điền đầy đủ các trường",
   "widget_name_hint": "Tên Widget (ví dụ: Facebook)",
   "url_hint": "URL (ví dụ: facebook.com)",
-  "plugins": "Plugins",
+  "plugins": "Tiện ích",
   "custom_url": "URL tùy chỉnh",
   "health_metrics_air_quality": "AQI",
   "health_metrics_weather": "Thời tiết",
@@ -1376,7 +2773,7 @@
   "home_index_balance": "Số dư",
   "home_index_spending": "Chi tiêu",
   "home_index_mood": "Tâm trạng",
-  "home_index_projects": "Tăng trưởng",
+  "home_index_projects": "Dự án",
   "home_index_weight": "Cân nặng",
   "home_index_water": "Nước uống",
   "home_index_daily": "Hàng ngày",
@@ -1391,6 +2788,306 @@
   "settings_title": "Cài đặt",
   "mind_latest_note": "Ghi chú gần nhất",
   "common_done": "Xong",
+  "island_app_name": "ICE GATE",
+  "island_app_blocker": "CHẶN ỨNG DỤNG",
+  "island_initializing": "ĐANG KHỞI TẠO…",
+  "island_notifications": "THÔNG BÁO",
+  "island_inbox": "HỘP THƯ",
+  "island_documentation": "TÀI LIỆU",
+  "island_canvas": "BẢNG GHÉP",
+  "island_mind": "TÂM TRÍ",
+  "island_health_data": "DỮ LIỆU",
+  "island_nutrition": "DINH DƯỠNG",
+  "island_activity": "VẬN ĐỘNG",
+  "island_hydration": "NƯỚC UỐNG",
+  "island_focus": "TẬP TRUNG",
+  "island_steps": "BƯỚC CHÂN",
+  "island_vitals": "CHỈ SỐ SỐNG",
+  "island_sleep": "GIẤC NGỦ",
+  "island_calories": "CALO",
+  "island_spo2": "SpO₂",
+  "island_biometrics": "SINH TRẮC",
+  "finance_tab_overview": "TỔNG QUAN",
+  "finance_tab_history": "LỊCH SỬ",
+  "finance_tab_daily": "TRONG NGÀY",
+  "finance_tab_daily_subtitle": "Chi tiêu vui và thu nhập trong ngày — chọn ngày trên lịch.",
+  "finance_tab_achievements": "THÀNH TỰU",
+  "finance_tab_career": "SỰ NGHIỆP",
+  "finance_job_title": "Vị trí công việc",
+  "finance_job_subtitle": "Theo dõi nhà tuyển dụng, hợp đồng và thâm niên",
+  "finance_job_empty": "Chưa có vị trí công việc",
+  "finance_job_current": "Đang làm",
+  "finance_job_ended": "Đã kết thúc",
+  "finance_job_tenure": "{months} tháng",
+  "@finance_job_tenure": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_add": "Thêm vị trí",
+  "finance_job_new": "Vị trí mới",
+  "finance_job_edit": "Sửa vị trí",
+  "finance_job_employer": "Nhà tuyển dụng / công ty",
+  "finance_job_role": "Chức danh / vai trò",
+  "finance_job_contract_type": "Loại hợp đồng",
+  "finance_job_contract_full_time": "Toàn thời gian",
+  "finance_job_contract_part_time": "Bán thời gian",
+  "finance_job_contract_freelance": "Freelance",
+  "finance_job_contract_internship": "Thực tập",
+  "finance_job_contract_contract": "Hợp đồng",
+  "finance_job_start_date": "Ngày bắt đầu",
+  "finance_job_end_date": "Ngày kết thúc",
+  "finance_job_end_date_hint": "Để trống nếu đang làm",
+  "finance_job_notes": "Ghi chú",
+  "finance_job_salary": "Thu nhập / tháng",
+  "finance_job_salary_hint": "Tạo thu nhập cố định gắn với công việc này",
+  "finance_job_income_type": "Loại thu nhập",
+  "finance_job_income_salary": "Lương",
+  "finance_job_income_contract": "Thu nhập hợp đồng",
+  "finance_job_income_bonus": "Thưởng",
+  "finance_job_salary_suffix": "{amount} / tháng",
+  "@finance_job_salary_suffix": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "finance_job_on_day": "Công việc trong ngày",
+  "finance_job_delete_confirm": "Xóa vị trí công việc này?",
+  "finance_job_end_confirm": "Đánh dấu vị trí này kết thúc hôm nay?",
+  "finance_job_work_days": "Ngày làm việc",
+  "finance_job_log_today": "Ghi hôm nay",
+  "finance_job_work_streak": "{count} ngày liên tiếp",
+  "@finance_job_work_streak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_sheet_subtitle": "Kế hoạch thời gian và bắt đầu làm việc",
+  "finance_job_time_plan": "Kế hoạch hôm nay",
+  "finance_job_time_category": "Loại công việc",
+  "finance_job_time_start": "Bắt đầu",
+  "finance_job_time_log_now": "Log ngay",
+  "finance_job_time_start_timer": "Bấm giờ",
+  "finance_job_time_logged": "Đã log {minutes} phút",
+  "@finance_job_time_logged": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_stop": "Dừng",
+  "finance_job_time_minutes": "{minutes} phút",
+  "@finance_job_time_minutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_elapsed": "Đã làm {minutes} phút",
+  "@finance_job_time_elapsed": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_actual_summary": "Thực tế: {actual} phút / kế hoạch: {planned} phút",
+  "@finance_job_time_actual_summary": {
+    "placeholders": {
+      "actual": {
+        "type": "int"
+      },
+      "planned": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_time_category_code_vibe": "Vibe code",
+  "finance_job_time_category_code_manual": "Code tay",
+  "finance_job_time_category_sales_desk": "Sales bàn",
+  "finance_job_time_category_sales_field": "Sales ngoài đường",
+  "finance_job_time_category_communication": "Giao tiếp",
+  "finance_job_time_category_meditation": "Thiền",
+  "finance_job_task_group_code": "Code",
+  "finance_job_task_group_sales": "Sales",
+  "finance_job_task_group_speech": "Nói",
+  "finance_job_task_group_health": "Sức khỏe",
+  "finance_job_task_group_time_log": "Log thời gian",
+  "finance_job_task_add_job": "Thêm task",
+  "finance_job_sub_task_name": "Tên task",
+  "finance_job_time_log": "Log thời gian",
+  "finance_job_time_log_title": "Log thời gian",
+  "finance_job_task_read_docs": "Đọc tài liệu",
+  "finance_job_task_sales_customer": "Tiếp xúc khách hàng",
+  "finance_job_task_sales_report": "Làm báo cáo",
+  "finance_job_task_pick_group": "Chọn loại công việc",
+  "finance_job_task_full_time": "Full-time",
+  "finance_job_task_part_time": "Part-time",
+  "finance_job_task_part_time_hours": "Số giờ làm",
+  "finance_job_task_part_time_save": "Ghi giờ",
+  "finance_job_task_pick_detail": "Chọn chi tiết",
+  "finance_job_history": "Lịch sử",
+  "finance_job_history_title": "Lịch sử làm việc",
+  "finance_job_history_subtitle": "Đồng bộ từ log thời gian công việc",
+  "finance_job_history_empty": "Chưa có thời gian được ghi",
+  "finance_job_present": "đến nay",
+  "finance_job_time_notes": "Ghi chú",
+  "finance_job_time_notes_hint": "Bạn đã làm gì?",
+  "finance_job_customer_title": "Khách hàng",
+  "finance_job_customer_name": "Tên khách hàng",
+  "finance_job_customer_company": "Công ty",
+  "finance_job_customer_phone": "Số điện thoại",
+  "finance_job_customer_save": "Lưu khách hàng",
+  "finance_job_customer_existing": "Đã có {count} khách hàng",
+  "@finance_job_customer_existing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_job_customer_open_form": "Mở form thêm khách",
+  "finance_achievements_subtitle": "Thành tựu tài chính lớn theo tháng và năm.",
+  "finance_period_month": "Tháng",
+  "finance_period_year": "Năm",
+  "finance_daily_in": "Tiền vào",
+  "finance_daily_out": "Tiền ra",
+  "finance_daily_empty": "Chưa có giao dịch trong ngày này",
+  "finance_achievements_empty": "Chưa có thành tựu lớn trong kỳ này",
+  "finance_achievements_add": "Ghi thành tựu",
+  "finance_milestone_month_income": "Thu nhập tháng",
+  "finance_milestone_month_savings": "Tiết kiệm tháng",
+  "finance_milestone_year_total": "Tổng thu năm",
+  "finance_tab_billing": "HÓA ĐƠN",
+  "finance_tab_saving": "TIẾT KIỆM",
+  "island_documents": "TÀI LIỆU",
+  "island_editor": "SOẠN THẢO",
+  "island_identity": "DANH TÍNH",
+  "island_id_update": "CẬP NHẬT ID",
+  "island_protocols": "QUY TRÌNH",
+  "island_sync_core": "ĐỒNG BỘ",
+  "island_settings": "CÀI ĐẶT",
+  "island_remote_ssh": "SSH TỪ XA",
+  "island_connected": "ĐÃ KẾT NỐI",
+  "island_not_active": "CHƯA HOẠT ĐỘNG",
+  "island_connect": "KẾT NỐI",
+  "island_tmux_active": "TMUX ĐANG CHẠY",
+  "daily_loop_title": "Vòng hôm nay",
+  "daily_loop_subtitle": "Hoàn thành cả 4 trụ cột để giữ chuỗi",
+  "daily_loop_complete": "Xong vòng hôm nay — quá đỉnh!",
+  "daily_loop_streak": "{count} ngày",
+  "@daily_loop_streak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daily_loop_progress": "{done} / {total} xong",
+  "@daily_loop_progress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "daily_loop_health": "Sức khỏe",
+  "daily_loop_finance": "Tài chính",
+  "daily_loop_mind": "Tâm trạng",
+  "daily_loop_projects": "Dự án",
+  "morning_loop_reminder_title": "Thông báo đẩy buổi sáng",
+  "morning_loop_reminder_subtitle": "Tùy chọn trên điện thoại — tóm tắt trong app trên Home vẫn hoạt động khi tắt",
+  "morning_briefing_toggle": "Tóm tắt sáng trên Home",
+  "morning_briefing_today_schedule": "Lịch hôm nay",
+  "morning_briefing_today_empty": "Không có sự kiện — một ngày trống để lên kế hoạch.",
+  "morning_briefing_today_connect_hint": "Kết nối Google hoặc lịch máy để xem sự kiện hôm nay tại đây.",
+  "morning_briefing_today_more": "+{count} sự kiện nữa trong lịch",
+  "@morning_briefing_today_more": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_all_day": "Cả ngày",
+  "morning_briefing_open_calendar": "Mở lịch",
+  "morning_briefing_title": "Chào buổi sáng",
+  "morning_briefing_title_name": "Chào buổi sáng, {name}",
+  "@morning_briefing_title_name": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "morning_briefing_subtitle": "Chăm cơ thể, ổn định tinh thần — rồi hoàn thành vòng 4 trụ cột trong ngày.",
+  "morning_briefing_yesterday_title": "Hôm qua",
+  "morning_briefing_yesterday_empty": "Ngày êm ả — hôm nay là khởi đầu mới.",
+  "morning_briefing_yesterday_steps": "{steps} bước chân",
+  "@morning_briefing_yesterday_steps": {
+    "placeholders": {
+      "steps": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_yesterday_water": "{ml} ml nước",
+  "@morning_briefing_yesterday_water": {
+    "placeholders": {
+      "ml": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_yesterday_sleep": "Ngủ {hours} giờ",
+  "@morning_briefing_yesterday_sleep": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "morning_briefing_yesterday_loop": "Hoàn thành {done}/{total} trụ cột",
+  "@morning_briefing_yesterday_loop": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_motivation_title": "Động lực hôm nay",
+  "morning_briefing_motivation_empty": "Hôm qua nhẹ nhàng — một chiến thắng nhỏ hôm nay là đủ để lấy lại nhịp.",
+  "morning_briefing_motivation_all_done": "Bạn kết thúc hôm qua rất tốt — giữ đà đó sang hôm nay nhé.",
+  "morning_briefing_motivation_strong": "Tiến bộ vững hôm qua — thêm một trụ cột hôm nay để giữ chuỗi.",
+  "morning_briefing_motivation_mid": "Bạn đã tiến lên hôm qua — thêm một bước nhỏ sáng nay.",
+  "morning_briefing_motivation_low": "Hôm qua là ngày nghỉ — uống nước, đi bộ hoặc ghi tâm trạng cũng là khởi đầu tốt.",
+  "morning_briefing_progress": "Đã xong {done}/{total} trụ cột hôm nay",
+  "@morning_briefing_progress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_start": "Bắt đầu ngày mới",
+  "morning_briefing_log_mood": "Ghi tâm trạng trước",
   "aiMemoryTitle": "Ký ức màn hình",
   "aiMemoryDraftsTitle": "Đang chờ xem xét",
   "aiMemoryConfirmedTitle": "Ký ức đã xác nhận",

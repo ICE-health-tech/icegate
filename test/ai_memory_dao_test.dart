@@ -1,6 +1,28 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// A transport that never opens a socket. DAO writes call `pushToSupabase`,
+/// which swallows errors, so this keeps the tests offline and deterministic
+/// without any real request being attempted.
+class _OfflineHttpClient extends http.BaseClient {
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    return http.StreamedResponse(
+      const Stream<List<int>>.empty(),
+      200,
+      request: request,
+      headers: const {'content-type': 'application/json'},
+    );
+  }
+}
 
 /// DAO-level tests for the screen-memory feature.
 ///
@@ -8,12 +30,20 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 /// involved.
 void main() {
   // Fixed base for deterministic recency assertions.
-  final _baseTime = DateTime(2026, 1, 1);
+  final baseTime = DateTime(2026, 1, 1);
 
   late AppDatabase db;
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
+    db.supabaseSync = SupabaseService(
+      client: SupabaseClient(
+        'http://localhost:1',
+        'test-anon-key',
+        httpClient: _OfflineHttpClient(),
+      ),
+      database: db,
+    );
   });
 
   tearDown(() async {
@@ -73,13 +103,13 @@ void main() {
       // confirming rather than through it.
       await (db.update(db.aiMemoriesTable)
             ..where((t) => t.id.equals('tie-a')))
-          .write(const AiMemoriesTableCompanion(
-            updatedAt: Value(_baseTime),
+          .write(AiMemoriesTableCompanion(
+            updatedAt: Value(baseTime),
           ));
       await (db.update(db.aiMemoriesTable)
             ..where((t) => t.id.equals('tie-b')))
-          .write(const AiMemoriesTableCompanion(
-            updatedAt: Value(_baseTime.add(const Duration(days: 1))),
+          .write(AiMemoriesTableCompanion(
+            updatedAt: Value(baseTime.add(const Duration(days: 1))),
           ));
 
       for (final id in ['low', 'high', 'tie-a', 'tie-b']) {
@@ -89,13 +119,13 @@ void main() {
       // Re-assert the tiebreak timestamps, since setStatus overwrote them.
       await (db.update(db.aiMemoriesTable)
             ..where((t) => t.id.equals('tie-a')))
-          .write(const AiMemoriesTableCompanion(
-            updatedAt: Value(_baseTime),
+          .write(AiMemoriesTableCompanion(
+            updatedAt: Value(baseTime),
           ));
       await (db.update(db.aiMemoriesTable)
             ..where((t) => t.id.equals('tie-b')))
-          .write(const AiMemoriesTableCompanion(
-            updatedAt: Value(_baseTime.add(const Duration(days: 1))),
+          .write(AiMemoriesTableCompanion(
+            updatedAt: Value(baseTime.add(const Duration(days: 1))),
           ));
 
       final rows = await db.aiMemoryDAO.getConfirmed(personId: 'person-1');
@@ -211,7 +241,9 @@ void main() {
           sourceKind: 'in_app',
           appLabel: 'ice_gate',
           route: const Value('/health'),
-          createdAt: Value(createdAt),
+          createdAt: createdAt == null
+              ? const Value.absent()
+              : Value(createdAt),
         ),
       );
     }

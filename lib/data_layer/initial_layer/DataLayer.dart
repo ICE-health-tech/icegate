@@ -3,9 +3,22 @@ import 'package:drift/drift.dart' hide Column;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:flutter/services.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/JobWorkLogBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database_agent.dart'
+import 'package:ice_gate/data_layer/Services/cloud/DeviceCalendarService.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleCalendarService.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleDriveService.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Integrations/IntegrationHubBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/IntegrationSyncCoordinator.dart';
+import 'package:ice_gate/orchestration_layer/Services/google_auth_utils.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSummaryAutoSend.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryPayloadBuilder.dart';
+import 'package:ice_gate/orchestration_layer/Services/MorningScheduleLoader.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/DatabaseAgent.dart'
     as DatabaseAgent;
 import 'package:ice_gate/orchestration_layer/Services/CustomAuthService.dart';
 import 'package:ice_gate/orchestration_layer/Services/PasskeyAuthService.dart';
@@ -28,14 +41,16 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Health/MotivationEngineBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/Health/NotificationEngine.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FoodAnalysisBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/VaultBlock.dart';
+
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 
-import 'package:ice_gate/link_layer/cloud_database/powersync_connector.dart';
+import 'package:ice_gate/link_layer/cloud_database/PowersyncConnector.dart';
 import 'package:ice_gate/orchestration_layer/Services/FocusAudioHandler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audio_service/audio_service.dart';
@@ -43,7 +58,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:path/path.dart' as p;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
-import 'package:ice_gate/link_layer/ui_route/internal_route.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/PlanBlock.dart';
+import 'package:ice_gate/orchestration_layer/HubRegistry.dart';
+import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -55,7 +72,9 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ChallengeBlock.d
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/RemoteControllerBlock.dart';
 import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PulseFeedBlock.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class DataLayer extends StatefulWidget {
   final Widget childWidget;
@@ -71,17 +90,26 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   AppDatabase get database => _databaseInstance!;
 
   late LocalNotificationService notificationService;
+  late GoogleCalendarService googleCalendarService;
+  late GoogleDriveService googleDriveService;
+  late DeviceCalendarService deviceCalendarService;
+  IntegrationHubBlock? integrationHubBlock;
+  bool _pendingGoogleEcosystemConnect = false;
   late FocusAudioHandler audioHandler;
-
+  late JobWorkLogBlock jobWorkLogBlock;
   late PersonBlock personBlock;
   late AuthBlock authBlock;
   late ObjectDatabaseBlock objectDatabaseBlock;
   late ScoreBlock scoreBlock;
   late WidgetManagerBlock widgetManagerBlock;
+  late PlanBlock planBlock;
+  late HubRegistry hubRegistry;
   late GrowthBlock growthBlock;
   late FocusBlock focusBlock;
   late MusicBlock musicBlock;
   late HealthBlock healthBlock;
+  late MotivationEngineBlock motivationEngineBlock;
+  late NotificationEngine notificationEngine;
   late ProjectBlock projectBlock;
   late FinanceBlock financeBlock;
   late ContentBlock contentBlock;
@@ -102,12 +130,13 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late FoodAnalysisBlock foodAnalysisBlock;
   late EnvironmentalBlock environmentalBlock;
   late StorageBlock storageBlock;
-  late VaultBlock vaultBlock;
+  late PulseFeedBlock pulseFeedBlock;
 
   DateTime? _lastPausedTime;
   String? _lastInitializedPersonId; // Guard for redundant re-inits
 
   Timer? _healthSyncTimer;
+  Timer? _dailyMailSummaryTimer;
 
   late HealthMetricsDAO healthMetricsDAO;
   bool _isInitialized = false;
@@ -150,6 +179,15 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     _syncHealthData(days: 30);
     _healthSyncTimer = Timer.periodic(const Duration(minutes: 5), (_) {
       _syncHealthData(days: 3);
+    });
+  }
+
+  /// Poll so auto-send still runs if the app stays open past the scheduled time.
+  void _startDailyMailSummaryPolling() {
+    if (kIsWeb) return;
+    _dailyMailSummaryTimer?.cancel();
+    _dailyMailSummaryTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      unawaited(_trySendDailyMailSummaryIfDue());
     });
   }
 
@@ -271,9 +309,20 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       await localeBlock.init();
 
       debugPrint("🚀 [Boot] Step 1: Initialize Supabase...");
+      final supabaseUrl = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+      final supabaseAnon = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
+      if (supabaseUrl.isEmpty || !supabaseUrl.startsWith('http')) {
+        throw StateError(
+          'SUPABASE_URL missing in .env (got "$supabaseUrl"). '
+          'OAuth would open invalid URLs like /auth/v1/authorize.',
+        );
+      }
+      if (supabaseAnon.isEmpty) {
+        throw StateError('SUPABASE_ANON_KEY missing in .env');
+      }
       await Supabase.initialize(
-        url: dotenv.env['SUPABASE_URL'] ?? "",
-        anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? "",
+        url: supabaseUrl,
+        anonKey: supabaseAnon,
         authOptions: const FlutterAuthClientOptions(
           authFlowType: AuthFlowType.pkce,
         ),
@@ -306,7 +355,12 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       debugPrint("🚀 [Boot] Step 3: Initialize Notifications...");
       notificationService = LocalNotificationService();
+      notificationService.onDailyMailSummaryTriggered = _trySendDailyMailSummaryIfDue;
       await notificationService.init(database);
+      googleCalendarService = GoogleCalendarService();
+      googleDriveService = GoogleDriveService();
+      deviceCalendarService = DeviceCalendarService();
+      unawaited(deviceCalendarService.restoreAccess());
 
       debugPrint("🚀 [Boot] Step 4: Initialize Audio...");
       try {
@@ -350,6 +404,17 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         authService: authService,
         personDao: database.personManagementDAO,
       );
+    
+      integrationHubBlock = IntegrationHubBlock(
+        personId: personBlock.information.value.profiles.id ?? '',
+        dao: database.integrationAccountDAO,
+        coordinator: IntegrationSyncCoordinator(
+          accountDao: database.integrationAccountDAO,
+          calendarService: googleCalendarService,
+          driveService: googleDriveService,
+          deviceCalendarService: deviceCalendarService,
+        ),
+      );
       authBlock = AuthBlock(
         authService: authService,
         sessionDao: database.sessionDAO,
@@ -367,6 +432,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         healthMealDao: database.healthMealDAO,
         hourlyLogDao: database.hourlyActivityLogDAO,
       );
+      motivationEngineBlock = MotivationEngineBlock();
+      motivationEngineBlock.bindHealth(healthBlock);
+      notificationEngine = NotificationEngine(notificationService);
+      notificationService.morningDigestBuilder = _buildMorningDigest;
       growthBlock = GrowthBlock();
       scoreBlock = ScoreBlock();
       projectBlock = ProjectBlock();
@@ -374,6 +443,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       externalWidgetBlock = ExternalWidgetBlock();
       financeBlock = FinanceBlock();
       quoteBlock = QuoteBlock();
+      quoteBlock.init(database.quoteDAO);
       questBlock = QuestBlock();
       socialBlock = SocialBlock();
       mindBlock = MindBlock(database.mindLogsDAO);
@@ -384,7 +454,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       configBlock = ConfigBlock();
       documentationBlock = DocumentationBlock();
       challengeBlock = ChallengeBlock();
-
+      pulseFeedBlock = PulseFeedBlock();
+      jobWorkLogBlock = JobWorkLogBlock(dao: database.jobWorkTrackingDAO);
       musicBlock = MusicBlock(audioHandler: audioHandler);
       socialBlockerBlock = SocialBlockerBlock();
       focusBlock = FocusBlock(
@@ -395,6 +466,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         musicBlock: musicBlock,
         notificationService: notificationService,
       );
+      focusBlock.jobWorkLogBlock = jobWorkLogBlock;
 
       remoteControllerBlock = RemoteControllerBlock(
         supabase: Supabase.instance.client,
@@ -405,10 +477,28 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
 
       environmentalBlock = EnvironmentalBlock();
-      storageBlock = StorageBlock();
-      vaultBlock = VaultBlock();
+      storageBlock = StorageBlock(mediaIndexDao: database.localMediaIndexDAO);
       Future.microtask(() => storageBlock.init());
 
+      final personIdSignal = computed(
+        () => personBlock.information.value.profiles.id,
+      );
+
+      widgetManagerBlock = WidgetManagerBlock(
+        widgetDao: database.widgetDAO,
+        personIdSignal: personIdSignal,
+      );
+
+      planBlock = PlanBlock(personIdSignal: personIdSignal);
+
+      hubRegistry = HubRegistry(
+        database: database,
+        growthBlock: growthBlock,
+        projectBlock: projectBlock,
+        planBlock: planBlock,
+        widgetManagerBlock: widgetManagerBlock,
+        internalWidgetBlock: internalWidgetBlock,
+      );
 
       _effectCleanups.add(
         effect(() {
@@ -423,15 +513,29 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
               _lastInitializedPersonId = personId;
 
               untracked(() {
-                print(
+                appLog(
                   "👤 [DataLayer] PersonID resolved to $personId. Re-initializing dependent blocks...",
                 );
+                hubRegistry.bindPerson(personId);
+                storageBlock.startAutoScan(personId: personId);
+                Future.microtask(() async {
+                  try {
+                    final achievements = await database.achievementsDAO
+                        .getAchievementsByPerson(personId);
+                    await storageBlock.syncAchievementStories(
+                      personId: personId,
+                      achievements: achievements,
+                      achievementsDao: database.achievementsDAO,
+                    );
+                  } catch (e) {
+                    appLog('Story sync backfill skipped: $e');
+                  }
+                });
                 healthBlock.personId = personId;
                 Future.microtask(() => healthBlock.init());
                 Future.microtask(() => mindBlock.init(personId));
                 _syncHealthData();
 
-                projectBlock.init(database.projectsDAO, personId);
                 financeBlock.init(
                   database.financeDAO,
                   database.portfolioSnapshotsDAO,
@@ -457,16 +561,33 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 focusBlock.personId = personId;
                 focusBlock.fetchDailyStats();
                 notificationService.syncAllNotifications(personId);
+                _resyncHealthNudges(force: true);
 
-                // Sync Social Blocker selection from cloud
-                socialBlockerBlock.initWithSync(focusBlock, personId);
+                // Sync Social Blocker rules + shield evaluation
+                Future.microtask(() async {
+                  await socialBlockerBlock.initWithSync(focusBlock, personId);
+                });
 
                 // NEW: Trigger Cloud Sync
-                database.supabaseSync?.syncFullDown(personId).then((_) {
+                database.supabaseSync?.syncFullDown(personId).then((_) async {
                   debugPrint("📡 [CloudSync] Initial full sync completed.");
+                  if (hubRegistry.isReady(HubId.growth)) {
+                    await growthBlock.sync();
+                  }
                   // Reschedule notifications once cloud data is local
                   notificationService.syncAllNotifications(personId);
+                  _resyncHealthNudges(force: true);
                   financeBlock.refreshFromLocalDatabase();
+                  try {
+                    await financeBlock.sync();
+                  } catch (e) {
+                    debugPrint('📡 [CloudSync] Finance sync failed: $e');
+                  }
+                  try {
+                    await mindBlock.syncGratitude(personId);
+                  } catch (e) {
+                    debugPrint('📡 [CloudSync] Gratitude sync failed: $e');
+                  }
                 });
 
                 // Initialize Remote Controller
@@ -477,15 +598,28 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   personId,
                   'home',
                 );
-                internalWidgetBlock.refreshBlock(
-                  database.internalWidgetsDAO,
-                  personId,
-                  'projects',
-                );
                 externalWidgetBlock.refreshBlock(
                   database.externalWidgetsDAO,
                   personId,
                 );
+
+                integrationHubBlock?.updatePersonId(personId);
+                documentationBlock.bindIntegrationHub(integrationHubBlock!);
+                unawaited(integrationHubBlock?.refresh());
+                if (_pendingGoogleEcosystemConnect) {
+                  _pendingGoogleEcosystemConnect = false;
+                  unawaited(
+                    integrationHubBlock
+                        ?.connectGoogleEcosystem(interactive: true)
+                        .then((_) => _syncDocumentationDriveState()),
+                  );
+                } else {
+                  unawaited(
+                    integrationHubBlock?.restoreGoogleEcosystem().then(
+                      (_) => _syncDocumentationDriveState(),
+                    ),
+                  );
+                }
               });
             }
           } catch (e) {
@@ -498,13 +632,6 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         .growthBlock = growthBlock;
 
       await focusBlock.init();
-
-      widgetManagerBlock = WidgetManagerBlock(
-        widgetDao: database.widgetDAO,
-        personIdSignal: computed(
-          () => personBlock.information.value.profiles.id,
-        ),
-      );
 
       debugPrint("🚀 [Boot] Step 6: Checking Auth Session...");
       if (mounted) {
@@ -521,6 +648,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         });
         // Start the periodic health sync NOW that all blocks are initialized.
         _startHealthSync();
+        _startDailyMailSummaryPolling();
+        Future.microtask(_trySendDailyMailSummaryIfDue);
       }
       debugPrint("🚀 [Boot] ✅ initializationData sequence COMPLETED.");
 
@@ -529,8 +658,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         final Session? session = data.session;
         final ps = database.powerSync;
 
-        print(
-          "🔑 [DataLayer] Supabase Auth Change: Event=$event, HasSession=${session != null}",
+        authLog(
+          'Supabase auth event=$event hasSession=${session != null}'
+          '${session != null ? ' user=${session.user.email ?? session.user.id}' : ''}',
         );
 
         if (event == AuthChangeEvent.passwordRecovery && session != null) {
@@ -541,6 +671,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         }
 
         if (session != null) {
+          if (event == AuthChangeEvent.signedIn &&
+              sessionUsedGoogleProvider(session)) {
+            _pendingGoogleEcosystemConnect = true;
+          }
+
           Future.microtask(() {
             batch(() {
               authBlock.jwt.value = session.accessToken;
@@ -599,6 +734,24 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
           }
         }),
       );
+
+      _effectCleanups.add(
+        effect(() {
+          final motivation = motivationEngineBlock.dailyResult.value;
+          if (motivation == null) return;
+          untracked(() {
+            final projects = DailySummaryPayloadBuilder.projectsSection(
+              growth: growthBlock,
+              project: projectBlock,
+            );
+            notificationEngine.syncHealthNudges(
+              motivation: motivation,
+              activeProjects: projects['projects_active'] as int,
+              activeTasks: projects['tasks_active'] as int,
+            );
+          });
+        }),
+      );
     } catch (e, stack) {
       debugPrint("DataLayer: Initialization CRITICAL error: $e");
       debugPrintStack(stackTrace: stack);
@@ -619,6 +772,21 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       debugPrint("DataLayer: App paused at $_lastPausedTime");
     } else if (state == AppLifecycleState.resumed) {
       debugPrint("DataLayer: App resumed");
+      // Workaround for occasional desktop key-state desync on resume:
+      // clear pressed keys so duplicate KeyDown doesn't trip assertions.
+      try {
+        // These are marked testing-only in Flutter, so we call via `dynamic`
+        // to avoid analyzer access restrictions in app code.
+        (HardwareKeyboard.instance as dynamic).clearState();
+      } catch (_) {
+        try {
+          (RawKeyboard.instance as dynamic).clearKeysPressed();
+        } catch (_) {}
+      }
+      if (_isInitialized) {
+        authBlock.extendAuthInteractionTimeoutOnResume();
+        authBlock.checkAuthInteractionDeadline();
+      }
       if (_lastPausedTime != null) {
         final diff = DateTime.now().difference(_lastPausedTime!);
         debugPrint("DataLayer: App was paused for ${diff.inSeconds} seconds");
@@ -626,7 +794,100 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
           authBlock.showWelcomeBack.value = true;
         }
         _syncHealthData();
+        Future.microtask(_trySendDailyMailSummaryIfDue);
       }
+    }
+  }
+
+  Future<void> _syncDocumentationDriveState() async {
+    try {
+      await documentationBlock.driveService.signIn(interactive: false);
+      documentationBlock.isGoogleDriveConnected.value =
+          documentationBlock.driveService.driveApi != null;
+    } catch (e) {
+      debugPrint('DataLayer: Documentation Drive sync failed: $e');
+    }
+  }
+
+  Future<void> _trySendDailyMailSummaryIfDue() async {
+    if (!_isInitialized || kIsWeb) return;
+    try {
+      await DailyMailSummaryAutoSend.trySendIfDue(
+        finance: financeBlock,
+        health: healthBlock,
+        mind: mindBlock,
+        growth: growthBlock,
+        project: projectBlock,
+        config: configBlock,
+        person: personBlock,
+        localeCode: localeBlock.currentLocale.value.languageCode,
+      );
+    } catch (e) {
+      debugPrint('DataLayer: daily mail summary auto-send failed: $e');
+    }
+  }
+
+  /// Morning loop notification body — calendar for [fireDay] + open
+  /// projects/tasks. Null → caller keeps the rotating motivational copy.
+  Future<String?> _buildMorningDigest(DateTime fireDay) async {
+    final personId = personBlock.information.value.profiles.id ?? '';
+    final prefs = await SharedPreferences.getInstance();
+    final vi = (prefs.getString('app_locale') ?? 'vi') == 'vi';
+
+    final lines = <String>[];
+
+    try {
+      final schedule = await MorningScheduleLoader.loadToday(
+        db: database,
+        personId: personId,
+        google: googleCalendarService,
+        device: deviceCalendarService,
+        forDay: fireDay,
+      );
+      if (schedule.items.isNotEmpty) {
+        final parts = schedule.items.take(3).map((e) {
+          if (e.allDay) return e.title;
+          return '${DateFormat.Hm().format(e.start)} ${e.title}';
+        });
+        lines.add(parts.join(' · '));
+      }
+    } catch (e) {
+      debugPrint('DataLayer: morning digest calendar load failed: $e');
+    }
+
+    final projects = DailySummaryPayloadBuilder.projectsSection(
+      growth: growthBlock,
+      project: projectBlock,
+    );
+    final activeProjects = projects['projects_active'] as int;
+    final activeTasks = projects['tasks_active'] as int;
+    if (activeProjects > 0 || activeTasks > 0) {
+      lines.add(
+        vi
+            ? '$activeProjects dự án · $activeTasks task đang mở'
+            : '$activeProjects projects · $activeTasks tasks open',
+      );
+    }
+
+    return lines.isEmpty ? null : lines.join('\n');
+  }
+
+  Future<void> _resyncHealthNudges({bool force = false}) async {
+    final motivation = motivationEngineBlock.dailyResult.value;
+    if (motivation == null) return;
+    try {
+      final projects = DailySummaryPayloadBuilder.projectsSection(
+        growth: growthBlock,
+        project: projectBlock,
+      );
+      await notificationEngine.syncHealthNudges(
+        motivation: motivation,
+        activeProjects: projects['projects_active'] as int,
+        activeTasks: projects['tasks_active'] as int,
+        force: force,
+      );
+    } catch (e) {
+      debugPrint('DataLayer: health nudge sync failed: $e');
     }
   }
 
@@ -634,6 +895,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _healthSyncTimer?.cancel();
+    _dailyMailSummaryTimer?.cancel();
     for (final cleanup in _effectCleanups) {
       cleanup();
     }
@@ -649,6 +911,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       foodAnalysisBlock.dispose();
       environmentalBlock.dispose();
       storageBlock.dispose();
+      growthBlock.dispose();
+      motivationEngineBlock.dispose();
     }
 
 
@@ -700,6 +964,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     return MultiProvider(
       providers: [
         Provider<LocalNotificationService>.value(value: notificationService),
+        Provider<GoogleCalendarService>.value(value: googleCalendarService),
+        Provider<DeviceCalendarService>.value(value: deviceCalendarService),
         Provider<FocusAudioHandler>.value(value: audioHandler),
         Provider<AppDatabase>.value(value: database),
         Provider<AiMemoryBlock>.value(value: aiMemoryBlock),
@@ -763,9 +1029,13 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<SocialBlockerBlock>.value(value: socialBlockerBlock),
         Provider<SocialBlock>.value(value: socialBlock),
         Provider<WidgetManagerBlock>.value(value: widgetManagerBlock),
+        Provider<PlanBlock>.value(value: planBlock),
+        Provider<HubRegistry>.value(value: hubRegistry),
         Provider<MusicBlock>.value(value: musicBlock),
         Provider<FocusBlock>.value(value: focusBlock),
         Provider<HealthBlock>.value(value: healthBlock),
+        Provider<MotivationEngineBlock>.value(value: motivationEngineBlock),
+        Provider<NotificationEngine>.value(value: notificationEngine),
         Provider<LocaleBlock>.value(value: localeBlock),
         Provider<ConfigBlock>.value(value: configBlock),
         Provider<DocumentationBlock>.value(value: documentationBlock),
@@ -775,7 +1045,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<FoodAnalysisBlock>.value(value: foodAnalysisBlock),
         Provider<EnvironmentalBlock>.value(value: environmentalBlock),
         Provider<StorageBlock>.value(value: storageBlock),
-        Provider<VaultBlock>.value(value: vaultBlock),
+        Provider<PulseFeedBlock>.value(value: pulseFeedBlock),
+        Provider<JobWorkLogBlock>.value(value: jobWorkLogBlock),
+        Provider<JobWorkTrackingDAO>.value(value: database.jobWorkTrackingDAO),
+        if (integrationHubBlock != null)
+          Provider<IntegrationHubBlock>.value(value: integrationHubBlock!),
 
       ],
       child: widget.childWidget,

@@ -47,12 +47,12 @@ const Map<String, Object> _cannedDefault = {
   'memory_weight': 0.5,
 };
 
-void main(List<String> args) {
+Future<void> main(List<String> args) async {
   final port = args.isNotEmpty
       ? int.tryParse(args.first) ?? _defaultPort
       : _defaultPort;
 
-  final server = HttpServer.bind(InternetAddress.anyIPv4, port);
+  final server = await HttpServer.bind(InternetAddress.anyIPv4, port);
   stdout.writeln('🖼️  Screenshot agent stub listening on :$port');
   stdout.writeln('   POST http://localhost:$port/analyze_screenshot_url');
 

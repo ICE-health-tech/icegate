@@ -1,0 +1,56 @@
+{
+    "theme_name": "Enchanted Forest",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFF32CD32",
+    "color_scheme": {
+        "primary": "0xFF32CD32",
+        "onPrimary": "0xFF000000",
+        "secondary": "0xFF7CFC00",
+        "onSecondary": "0xFF000000",
+        "surface": "0xFF051A05",
+        "onSurface": "0xFFADFF2F",
+        "background": "0xFF020D02",
+        "onBackground": "0xFFADFF2F"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF051A05",
+            "foregroundColor": "0xFF32CD32",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFF32CD32",
+            "foregroundColor": "0xFF000000",
+            "borderRadius": 30.0,
+            "elevation": 3.0
+        },
+        "card": {
+            "backgroundColor": "0xFF0A260A",
+            "elevation": 2.0,
+            "borderRadius": 25.0
+        },
+        "icon": {
+            "color": "0xFF7CFC00",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Outfit",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFF7CFC00"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFADFF2F"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "medium",
+            "color": "0xFFFFFFFF"
+        }
+    }
+}

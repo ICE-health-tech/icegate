@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:drift/drift.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/CVAddressProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/EmailAddressProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/PersonProtocol.dart';
@@ -129,7 +129,7 @@ class DataSeeder {
         personID: Value(personId),
         skillName: const Value('Sample skill'),
         proficiencyLevel: const Value(SkillLevel.beginner),
-        yearsOfExperience: const Value(0),
+        point: const Value(0),
         isFeatured: const Value(true),
       ),
     );

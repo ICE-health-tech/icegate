@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
-import 'package:http/http.dart' as http;
+import 'package:ice_gate/data_layer/Services/cloud/GoogleSignInHub.dart';
 
 class DriveFile {
   final String id;
@@ -24,15 +24,8 @@ class DriveFile {
 }
 
 class GoogleDriveService {
-  static const String googleWebClientId =
-      '1076295055088-s88o9d59unnd0p68be5pmsiv6h2a0rgo.apps.googleusercontent.com';
-  static const String googleDarwinClientId =
-      '807274985161-2tgda6mbjop0k2vnf85q5plac7t6d1aq.apps.googleusercontent.com';
-
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: (Platform.isIOS || Platform.isMacOS) ? googleDarwinClientId : googleWebClientId,
-    scopes: [drive.DriveApi.driveFileScope, drive.DriveApi.driveMetadataReadonlyScope],
-  );
+  static const String googleWebClientId = GoogleSignInHub.webClientId;
+  static const String googleDarwinClientId = GoogleSignInHub.darwinClientId;
 
   GoogleSignInAccount? _account;
   drive.DriveApi? _driveApi;
@@ -42,18 +35,19 @@ class GoogleDriveService {
   /// Try to sign in silently first, then fallback to interactive sign-in if [interactive] is true.
   Future<bool> signIn({bool interactive = true}) async {
     try {
-      // 1. Try silent sign-in first (no UI)
-      _account = await _googleSignIn.signInSilently();
-      
-      // 2. If silent failed and interactive is allowed, show UI
+      _account = await GoogleSignInHub.silentAccount();
       if (_account == null && interactive) {
-        _account = await _googleSignIn.signIn();
+        _account = await GoogleSignInHub.interactiveSignIn();
       }
-      
       if (_account == null) return false;
 
-      // Initialize API with a client that fetches fresh headers for every request
-      _driveApi = drive.DriveApi(_GoogleAuthClient(_account!));
+      final scopesOk = await GoogleSignInHub.ensureScopes([
+        drive.DriveApi.driveFileScope,
+        drive.DriveApi.driveMetadataReadonlyScope,
+      ]);
+      if (!scopesOk) return false;
+
+      _driveApi = drive.DriveApi(GoogleAuthorizedClient(_account!));
       return true;
     } catch (e) {
       debugPrint('Drive Sign-In Error: $e');
@@ -67,7 +61,7 @@ class GoogleDriveService {
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
+    await GoogleSignInHub.signIn.signOut();
     _account = null;
     _driveApi = null;
   }
@@ -198,18 +192,3 @@ class GoogleDriveService {
   }
 }
 
-class _GoogleAuthClient extends http.BaseClient {
-  final GoogleSignInAccount _account;
-  final http.Client _client = http.Client();
-
-  _GoogleAuthClient(this._account);
-
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    // Dynamically fetch fresh headers for every single request.
-    // google_sign_in package handles token refreshing internally here.
-    final headers = await _account.authHeaders;
-    request.headers.addAll(headers);
-    return _client.send(request);
-  }
-}

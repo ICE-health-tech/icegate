@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/transaction_card.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionCard.dart';
 
 class FinanceTransactionsPage extends StatelessWidget {
   final FinanceBlock financeBlock;

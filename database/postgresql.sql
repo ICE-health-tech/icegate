@@ -122,9 +122,11 @@ CREATE TABLE IF NOT EXISTS public.skills (
     skill_name TEXT NOT NULL,
     skill_category TEXT,
     proficiency_level TEXT DEFAULT 'beginner',
-    years_of_experience INTEGER DEFAULT 0,
     description TEXT,
     is_featured BOOLEAN DEFAULT FALSE,
+    point INTEGER DEFAULT 0,
+    achieved_points INTEGER DEFAULT 0,
+    event_id TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW (),
     updated_at TIMESTAMPTZ DEFAULT NOW ()
 );
@@ -448,7 +450,7 @@ INSERT INTO
         person_id,
         skill_name,
         proficiency_level,
-        years_of_experience,
+        point,
         is_featured
     )
 SELECT

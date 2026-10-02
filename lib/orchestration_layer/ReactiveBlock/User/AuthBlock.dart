@@ -6,12 +6,17 @@ import 'package:ice_gate/orchestration_layer/Services/PasskeyAuthService.dart';
 import 'package:ice_gate/orchestration_layer/Services/BiometricAuthService.dart';
 import 'package:ice_gate/orchestration_layer/Services/SecureStorageService.dart';
 import 'package:ice_gate/data_layer/Protocol/User/RegistrationProtocol.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
+import 'package:ice_gate/utils/app_log.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 enum AuthStatus {
   init,
@@ -73,31 +78,85 @@ class AuthBlock {
       false; // Reentrancy lock to prevent double-login race conditions
 
   Timer? _authInteractionTimer;
+  /// Wall-clock end for auth watchdog — [Timer] may not run while the app is
+  /// backgrounded (OAuth in Safari); [checkAuthInteractionDeadline] uses this on resume.
+  DateTime? _authInteractionDeadline;
 
-  /// Clears the 10s OAuth / login spinner watchdog (call when session is ready).
+  /// Browser OAuth (Google/Apple) often takes >10s; short timeouts falsely show
+  /// `err_auth_timeout` before the deep-link callback arrives.
+  static const Duration _oauthBrowserTimeout = Duration(minutes: 3);
+
+  /// Clears the OAuth / login spinner watchdog (call when session is ready).
   void cancelAuthInteractionTimeout() {
     _authInteractionTimer?.cancel();
     _authInteractionTimer = null;
+    _authInteractionDeadline = null;
   }
 
-  /// Starts a 10s watchdog: if still [AuthStatus.authenticating] or [AuthStatus.registering],
-  /// resets to unauthenticated so the user can try again (covers stuck OAuth / hung API).
-  void armAuthInteractionTimeout() {
+  /// Call from [WidgetsBindingObserver.didChangeAppLifecycleState] when the app
+  /// resumes. Applies timeout if the user spent longer than the armed duration
+  /// in the browser while timers were throttled.
+  void checkAuthInteractionDeadline() {
+    if (_authInteractionDeadline == null) return;
+    if (DateTime.now().isBefore(_authInteractionDeadline!)) return;
+    _applyAuthInteractionTimeoutIfNeeded();
+  }
+
+  void _applyAuthInteractionTimeoutIfNeeded() {
+    if (status.value != AuthStatus.authenticating &&
+        status.value != AuthStatus.registering) {
+      cancelAuthInteractionTimeout();
+      return;
+    }
+    status.value = AuthStatus.unauthenticated;
+    error.value = 'err_auth_timeout';
+    authLog('⏱️ interaction timed out (watchdog) → err_auth_timeout');
     cancelAuthInteractionTimeout();
-    _authInteractionTimer = Timer(const Duration(seconds: 10), () {
-      if (status.value == AuthStatus.authenticating ||
-          status.value == AuthStatus.registering) {
-        status.value = AuthStatus.unauthenticated;
-        error.value = error.value ?? 'err_auth_timeout';
-        debugPrint('⏱️ [AuthBlock] Auth interaction timed out after 10s');
-      }
-      _authInteractionTimer = null;
-    });
+  }
+
+  /// [signInWithOAuth] returns after opening Safari / system browser; session
+  /// usually arrives later via deep link. Keep [AuthStatus.authenticating] until
+  /// the session arrives or [_oauthBrowserTimeout] elapses.
+  void _idleLoginUiWhileOAuthContinuesInBrowser() {
+    if (Supabase.instance.client.auth.currentSession == null) {
+      armAuthInteractionTimeout(_oauthBrowserTimeout);
+    }
+  }
+
+  /// Called when the app resumes from Safari during OAuth — extend the watchdog
+  /// and complete login if Supabase already has a session from the deep link.
+  void extendAuthInteractionTimeoutOnResume() {
+    if (status.value != AuthStatus.authenticating &&
+        status.value != AuthStatus.registering) {
+      return;
+    }
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      authLog('✅ resume: session ready (${session.user.email ?? session.user.id})');
+      cancelAuthInteractionTimeout();
+      error.value = null;
+      status.value = AuthStatus.authenticated;
+      return;
+    }
+    authLog('⏳ resume: still waiting for OAuth deep link; extending timeout');
+    armAuthInteractionTimeout(_oauthBrowserTimeout);
+  }
+
+  /// Watchdog: if still [AuthStatus.authenticating] or [AuthStatus.registering]
+  /// after [duration], reset to unauthenticated so the user can try again
+  /// (covers stuck OAuth / hung API). Default 10s stops the login button spinner
+  /// when the network or Supabase does not return.
+  void armAuthInteractionTimeout([
+    Duration duration = const Duration(seconds: 10),
+  ]) {
+    cancelAuthInteractionTimeout();
+    _authInteractionDeadline = DateTime.now().add(duration);
+    _authInteractionTimer = Timer(duration, _applyAuthInteractionTimeoutIfNeeded);
   }
 
   /// Helper to persist session locally (e.g. after Google OAuth)
   Future<void> persistSession(String token, String name) async {
-    print("💾 [AuthBlock] Persisting session locally for $name...");
+    appLog("💾 [AuthBlock] Persisting session locally for $name...");
     await _sessionDao.saveSession(token, name);
   }
 
@@ -106,7 +165,7 @@ class AuthBlock {
   /// For RETURNING users, we do NOT overwrite first_name/last_name/profile_image
   /// because the user may have edited them in the profile page.
   Future<void> syncUserWithSupabase(User user) async {
-    print("🔄 [AuthBlock] Synchronizing user ${user.id} with Supabase...");
+    appLog("🔄 [AuthBlock] Synchronizing user ${user.id} with Supabase...");
 
     try {
       final client = Supabase.instance.client;
@@ -129,25 +188,25 @@ class AuthBlock {
             .from('persons')
             .update({'tenant_id': forcedTenantId})
             .eq('id', userId);
-        print('✅ [Auth] Super-correcting Supabase tenant_id to ...0001');
+        appLog('✅ [Auth] Super-correcting Supabase tenant_id to ...0001');
 
         // 2. Update Local Database via DAO
         await _personDao.updateTenantId(userId, forcedTenantId);
-        print('✅ [Auth] Super-correcting Local tenant_id to ...0001');
+        appLog('✅ [Auth] Super-correcting Local tenant_id to ...0001');
 
         // 3. Migrate any existing Guest data to this new identity
         // This promotes offline progress to the cloud.
         await _personDao.migrateGuestData(userId, forcedTenantId);
-        print('✅ [Auth] Migrated orphaned guest data to user $userId');
+        appLog('✅ [Auth] Migrated orphaned guest data to user $userId');
       } catch (e) {
-        print(
+        appLog(
           '⚠️ [Auth] Minor error during tenant repair (expected for offline/guest): $e',
         );
       }
 
       if (existingPerson != null) {
         // RETURNING USER: Skip full field overwrite to keep local edits
-        print("   - Existing user found. Identity verified.");
+        appLog("   - Existing user found. Identity verified.");
       } else {
         // NEW USER: insert with Google OAuth metadata as defaults
         final fullName =
@@ -162,7 +221,7 @@ class AuthBlock {
                 ? fullName.split(' ').sublist(1).join(' ')
                 : '');
 
-        print("   - New user. Inserting metadata defaults...");
+        appLog("   - New user. Inserting metadata defaults...");
 
         await client.from('persons').insert({
           'id': userId,
@@ -183,7 +242,7 @@ class AuthBlock {
 
       // 3. Ensure email address exists
       if (user.email != null) {
-        print("   - Ensuring 'email_addresses' row exists...");
+        appLog("   - Ensuring 'email_addresses' row exists...");
         await client.from('email_addresses').upsert({
           'id': userId, // Using user ID as primary key
           'person_id': userId,
@@ -199,7 +258,7 @@ class AuthBlock {
           user.email?.split('@')[0] ??
           'user_${userId.substring(0, 8)}';
 
-      print("   - Ensuring 'user_accounts' row exists...");
+      appLog("   - Ensuring 'user_accounts' row exists...");
       await client.from('user_accounts').upsert({
         'id': userId,
         'person_id': userId,
@@ -211,11 +270,11 @@ class AuthBlock {
 
       // 5. Ensure detail_information exists
 
-      print(
+      appLog(
         "✅ [AuthBlock] Identity sync complete for User: $userId, Username: $usernameStr",
       );
     } catch (e) {
-      print("❌ [AuthBlock] Identity synchronization failed: $e");
+      appLog("❌ [AuthBlock] Identity synchronization failed: $e");
     }
   }
 
@@ -223,7 +282,7 @@ class AuthBlock {
   Future<void> loginAsGuest() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    print("👤 Logging in as Guest...");
+    appLog("👤 Logging in as Guest...");
 
     try {
       // Provide a mock JWT and fallback username
@@ -239,9 +298,9 @@ class AuthBlock {
       // and then fall back to local DB user ID 1, which acts as our mock data.
       await fetchUser();
 
-      print("✅ Guest login successful with mock data.");
+      appLog("✅ Guest login successful with mock data.");
     } catch (e) {
-      print("❌ Guest login failed: $e");
+      appLog("❌ Guest login failed: $e");
       error.value = "err_unexpected";
       status.value = AuthStatus.unauthenticated;
     }
@@ -267,6 +326,16 @@ class AuthBlock {
     if (str.contains("biometric") && str.contains("not enabled")) {
       return "err_biometric_disabled";
     }
+    if (str.contains("google") &&
+        (str.contains("canceled") ||
+            str.contains("cancelled") ||
+            str.contains("sign_in_canceled"))) {
+      return "err_google_canceled";
+    }
+    // Preserve detailed Google/Supabase errors for debugging.
+    // The UI will show raw text for unknown keys (see LoginPage._getLocalizedError).
+    if (str.contains("id token missing")) return "err_google_failed";
+    if (str.contains("google")) return e.toString();
     if (str.contains("passkey") &&
         (str.contains("canceled") ||
             str.contains("dismissed") ||
@@ -277,7 +346,40 @@ class AuthBlock {
       return "err_passkey_failed";
     }
 
-    return "err_unexpected";
+    // Preserve the original exception text so the UI can show something more
+    // useful than a generic "System Error". UI helpers treat this as
+    // `err_unexpected` with details after the delimiter.
+    //
+    // NOTE: This is still safe because:
+    // - on release builds, the UI can choose to display a generic message, and
+    // - the log still has the raw exception for debugging.
+    final raw = e.toString().trim();
+    if (raw.isEmpty) return "err_unexpected";
+    // Avoid extremely long banners.
+    final compact = raw.length > 200 ? '${raw.substring(0, 200)}…' : raw;
+    return 'err_unexpected|$compact';
+  }
+
+  /// Face ID / passkey button on login — one path only (no double prompts).
+  Future<bool> loginWithQuickAccess(
+    BuildContext context, {
+    String? emailHint,
+  }) async {
+    await _migrateLegacyPasskeyFlag();
+    final passkeyOn = await _secureStorage.isPasskeyEnabled();
+    if (passkeyOn) {
+      return loginWithPasskey(
+        context,
+        email: emailHint ?? rememberedUser.value?['username'],
+      );
+    }
+    final biometricOn = await _secureStorage.isBiometricEnabled();
+    if (biometricOn) {
+      return loginWithBiometrics(context);
+    }
+    error.value = 'err_biometric_disabled';
+    status.value = AuthStatus.unauthenticated;
+    return false;
   }
 
   /// Biometric Login Flow (Returns true if successful)
@@ -286,10 +388,10 @@ class AuthBlock {
     _isLocked = true;
 
     try {
-      print("🔐 [AuthBlock] Biometric Login Guard: Locked");
+      appLog("🔐 [AuthBlock] Biometric Login Guard: Locked");
       status.value = AuthStatus.authenticating;
       error.value = null;
-      print("🧬 [AuthBlock] Authenticating with biometrics...");
+      appLog("🧬 [AuthBlock] Authenticating with biometrics...");
       final isSupported = await _biometricService.canAuthenticate();
       if (!isSupported) {
         throw Exception(
@@ -306,46 +408,40 @@ class AuthBlock {
         reason: "Please authenticate to log in to ICE Gate",
       );
 
-      if (authenticated) {
-        // HARDENING: Check if we should use the Passkey Hub instead of legacy passwords
-        final isPasskeyRegistered = await _secureStorage
-            .isBiometricEnabled(); // Re-using this flag for passkey context
-        final credentials = await _secureStorage.getCredentials();
-        final email = credentials['username'];
-
-        if (isPasskeyRegistered && email != null) {
-          print(
-            "🛡️ [AuthBlock] Hardened Flow: Using Passkey Hub for biometric login...",
-          );
-          return await loginWithPasskey(
-            context,
-            email: email,
-            isInternal: true,
-          );
-        }
-
-        // Fallback for users who haven't migrated to Passkey yet
-        final password = credentials['password'];
-        if (email != null && password != null) {
-          print("⚠️ [AuthBlock] Legacy Flow: Using stored password...");
-          await login(email, password, context);
-          return status.value == AuthStatus.authenticated;
-        } else {
-          throw Exception(
-            "No stored credentials found. Please log in with password first.",
-          );
-        }
-      } else {
-        throw Exception("Biometric authentication failed or canceled.");
+      if (!authenticated) {
+        error.value = 'err_passkey_canceled';
+        status.value = AuthStatus.unauthenticated;
+        return false;
       }
+
+      final credentials = await _secureStorage.getCredentials();
+      final email = credentials['username'];
+      final password = credentials['password'];
+
+      if (email == null || password == null || password.isEmpty) {
+        throw Exception(
+          "No stored credentials found. Please log in with password first.",
+        );
+      }
+
+      // Passkey accounts use WebAuthn only — do not chain a second system prompt.
+      if (password == 'PASSKEY_AUTH' || password == 'APPLE_AUTH') {
+        throw Exception(
+          "Passkey login required. Use the passkey button, not quick biometric.",
+        );
+      }
+
+      appLog("🔐 [AuthBlock] Quick access: signing in with stored password...");
+      await login(email, password, context);
+      return status.value == AuthStatus.authenticated;
     } catch (e) {
-      print("❌ [AuthBlock] Biometric Login failed: $e");
+      appLog("❌ [AuthBlock] Biometric Login failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
       return false;
     } finally {
       _isLocked = false;
-      print("🔐 [AuthBlock] Biometric Login Guard: Released");
+      appLog("🔐 [AuthBlock] Biometric Login Guard: Released");
     }
   }
 
@@ -358,7 +454,7 @@ class AuthBlock {
     // Only apply lock if not an internal redirect (e.g. from Biometrics)
     if (!isInternal) {
       if (_isLocked) {
-        print(
+        appLog(
           "🔐 [AuthBlock] Passkey Login blocked: Another auth process in progress.",
         );
         return false;
@@ -380,17 +476,17 @@ class AuthBlock {
       // Use provided email, fallback to remembered, or default test
       final targetEmail =
           email ?? rememberedUser.value?['username'] ?? "duylong.art@gmail.com";
-      print("--------------------------------------------------");
-      print("🔑 PASSKEY AUTHENTICATION INITIATED");
-      print("📧 Target Identity: $targetEmail");
-      print("--------------------------------------------------");
+      appLog("--------------------------------------------------");
+      appLog("🔑 PASSKEY AUTHENTICATION INITIATED");
+      appLog("📧 Target Identity: $targetEmail");
+      appLog("--------------------------------------------------");
 
       // 1. Get Challenge / Options - pass the identifier (email/username)
       // CustomAuthService now returns the full publicKey JSON options string
       final optionsJson = await _authService.getPasskeyChallenge(
         email: targetEmail,
       );
-      // print("🔑 Challenge received: $challenge");
+      // appLog("🔑 Challenge received: $challenge");
 
       // 2. Perform Passkey Assertion
       // Call the platform passkey service with the full options
@@ -418,11 +514,11 @@ class AuthBlock {
         await _sessionDao.saveSession(jwt.value!, username.value);
 
         status.value = AuthStatus.authenticated;
-        print("✅ Passkey Login successful.");
+        appLog("✅ Passkey Login successful.");
 
         // Save username for possible biometric/re-auth if passkey is tied to user
         await _secureStorage.saveCredentials(username.value!, "PASSKEY_AUTH");
-        await _secureStorage.setBiometricEnabled(true);
+        await _secureStorage.setPasskeyEnabled(true);
 
         await fetchUser();
         return true;
@@ -431,15 +527,13 @@ class AuthBlock {
       }
     } catch (e) {
       final errorStr = e.toString();
-      print("❌ Passkey Authentication failed: $errorStr");
+      appLog("❌ Passkey Authentication failed: $errorStr");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
       return false;
     } finally {
-      if (!isInternal) {
-        _isLocked = false;
-        print("🔐 [AuthBlock] Passkey Login Guard: Released");
-      }
+      _isLocked = false;
+      appLog("🔐 [AuthBlock] Passkey Login Guard: Released");
     }
   }
 
@@ -449,7 +543,7 @@ class AuthBlock {
     final authUser = Supabase.instance.client.auth.currentUser;
     if (authUser == null) return "User session not found";
 
-    print(
+    appLog(
       "🔑 [AuthBlock] Initiating Passkey Enrollment for ${authUser.email}...",
     );
     try {
@@ -478,25 +572,48 @@ class AuthBlock {
         userId: authUser.id,
       );
 
-      print("✅ [AuthBlock] Passkey Enrollment successful.");
+      appLog("✅ [AuthBlock] Passkey Enrollment successful.");
       isPasskeyEnrolled.value = true;
 
-      // Save info that we have a passkey for this user
+      await _secureStorage.setPasskeyEnabled(true);
       await _secureStorage.setBiometricEnabled(true);
 
       return "success";
     } catch (e) {
       final errorStr = e.toString();
-      print("❌ [AuthBlock] Passkey Enrollment failed: $errorStr");
+      appLog("❌ [AuthBlock] Passkey Enrollment failed: $errorStr");
 
-      if (errorStr.contains('1001') || errorStr.contains('canceled')) {
+      if (errorStr.contains('1001') ||
+          errorStr.contains('canceled') ||
+          errorStr.contains('cancelled')) {
         return "canceled";
       }
 
-      final mappedError = _mapError(e);
+      if (errorStr.contains('1004')) {
+        const msg =
+            'Passkey domain not verified (1004). Use a physical iPhone/iPad '
+            '(not Simulator), then reinstall the app so Associated Domains apply.';
+        error.value = 'err_unexpected|$msg';
+        return error.value!;
+      }
+
+      final mappedError = _mapEnrollmentError(e);
       error.value = mappedError;
       return mappedError;
     }
+  }
+
+  /// Enrollment errors — keep hub/server text instead of generic passkey_failed.
+  String _mapEnrollmentError(Object e) {
+    final str = e.toString().toLowerCase();
+    if (str.contains('not supported')) return 'err_biometric_unsupported';
+    if (str.contains('network') || str.contains('connection refused')) {
+      return 'err_network_fail';
+    }
+    if (str.contains('hub returned')) {
+      return 'err_unexpected|${e.toString().trim()}';
+    }
+    return _mapError(e);
   }
   // --- Actions ---
 
@@ -504,7 +621,7 @@ class AuthBlock {
   /// In this Flutter app, we'll simulate cookie check or just go to auto-auth
   Future<void> checkSession(BuildContext context) async {
     status.value = AuthStatus.checkingSession;
-    print("🔍 [AuthBlock] Checking for Supabase session...");
+    appLog("🔍 [AuthBlock] Checking for Supabase session...");
 
     // Load remembered identity for UI preview
     await _loadRememberedUser();
@@ -512,7 +629,7 @@ class AuthBlock {
     try {
       final session = Supabase.instance.client.auth.currentSession;
       if (session != null) {
-        print("✅ [AuthBlock] Supabase session found.");
+        appLog("✅ [AuthBlock] Supabase session found.");
         jwt.value = session.accessToken;
 
         // You might want to get the username from the JWT or Supabase user metadata
@@ -522,39 +639,34 @@ class AuthBlock {
         // unawaited(_authService.appSync(session.accessToken));
         await fetchUser();
       } else {
-        print("⚠️ [AuthBlock] No Supabase session found. Checking fallback...");
+        appLog("⚠️ [AuthBlock] No Supabase session found. Checking fallback...");
         await fetchAutoJWT();
       }
     } catch (e) {
-      print("❌ [AuthBlock] Error checking Supabase session: $e");
+      appLog("❌ [AuthBlock] Error checking Supabase session: $e");
       await fetchAutoJWT();
     }
   }
 
-  /// Step 2: Attempt to fetch JWT from API automatically (if possible/needed)
-  /// Corresponds to onAuthen in XState
+  /// Step 2: No Supabase session — leave user unauthenticated so [GoRouter]
+  /// can open `/login`. Guest mode is optional via [loginAsGuest] on the login UI.
   Future<void> fetchAutoJWT() async {
-    status.value = AuthStatus.authenticating;
-    print("🔍 Step 2: Attempting to fetch JWT from API automatically...");
+    appLog(
+      "🔍 Step 2: No Supabase session — sign-in required (guest not auto-selected).",
+    );
 
     try {
-      // The machine logic says GET /backend/auth/login
-      // We'll implement this in CustomAuthService if it doesn't exist
-      // Since it's a mock/example in many cases, we'll try it
-      // final data = await _authService.fetchSessionJWT(); // hypothetical
-
-      // For now, let's assume it fails or returns unauthenticated to force manual login
-      // unless we want to simulate success
+      jwt.value = null;
+      username.value = null;
       status.value = AuthStatus.unauthenticated;
-      print(
+      appLog(
         "⚠️ Auto-auth returned unauthenticated. Waiting for user credentials.",
       );
-      // Fallback to Guest Mode automatically if offline/unauthenticated
-      await loginAsGuest();
     } catch (e) {
-      print("❌ Auto-auth fetch failed: $e");
-      // Fallback to Guest Mode automatically if offline
-      await loginAsGuest();
+      appLog("❌ Auto-auth fetch failed: $e");
+      jwt.value = null;
+      username.value = null;
+      status.value = AuthStatus.unauthenticated;
     }
   }
 
@@ -567,14 +679,14 @@ class AuthBlock {
     status.value = AuthStatus.authenticating;
     error.value = null;
     armAuthInteractionTimeout();
-    print("🔐 [AuthBlock] Authenticating: $ident");
+    appLog("🔐 [AuthBlock] Authenticating: $ident");
 
     try {
       String email = ident;
 
       // 1. Resolve username to email if identifier doesn't look like an email
       if (!ident.contains('@')) {
-        print("🔍 [AuthBlock] Resolving username '$ident' to email...");
+        appLog("🔍 [AuthBlock] Resolving username '$ident' to email...");
         try {
           // Attempt to find the user in the public user_accounts table first.
           final response = await Supabase.instance.client
@@ -596,17 +708,17 @@ class AuthBlock {
             if (emailResponse != null &&
                 emailResponse['email_address'] != null) {
               email = emailResponse['email_address'];
-              print("✅ [AuthBlock] Username '$ident' resolved to '$email'");
+              appLog("✅ [AuthBlock] Username '$ident' resolved to '$email'");
             }
           }
         } catch (resolveErr) {
-          print(
+          appLog(
             "⚠️ [AuthBlock] Username resolution failed: $resolveErr. Falling back...",
           );
         }
 
         if (email == ident) {
-          print(
+          appLog(
             "⚠️ [AuthBlock] Username resolution failed for: $ident. Attempting direct login.",
           );
         }
@@ -629,7 +741,7 @@ class AuthBlock {
         // unawaited(_authService.appSync(session.accessToken));
 
         status.value = AuthStatus.authenticated;
-        print("✅ [AuthBlock] Authentication successful.");
+        appLog("✅ [AuthBlock] Authentication successful.");
 
         // Securely store credentials if biometric login is not yet confirmed
         // For production, you might want to ask the user before enabling this.
@@ -649,7 +761,7 @@ class AuthBlock {
         throw Exception("Supabase returned no session");
       }
     } catch (e) {
-      print("❌ [AuthBlock] Authentication failed: $e");
+      appLog("❌ [AuthBlock] Authentication failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
     } finally {
@@ -661,16 +773,18 @@ class AuthBlock {
   Future<void> signInWithApple() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    armAuthInteractionTimeout();
-    print("🍎 [AuthBlock] Initiating Apple Sign-In via Supabase...");
+    appLog("🍎 [AuthBlock] Initiating Apple Sign-In via Supabase...");
 
     try {
       if (Platform.isIOS || Platform.isMacOS) {
+        // Apple nonce: pass SHA256(raw) to Apple, raw nonce to Supabase.
+        final nonces = _createAppleNoncePair();
         final credential = await SignInWithApple.getAppleIDCredential(
           scopes: [
             AppleIDAuthorizationScopes.email,
             AppleIDAuthorizationScopes.fullName,
           ],
+          nonce: nonces.hashed,
         );
 
         final idToken = credential.identityToken;
@@ -681,21 +795,24 @@ class AuthBlock {
         await Supabase.instance.client.auth.signInWithIdToken(
           provider: OAuthProvider.apple,
           idToken: idToken,
+          nonce: nonces.raw,
         );
       } else {
         // Fallback to OAuth for other platforms
         const redirectTo = 'io.supabase.icegate://login-callback';
+        authLog('🍎 opening Apple OAuth in browser → $redirectTo');
         await Supabase.instance.client.auth.signInWithOAuth(
           OAuthProvider.apple,
           redirectTo: redirectTo,
           authScreenLaunchMode: LaunchMode.externalApplication,
         );
+        _idleLoginUiWhileOAuthContinuesInBrowser();
       }
 
       final user = Supabase.instance.client.auth.currentUser;
 
       if (user != null) {
-        print(
+        appLog(
           "👤 [AuthBlock] User already present, syncing identity... with ${user.id}",
         );
         await syncUserWithSupabase(user);
@@ -717,9 +834,9 @@ class AuthBlock {
         await _loadRememberedUser();
       }
 
-      print("✅ [AuthBlock] User account synced to database.");
+      appLog("✅ [AuthBlock] User account synced to database.");
 
-      print(
+      appLog(
         "✅ [AuthBlock] Apple OAuth command sent. State change will be handled in DataLayer.",
       );
 
@@ -727,68 +844,58 @@ class AuthBlock {
         cancelAuthInteractionTimeout();
       }
     } catch (e) {
-      print("❌ [AuthBlock] Apple Sign-In initiation failed: $e");
+      appLog("❌ [AuthBlock] Apple Sign-In initiation failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
       cancelAuthInteractionTimeout();
     }
   }
 
+  /// Raw nonce for Supabase + SHA256 hash for Apple's credential request.
+  ({String raw, String hashed}) _createAppleNoncePair() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(32, (_) => random.nextInt(256));
+    final raw = base64Url.encode(bytes).replaceAll('=', '');
+    final hashed = sha256.convert(utf8.encode(raw)).toString();
+    return (raw: raw, hashed: hashed);
+  }
+
   /// Google Sign-In with Supabase
   Future<void> signInWithGoogle() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    armAuthInteractionTimeout();
-    print("🌐 [AuthBlock] Initiating Google Sign-In via Supabase...");
+    authLog('🌐 Google sign-in started');
 
     try {
-      const redirectTo = 'io.supabase.icegate://login-callback';
-      await Supabase.instance.client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: redirectTo,
-        authScreenLaunchMode: LaunchMode.externalApplication,
-      );
-
-      final user = Supabase.instance.client.auth.currentUser;
-
-      if (user != null) {
-        print(
-          "👤 [AuthBlock] User already present, syncing identity... with ${user.id}",
-        );
-        await syncUserWithSupabase(user);
-        final session = Supabase.instance.client.auth.currentSession;
-        if (session != null) {
-          // unawaited(_authService.appSync(session.accessToken));
-        }
-
-        // Save metadata for credential persistence
-        final email = user.email ?? "GoogleUser";
-        await _secureStorage.saveCredentials(
-          email,
-          "GOOGLE_AUTH",
-          displayName:
-              user.userMetadata?['full_name'] ?? user.userMetadata?['name'],
-          avatarUrl: user.userMetadata?['avatar_url'],
-        );
-        await _secureStorage.setBiometricEnabled(true);
-        await _loadRememberedUser();
-      }
-
-      print("✅ [AuthBlock] User account synced to database.");
-
-      print(
-        "✅ [AuthBlock] Google OAuth command sent. State change will be handled in DataLayer.",
-      );
-
-      if (Supabase.instance.client.auth.currentSession != null) {
-        cancelAuthInteractionTimeout();
-      }
+      // Single-path OAuth flow (external browser) on all platforms.
+      await _signInWithGoogleOAuth();
+      return; // Browser flow completes via deep link + onAuthStateChange.
     } catch (e) {
-      print("❌ [AuthBlock] Google Sign-In initiation failed: $e");
+      authLog('❌ Google sign-in failed to start: $e');
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
       cancelAuthInteractionTimeout();
     }
+  }
+
+  Future<void> _signInWithGoogleOAuth() async {
+    final supabaseUrl = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+    if (supabaseUrl.isEmpty || !supabaseUrl.startsWith('http')) {
+      throw Exception(
+        'SUPABASE_URL is missing or invalid. Add it to .env and rebuild.',
+      );
+    }
+    const redirectTo = 'io.supabase.icegate://login-callback';
+    authLog('redirectTo="$redirectTo" (len=${redirectTo.length})');
+    authLog('supabaseUrl=$supabaseUrl');
+    // User preference: go directly to external browser (Safari).
+    final launched = await Supabase.instance.client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: redirectTo,
+      authScreenLaunchMode: LaunchMode.externalApplication,
+    );
+    authLog('browser launched=$launched — waiting for io.supabase.icegate://login-callback');
+    _idleLoginUiWhileOAuthContinuesInBrowser();
   }
 
   /// Deep link for confirmation / OAuth / recovery — allowlist in Supabase Dashboard → Auth → URL config.
@@ -800,7 +907,7 @@ class AuthBlock {
     error.value = null;
     registerPendingEmail.value = null;
     armAuthInteractionTimeout();
-    print("📝 [AuthBlock] Registering user with Supabase: ${payload.userName}");
+    appLog("📝 [AuthBlock] Registering user with Supabase: ${payload.userName}");
 
     try {
       final AuthResponse response = await Supabase.instance.client.auth.signUp(
@@ -815,7 +922,7 @@ class AuthBlock {
       );
 
       if (response.user != null) {
-        print("✅ [AuthBlock] Registration successful for ${payload.email}");
+        appLog("✅ [AuthBlock] Registration successful for ${payload.email}");
         // If auto-logged in or confirmation not required:
         if (response.session != null) {
           jwt.value = response.session!.accessToken;
@@ -838,11 +945,11 @@ class AuthBlock {
         } else {
           status.value = AuthStatus.unauthenticated;
           registerPendingEmail.value = payload.email.trim();
-          print("📬 [AuthBlock] Confirmation email sent; awaiting verification.");
+          appLog("📬 [AuthBlock] Confirmation email sent; awaiting verification.");
         }
       }
     } catch (e) {
-      print("❌ [AuthBlock] Registration failed: $e");
+      appLog("❌ [AuthBlock] Registration failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
     } finally {
@@ -865,7 +972,7 @@ class AuthBlock {
       );
       return null;
     } catch (e) {
-      print('❌ [AuthBlock] resend signup: $e');
+      appLog('❌ [AuthBlock] resend signup: $e');
       return _mapError(e);
     }
   }
@@ -876,7 +983,7 @@ class AuthBlock {
 
   /// Step 7 & Logout
   Future<void> logout() async {
-    print("👋 Logging out...");
+    appLog("👋 Logging out...");
     final currentToken = jwt.value;
 
     // context.go("/login");
@@ -907,7 +1014,7 @@ class AuthBlock {
   Future<void> fetchUser() async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      print(
+      appLog(
         "⚠️ [AuthBlock] No Supabase session found for fetchUser. Falling back...",
       );
       await _fetchLocalFallback();
@@ -915,7 +1022,7 @@ class AuthBlock {
     }
 
     try {
-      print(
+      appLog(
         "🔍 [AuthBlock] Fetching user profile from Supabase profiles & user_accounts...",
       );
 
@@ -947,22 +1054,21 @@ class AuthBlock {
         hasLocalPassword.value =
             hash != null && hash != 'EXTERNAL_AUTH' && hash.isNotEmpty;
 
-        // Check for passkey enrollment on this device/account
-        final passkeyEnrolled = await _secureStorage.isBiometricEnabled();
-        isPasskeyEnrolled.value = passkeyEnrolled;
-        hasLocalPassword.value = true;
+        isPasskeyEnrolled.value = await _secureStorage.isPasskeyEnabled();
+        hasLocalPassword.value =
+            hash != null && hash != 'EXTERNAL_AUTH' && hash.isNotEmpty;
 
         // isPasskeyEnrolled.value = passkeyEnrolled; // Already set above
 
         status.value = AuthStatus.authenticated;
-        print(
+        appLog(
           "✅ [AuthBlock] Profile fetched for ${username.value} with email ${session.user.email}",
         );
 
         _startWatchingAccount(personId);
         return; // THOÁT HÀM THÀNH CÔNG
       } else {
-        print(
+        appLog(
           "⚠️ [AuthBlock] Profile record not found. Syncing existing user...",
         );
         await syncUserWithSupabase(session.user);
@@ -979,7 +1085,7 @@ class AuthBlock {
         return; // THOÁT HÀM, NGĂN KHÔNG CHO CHẠY XUỐNG DƯỚI
       }
     } catch (e) {
-      print(
+      appLog(
         "⚠️ [AuthBlock] Remote fetch failed: $e. Falling back to local/guest.",
       );
       // Chỉ chạy fallback nếu thực sự có lỗi mạng (catch error)
@@ -988,21 +1094,21 @@ class AuthBlock {
   }
 
   Future<void> _fetchLocalFallback() async {
-    print("🔄 [AuthBlock] Attempting local fallback for User ID...");
+    appLog("🔄 [AuthBlock] Attempting local fallback for User ID...");
     try {
       PersonData? localPerson = await _personDao.getPersonById(
         DataSeeder.guestPersonId,
       );
 
       if (localPerson == null) {
-        print("⚠️ [AuthBlock] Local guest fallback failed. No persons record.");
+        appLog("⚠️ [AuthBlock] Local guest fallback failed. No persons record.");
         return;
       }
 
       // Start watching the account reactively
       _startWatchingAccount(localPerson.id);
 
-      print(
+      appLog(
         "✅ [AuthBlock] Falling back to local user ID ${localPerson.id}: ${localPerson.firstName}",
       );
 
@@ -1015,7 +1121,7 @@ class AuthBlock {
         'role': 'admin',
       };
     } catch (dbError) {
-      print("❌ [AuthBlock] Local DB fallback failed: $dbError");
+      appLog("❌ [AuthBlock] Local DB fallback failed: $dbError");
     }
   }
 
@@ -1024,7 +1130,7 @@ class AuthBlock {
     final authUser = Supabase.instance.client.auth.currentUser;
     if (authUser == null) throw Exception("Not authenticated");
 
-    print("👤 [AuthBlock] Changing username to: $newUsername");
+    appLog("👤 [AuthBlock] Changing username to: $newUsername");
 
     try {
       final client = Supabase.instance.client;
@@ -1052,9 +1158,9 @@ class AuthBlock {
 
       // 4. Update UI signal
       username.value = newUsername;
-      print("✅ [AuthBlock] Username updated successfully.");
+      appLog("✅ [AuthBlock] Username updated successfully.");
     } catch (e) {
-      print("❌ [AuthBlock] Failed to change username: $e");
+      appLog("❌ [AuthBlock] Failed to change username: $e");
       rethrow;
     }
   }
@@ -1064,7 +1170,7 @@ class AuthBlock {
   Future<void> repairTenantBucket() async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      print("⚠️ [Auth] Cannot repair bucket without an active session.");
+      appLog("⚠️ [Auth] Cannot repair bucket without an active session.");
       return;
     }
 
@@ -1072,24 +1178,24 @@ class AuthBlock {
       final String personId = session.user.id;
       const String tenantId = "00000000-0000-0000-0000-000000000001";
 
-      print("🛰️ [Auth] Manual repair triggered for $personId");
+      appLog("🛰️ [Auth] Manual repair triggered for $personId");
       // Use the internal DAO reference
       await _personDao.migrateGuestData(personId, tenantId);
-      print("✅ [Auth] Manual repair successful.");
+      appLog("✅ [Auth] Manual repair successful.");
     } catch (e) {
-      print("❌ [Auth] Manual repair failed: $e");
+      appLog("❌ [Auth] Manual repair failed: $e");
     }
   }
 
   void _startWatchingAccount(String personId) {
     _accountSubscription?.cancel();
-    print("👀 [AuthBlock] Starting reactive watch for account: $personId");
+    appLog("👀 [AuthBlock] Starting reactive watch for account: $personId");
     _accountSubscription = _personDao.watchAccountByPersonId(personId).listen((
       account,
     ) {
       if (account != null && account.username != null) {
         if (username.value != account.username) {
-          print(
+          appLog(
             "🔄 [AuthBlock] Username synced from local DB: ${account.username}",
           );
           batch(() {
@@ -1115,7 +1221,7 @@ class AuthBlock {
       );
       return null;
     } catch (e) {
-      print('❌ [AuthBlock] resetPasswordForEmail: $e');
+      appLog('❌ [AuthBlock] resetPasswordForEmail: $e');
       return _mapError(e);
     }
   }
@@ -1130,23 +1236,32 @@ class AuthBlock {
     try {
       await client.functions.invoke('delete-account');
     } catch (e) {
-      print('⚠️ [AuthBlock] delete-account Edge Function: $e');
+      appLog('⚠️ [AuthBlock] delete-account Edge Function: $e');
     }
     try {
       await client.auth.signOut();
     } catch (e) {
-      print('⚠️ [AuthBlock] Supabase signOut: $e');
+      appLog('⚠️ [AuthBlock] Supabase signOut: $e');
     }
     await _secureStorage.clearCredentials();
     await logout();
     return null;
   }
 
+  /// Users enrolled before passkey_enabled existed used biometric_enabled only.
+  Future<void> _migrateLegacyPasskeyFlag() async {
+    if (await _secureStorage.isPasskeyEnabled()) return;
+    final creds = await _secureStorage.getCredentials();
+    if (creds['password'] == 'PASSKEY_AUTH') {
+      await _secureStorage.setPasskeyEnabled(true);
+    }
+  }
+
   Future<void> _loadRememberedUser() async {
     final data = await _secureStorage.getRememberedUser();
     if (data['username'] != null) {
       rememberedUser.value = data;
-      print(
+      appLog(
         "🧊 [AuthBlock] Remembered user loaded: ${data['displayName'] ?? data['username']}",
       );
     } else {

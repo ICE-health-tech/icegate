@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/IceDiamondBackground.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 
 // Components
 import 'login_components/LoginDecorations.dart';
@@ -19,6 +19,183 @@ class LoginPage extends StatefulWidget {
 
   @override
   State<LoginPage> createState() => _LoginPageState();
+}
+
+/// Cyberpunk "route rings" background: broken arcs + orbit dots.
+/// Kept subtle and low-frequency to avoid distracting from the CTA.
+class _CyberRouteRings extends StatelessWidget {
+  final Animation<double> t;
+  const _CyberRouteRings({required this.t});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: t,
+        builder: (context, child) {
+          return CustomPaint(
+            painter: _CyberRouteRingsPainter(progress: t.value),
+            size: Size.infinite,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CyberRouteRingsPainter extends CustomPainter {
+  final double progress;
+  _CyberRouteRingsPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.5, size.height * 0.36);
+    // "Impact" point like the reference crack/ring HUD.
+    final impact = Offset(size.width * 0.58, size.height * 0.25);
+    final base = math.min(size.width, size.height);
+
+    // Paints
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final dotPaint = Paint()..style = PaintingStyle.fill;
+
+    // Shatter rays (Cyclepunk / cracked-glass vibe)
+    final rayPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final impactGlow = Paint()
+      ..style = PaintingStyle.fill
+      ..blendMode = BlendMode.plus;
+
+    // 3 rings: each has a slightly different speed + dash pattern
+    final rings = <_RingSpec>[
+      _RingSpec(r: base * 0.36, w: 1.3, a: 0.14, speed: 0.55),
+      _RingSpec(r: base * 0.46, w: 1.0, a: 0.11, speed: -0.32),
+      _RingSpec(r: base * 0.58, w: 0.9, a: 0.09, speed: 0.22),
+    ];
+
+    // Impact glow + tiny core dot
+    impactGlow.shader = RadialGradient(
+      colors: [
+        Colors.white.withValues(alpha: 0.22),
+        EntryColors.iceCyan.withValues(alpha: 0.12),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.35, 1.0],
+    ).createShader(Rect.fromCircle(center: impact, radius: base * 0.22));
+    canvas.drawCircle(impact, base * 0.22, impactGlow);
+    dotPaint.color = Colors.white.withValues(alpha: 0.65);
+    canvas.drawCircle(impact, 1.8, dotPaint);
+
+    // Rays: multiple thin cracks + a few thicker "shards"
+    final rayLen = base * 0.62;
+    for (int i = 0; i < 18; i++) {
+      final a = (i / 18) * math.pi * 2 + math.sin(progress * math.pi * 2) * 0.06;
+      final jitter = math.sin((impact.dx + impact.dy) * 0.002 + i * 1.7) * 0.035;
+      final start = impact + Offset(math.cos(a) * (base * 0.02), math.sin(a) * (base * 0.02));
+      final end = impact + Offset(math.cos(a + jitter) * (rayLen * (0.35 + (i % 5) * 0.1)), math.sin(a + jitter) * (rayLen * (0.35 + (i % 5) * 0.1)));
+
+      final thick = (i % 6 == 0);
+      rayPaint
+        ..strokeWidth = thick ? 1.6 : 0.85
+        ..color = (thick ? Colors.white : EntryLandscapePalette.dustySkyBlue)
+            .withValues(alpha: thick ? 0.11 : 0.08);
+      canvas.drawLine(start, end, rayPaint);
+
+      // Occasional side-branch
+      if (i % 4 == 0) {
+        final b = a + (i.isEven ? 0.35 : -0.32);
+        final mid = Offset.lerp(start, end, 0.55)!;
+        final bend = mid + Offset(math.cos(b) * base * 0.08, math.sin(b) * base * 0.08);
+        rayPaint
+          ..strokeWidth = 0.7
+          ..color = Colors.white.withValues(alpha: 0.06);
+        final p = Path()..moveTo(start.dx, start.dy)
+          ..quadraticBezierTo(bend.dx, bend.dy, end.dx, end.dy);
+        canvas.drawPath(p, rayPaint);
+      }
+    }
+
+    for (final spec in rings) {
+      final rot = (progress * math.pi * 2) * spec.speed;
+
+      ringPaint
+        ..strokeWidth = spec.w
+        ..color = EntryColors.iceCyan.withValues(alpha: spec.a);
+
+      // Broken arcs
+      _drawArcSegment(canvas, center, spec.r, rot + 0.15, 0.9, ringPaint);
+      _drawArcSegment(canvas, center, spec.r, rot + 1.55, 0.55, ringPaint);
+      _drawArcSegment(canvas, center, spec.r, rot + 2.55, 0.75, ringPaint);
+
+      // Add a couple of arcs centered around impact (reference-like)
+      ringPaint.color = Colors.white.withValues(alpha: spec.a * 0.42);
+      final around = math.atan2(impact.dy - center.dy, impact.dx - center.dx);
+      _drawArcSegment(canvas, center, spec.r, around - 0.35 + rot * 0.1, 0.6, ringPaint);
+
+      // Secondary faint ring to feel "etched"
+      ringPaint.color = Colors.white.withValues(alpha: spec.a * 0.35);
+      _drawArcSegment(canvas, center, spec.r, rot + 0.75, 0.22, ringPaint);
+      _drawArcSegment(canvas, center, spec.r, rot + 3.65, 0.18, ringPaint);
+
+      // Orbit dot (like a router packet)
+      final theta = rot + 0.35;
+      final dot = Offset(
+        center.dx + math.cos(theta) * spec.r,
+        center.dy + math.sin(theta) * spec.r,
+      );
+      dotPaint.color = EntryColors.iceCyan.withValues(alpha: spec.a * 2.2);
+      canvas.drawCircle(dot, 2.2, dotPaint);
+    }
+
+    // Subtle connector lines ("routes")
+    final routePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8
+      ..color = EntryLandscapePalette.dustySkyBlue.withValues(alpha: 0.08);
+
+    final p1 = Offset(center.dx - base * 0.22, center.dy + base * 0.02);
+    final p2 = Offset(center.dx + base * 0.26, center.dy - base * 0.06);
+    final p3 = Offset(center.dx + base * 0.06, center.dy + base * 0.22);
+
+    final path = Path()
+      ..moveTo(p1.dx, p1.dy)
+      ..quadraticBezierTo(center.dx, center.dy - base * 0.08, p2.dx, p2.dy)
+      ..quadraticBezierTo(center.dx + base * 0.18, center.dy + base * 0.12, p3.dx, p3.dy);
+    canvas.drawPath(path, routePaint);
+  }
+
+  void _drawArcSegment(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double start,
+    double sweep,
+    Paint paint,
+  ) {
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      start,
+      sweep,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _CyberRouteRingsPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+class _RingSpec {
+  final double r;
+  final double w;
+  final double a;
+  final double speed;
+  _RingSpec({required this.r, required this.w, required this.a, required this.speed});
 }
 
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
@@ -115,18 +292,28 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Watch((context) {
       final status = _authBlock.status.value;
       final error = _authBlock.error.value;
-      final isLoading =
+      /// Locks inputs/footer while session is restoring or a login is in flight.
+      final controlsLocked =
           status == AuthStatus.authenticating ||
           status == AuthStatus.registering ||
           status == AuthStatus.checkingSession;
+      /// Spinner on primary CTA only during active login/OAuth — not during session check.
+      final primaryShowsSpinner =
+          status == AuthStatus.authenticating ||
+          status == AuthStatus.registering;
 
       return Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: EntryLandscapePalette.midnightNavy,
+        backgroundColor: const Color(0xFF000510),
         body: IceDiamondBackground(
-          particleCount: 80,
+          particleCount: 110,
           child: Stack(
             children: [
+              // 0. Cyberpunk route rings (Cyclepunk vibe)
+              Positioned.fill(
+                child: _CyberRouteRings(t: _hudRotationController),
+              ),
+
               // 1. Tech Background Ornaments
               _buildBackgroundOrnaments(),
               
@@ -146,13 +333,24 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     ),
                     child: SingleChildScrollView(
                       padding: EntryConstraints.loginScrollPadding,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildPremiumMainCard(isLoading, error, context),
-                          const SizedBox(height: 40),
-                          _buildLoginFooter(isLoading, context),
-                        ],
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 420),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildPremiumMainCard(
+                                controlsLocked,
+                                primaryShowsSpinner,
+                                error,
+                                context,
+                              ),
+                              const SizedBox(height: 40),
+                              _buildLoginFooter(controlsLocked, context),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -226,7 +424,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildPremiumMainCard(bool isLoading, String? error, BuildContext context) {
+  Widget _buildPremiumMainCard(
+    bool controlsLocked,
+    bool primaryShowsSpinner,
+    String? error,
+    BuildContext context,
+  ) {
     // No 3D transform: perspective + BackdropFilter causes mirrored backdrop artifacts on iOS.
     // Shine/scan overlays use Positioned.fill so they cannot paint outside the card or over the footer.
     return ClipRRect(
@@ -236,95 +439,169 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         clipBehavior: Clip.hardEdge,
         children: [
           BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(32),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF122536).withValues(alpha: 0.94),
+                    const Color(0xFF050912).withValues(alpha: 0.97),
+                    Colors.black.withValues(alpha: 0.92),
+                  ],
+                  stops: const [0.0, 0.48, 1.0],
+                ),
                 border: Border.all(
-                  color: EntryLandscapePalette.steelBlue.withValues(alpha: 0.38),
+                  color: EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.42),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.55),
-                    blurRadius: 50,
-                    offset: const Offset(20, 35),
-                    spreadRadius: -8,
+                    color: Colors.black.withValues(alpha: 0.72),
+                    blurRadius: 56,
+                    offset: const Offset(0, 32),
+                    spreadRadius: -6,
                   ),
                   BoxShadow(
-                    color: EntryLandscapePalette.dustySkyBlue.withValues(
-                      alpha: 0.14,
-                    ),
-                    blurRadius: 80,
-                    offset: const Offset(-8, -8),
-                    spreadRadius: -15,
+                    color: EntryColors.iceCyan.withValues(alpha: 0.18),
+                    blurRadius: 36,
+                    offset: const Offset(0, -6),
+                    spreadRadius: -14,
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    blurRadius: 18,
+                    offset: const Offset(0, -2),
+                    spreadRadius: -16,
                   ),
                 ],
               ),
-              child: Column(
+              child: Stack(
                 children: [
-                  _buildAnimatedLogo(),
-                  const SizedBox(height: 10),
-                  Text(
-                    AppLocalizations.of(context)!.app_title.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 8.0,
-                      color: EntryLandscapePalette.icyWhiteBlue,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (error != null) _buildErrorMessage(error),
-
-                  ModernAuthField(
-                    controller: _emailController,
-                    hint: AppLocalizations.of(context)!.username_email_hint,
-                    icon: Icons.alternate_email_rounded,
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 20),
-                  ModernAuthField(
-                    controller: _passwordController,
-                    hint: AppLocalizations.of(context)!.password_hint,
-                    icon: Icons.lock_outline_rounded,
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 4),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed:
-                          isLoading
-                              ? null
-                              : () => _showForgotPasswordDialog(context),
-                      child: Text(
-                        AppLocalizations.of(context)!.forgot_password,
-                        style: TextStyle(
-                          color: EntryLandscapePalette.dustySkyBlue.withValues(
-                            alpha: 0.95,
+                  // Bevel + vignette overlays to create 3D depth (no perspective transforms).
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(32),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.12),
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.25),
+                            ],
+                            stops: const [0.0, 0.38, 1.0],
                           ),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.2,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 28),
-
-                  ShimmerButton(
-                    label: AppLocalizations.of(context)!.btn_enter,
-                    isLoading: isLoading,
-                    onPressed: _handleLogin,
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(32),
+                          gradient: RadialGradient(
+                            center: const Alignment(-0.25, -0.55),
+                            radius: 1.05,
+                            colors: [
+                              EntryColors.iceCyan.withValues(alpha: 0.14),
+                              Colors.transparent,
+                            ],
+                            stops: const [0.0, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+                  // Content
+                  Column(
+                    children: [
+                      _buildAnimatedLogo(),
+                      const SizedBox(height: 10),
+                      Text(
+                        AppLocalizations.of(context)!.app_title.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 8.0,
+                          color: const Color(0xFFF5FBFF),
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.85),
+                              blurRadius: 18,
+                              offset: const Offset(0, 4),
+                            ),
+                            Shadow(
+                              color: EntryColors.iceCyan.withValues(alpha: 0.35),
+                              blurRadius: 24,
+                              offset: Offset.zero,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      if (error != null) _buildErrorMessage(error),
 
-                  const SizedBox(height: 24),
+                      ModernAuthField(
+                        controller: _emailController,
+                        hint: AppLocalizations.of(context)!.username_email_hint,
+                        icon: Icons.alternate_email_rounded,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 20),
+                      ModernAuthField(
+                        controller: _passwordController,
+                        hint: AppLocalizations.of(context)!.password_hint,
+                        icon: Icons.lock_outline_rounded,
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed:
+                              controlsLocked
+                                  ? null
+                                  : () => _showForgotPasswordDialog(context),
+                          child: Text(
+                            AppLocalizations.of(context)!.forgot_password,
+                            style: TextStyle(
+                              color: const Color(0xFFCBE9FF),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                              decoration: TextDecoration.underline,
+                              decorationColor: const Color(0xFFCBE9FF)
+                                  .withValues(alpha: 0.55),
+                            ),
+                          ),
+                        ),
+                      ),
+             
 
-                  _buildAlternativeAuthRow(isLoading, context),
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 360),
+                          child: ShimmerButton(
+                            label: AppLocalizations.of(context)!.btn_enter,
+                            isLoading: primaryShowsSpinner,
+                            onPressed: _handleLogin,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      _buildAlternativeAuthRow(controlsLocked, context),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -360,6 +637,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       builder: (context, child) {
         final double glow = 30 + math.sin(_logoPulseController.value * math.pi) * 20;
         final double scale = 1.0 + math.sin(_logoPulseController.value * math.pi) * 0.05;
+        // Subtle 3D spin (perspective tilt) for the crystal mark.
+        final t = _logoPulseController.value;
+        final double rotY = math.sin(t * math.pi * 2) * 0.28;
+        final double rotX = math.cos(t * math.pi * 2) * 0.16;
 
         return Container(
           width: 180,
@@ -374,11 +655,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
             ],
           ),
-          child: Transform.scale(
-            scale: scale,
-            child: Image.asset(
-              'assets/images/crystal_logo.png',
-              fit: BoxFit.contain,
+          child: Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.0016)
+              ..rotateX(rotX)
+              ..rotateY(rotY),
+            child: Transform.scale(
+              scale: scale,
+              child: Image.asset(
+                'assets/images/crystal_logo2.png',
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+              ),
             ),
           ),
         );
@@ -387,33 +676,33 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   Widget _buildAlternativeAuthRow(bool isLoading, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
           child: AuthIconButton(
+            pillarKey: 'health',
             icon: Icons.fingerprint_rounded,
-            label: "",
+            label: 'Face ID',
             onPressed: isLoading ? null : _handleSecureLogin,
-            color: const Color.fromARGB(235, 211, 249, 200),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: AuthIconButton(
+            pillarKey: 'mind',
             icon: Icons.apple_rounded,
-            label: AppLocalizations.of(context)!.apple_login,
+            label: l10n.apple_login,
             onPressed: isLoading ? null : _handleAppleSignIn,
-            color: EntryLandscapePalette.icyWhiteBlue,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: AuthIconButton(
-            icon: Icons.g_mobiledata_rounded,
-            label: AppLocalizations.of(context)!.google_login,
+            pillarKey: 'google',
+            leading: AuthIconButton.googleMark(),
+            label: l10n.google_login,
             onPressed: isLoading ? null : _handleGoogleSignIn,
-            isLargeIcon: true,
-            color: const Color.fromARGB(255, 255, 255, 255),
           ),
         ),
       ],
@@ -450,6 +739,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   String _getLocalizedError(BuildContext context, String key) {
     final l10n = AppLocalizations.of(context)!;
+    // Allow `AuthBlock` to pass through unexpected error details while still
+    // mapping to the localized `err_unexpected` template.
+    if (key.startsWith('err_unexpected|')) {
+      final details = key.substring('err_unexpected|'.length);
+      return l10n.err_unexpected(details.isEmpty ? 'System Error' : details);
+    }
     switch (key) {
       case "err_invalid_credentials": return l10n.err_invalid_credentials;
       case "err_email_not_confirmed": return l10n.err_email_not_confirmed;
@@ -458,6 +753,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       case "err_auth_timeout": return l10n.err_auth_timeout;
       case "err_passkey_canceled": return l10n.err_passkey_canceled;
       case "err_passkey_failed": return l10n.err_passkey_failed;
+      case "err_google_canceled": return l10n.err_google_canceled;
+      case "err_google_failed": return l10n.err_google_failed;
       case "err_biometric_unsupported": return l10n.err_biometric_unsupported;
       case "err_biometric_disabled": return l10n.err_biometric_disabled;
       case "err_too_many_attempts": return l10n.err_too_many_attempts;
@@ -624,16 +921,23 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Future<void> _handleSecureLogin() async {
     FocusScope.of(context).unfocus();
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 350));
       if (!mounted) return;
-      final success = await _authBlock.loginWithBiometrics(context);
-      if (!success && mounted) {
-        await _authBlock.loginWithPasskey(context);
-      }
+      final emailHint = _emailController.text.trim();
+      await _authBlock.loginWithQuickAccess(
+        context,
+        emailHint: emailHint.isEmpty ? null : emailHint,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.msg_secure_login_failed(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.msg_secure_login_failed(
+                e.toString(),
+              ),
+            ),
+          ),
         );
       }
     }
@@ -654,15 +958,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Future<void> _handleGuestLogin() async => await _authBlock.loginAsGuest();
 
   Future<void> _handleGoogleSignIn() async {
-    try {
-      await _authBlock.signInWithGoogle();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.google_signin_error(e.toString()))),
-        );
-      }
-    }
+    FocusScope.of(context).unfocus();
+    await _authBlock.signInWithGoogle();
   }
 
   Future<void> _handleAppleSignIn() async {

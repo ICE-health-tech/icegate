@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'PluginProtocol.dart';
 
@@ -12,6 +12,8 @@ class InternalWidgetProtocol implements PluginProtocol {
   final String _widgetID;
   final String _alias;
   final String? _scope; // New field
+  /// Primary key in `internal_widgets` when loaded from the DB; null for templates.
+  final String? _rowId;
 
   // NEW: Enhanced metadata fields
   final String _description;
@@ -43,6 +45,8 @@ class InternalWidgetProtocol implements PluginProtocol {
   String get widgetID => _widgetID;
 
   String? get scope => _scope;
+
+  String? get rowId => _rowId;
 
   // Getters for new fields
   @override
@@ -88,6 +92,7 @@ class InternalWidgetProtocol implements PluginProtocol {
     List<String> tags = const [],
     bool isActive = false,
     bool requiresAuth = false,
+    String? rowId,
   }) : _url = url,
        _name = name,
        _imageUrl = imageUrl,
@@ -102,7 +107,8 @@ class InternalWidgetProtocol implements PluginProtocol {
        _tags = tags,
        _isActive = isActive,
        _requiresAuth = requiresAuth,
-       _scope = scope;
+       _scope = scope,
+       _rowId = rowId;
 
   @override
   InternalWidgetProtocol createInstance({
@@ -126,6 +132,7 @@ class InternalWidgetProtocol implements PluginProtocol {
       tags: _tags,
       isActive: _isActive,
       requiresAuth: _requiresAuth,
+      rowId: null,
     );
   }
 
@@ -170,6 +177,7 @@ class InternalWidgetProtocol implements PluginProtocol {
       tags: const [],
       isActive: false,
       requiresAuth: false,
+      rowId: data.id,
     );
   }
 

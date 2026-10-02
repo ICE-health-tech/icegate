@@ -86,7 +86,7 @@ class ScreenshotMemoryService {
       }
 
       return ScreenshotMemoryOutcome(
-        memory: ScreenshotMemoryProtocol.fromJson(response.body),
+        memory: ScreenshotMemoryProtocol.fromJsonString(response.body),
         requestOk: true,
       );
     } on TimeoutException {

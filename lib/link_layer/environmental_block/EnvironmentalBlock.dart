@@ -1,11 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals/signals.dart';
 import 'EnvironmentalService.dart';
-import 'LocationService.dart';
 
 class EnvironmentalBlock {
-  // Signals for reactive state
+  static const _cacheKey = 'environmental_data_cache_v1';
+  static const _cacheTimeKey = 'environmental_data_cache_time_v1';
+
   final currentData = signal<EnvironmentalData?>(null);
   final isLoading = signal<bool>(false);
   final error = signal<String?>(null);
@@ -14,41 +18,71 @@ class EnvironmentalBlock {
   Timer? _refreshTimer;
 
   EnvironmentalBlock() {
-    // Initial fetch
-    refresh();
-    
-    // Auto-refresh every 30 minutes
-    _refreshTimer = Timer.periodic(const Duration(minutes: 30), (_) => refresh());
+    unawaited(_loadCached());
+    unawaited(refresh());
+
+    _refreshTimer = Timer.periodic(
+      const Duration(minutes: 30),
+      (_) => refresh(),
+    );
+  }
+
+  Future<void> _loadCached() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_cacheKey);
+      final timeRaw = prefs.getString(_cacheTimeKey);
+      if (raw == null) return;
+
+      final data = EnvironmentalData.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
+      currentData.value = data;
+      if (timeRaw != null) {
+        lastUpdated.value = DateTime.tryParse(timeRaw);
+      }
+      debugPrint('EnvironmentalBlock: restored cached env data');
+    } catch (e) {
+      debugPrint('EnvironmentalBlock: cache read failed: $e');
+    }
+  }
+
+  Future<void> _persistCache(EnvironmentalData data) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_cacheKey, jsonEncode(data.toJson()));
+      await prefs.setString(_cacheTimeKey, DateTime.now().toIso8601String());
+    } catch (e) {
+      debugPrint('EnvironmentalBlock: cache write failed: $e');
+    }
   }
 
   Future<void> refresh() async {
     if (isLoading.value) return;
-    
-    isLoading.value = true;
+
+    final hadData = currentData.value != null;
+    if (!hadData) {
+      isLoading.value = true;
+    }
     error.value = null;
-    debugPrint('EnvironmentalBlock: refresh() started');
 
     try {
-      var position = await LocationService.getCurrentLocation();
-      
-      double lat = position?.latitude ?? 21.0285; // Fallback to Hanoi
-      double lon = position?.longitude ?? 105.8542;
-      
-      if (position == null) {
-        debugPrint('EnvironmentalBlock: Location null, using fallback (Hanoi)');
-      }
+      const double lat = 21.0285;
+      const double lon = 105.8542;
 
       final data = await EnvironmentalService.fetchEnvironmentalData(lat, lon);
-      
+
       if (data != null) {
         currentData.value = data;
         lastUpdated.value = DateTime.now();
-        debugPrint('EnvironmentalBlock: Successfully updated data for $lat, $lon');
-      } else {
+        await _persistCache(data);
+      } else if (!hadData) {
         error.value = 'Failed to fetch environmental data';
       }
     } catch (e) {
-      error.value = 'Error: $e';
+      if (!hadData) {
+        error.value = 'Error: $e';
+      }
       debugPrint('EnvironmentalBlock error: $e');
     } finally {
       isLoading.value = false;

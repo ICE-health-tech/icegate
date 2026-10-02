@@ -1,19 +1,28 @@
-import 'dart:convert';
-import 'dart:ui';
+import 'dart:async';
+
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
+import 'package:path/path.dart' as p;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/utils/journal_media.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindLogInsights.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_activity_tokens.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/mind_mood_palette.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class SocialNotesDashboard extends StatefulWidget {
@@ -24,10 +33,33 @@ class SocialNotesDashboard extends StatefulWidget {
 }
 
 class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
+  bool _journalSyncStarted = false;
+
+  void _maybeSyncJournalImages(String personId) {
+    if (_journalSyncStarted || personId.isEmpty) return;
+    _journalSyncStarted = true;
+    unawaited(
+      context.read<StorageBlock>().syncJournalNotes(
+        personId: personId,
+        notesDao: context.read<ProjectNoteDAO>(),
+        category: 'social',
+      ),
+    );
+  }
+
+  /// Space for [MainShell] bottom FAB / home button strip.
+  double _bottomClearance(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final wideMac = defaultTargetPlatform == TargetPlatform.macOS && width >= 560;
+    return wideMac ? 72 : 104;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Watch((context) {
       final personBlock = context.read<PersonBlock>();
       final personId = personBlock.currentPersonID.value;
@@ -36,62 +68,39 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
         return const Center(child: CircularProgressIndicator());
       }
 
+      _maybeSyncJournalImages(personId);
+
       return Container(
         color: Colors.transparent,
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
             SliverToBoxAdapter(
               child: Column(
                 children: [
-                  _buildQuickEntryBar(context, colorScheme, textTheme),
-                  const Divider(height: 1, thickness: 0.2),
+                  _buildQuickEntryBar(context, colorScheme, textTheme, isDark),
+                  const SizedBox(height: 8),
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: StreamBuilder<List<MindLogData>>(
-                      stream: context.read<MindBlock>().watchMindLogsRange(
-                        personId,
-                        7,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.sizeOf(context).width >= 900
+                          ? 32
+                          : 16,
+                      vertical: 12,
+                    ),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 920),
+                        child: _buildJournalMoodTrendsPanel(
+                          context,
+                          personId,
+                          colorScheme,
+                          textTheme,
+                          isDark,
+                        ),
                       ),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.mood_trends_title.toUpperCase(),
-                              style: textTheme.labelSmall?.copyWith(
-                                letterSpacing: 2,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            MoodTrendsChart(logs: snapshot.data!),
-                            const SizedBox(height: 24),
-                            _buildRecentLogsPreview(
-                              context,
-                              snapshot.data!,
-                              personId,
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              AppLocalizations.of(context)!.social_notes_title.toUpperCase(),
-                              style: textTheme.labelSmall?.copyWith(
-                                letterSpacing: 2,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
                     ),
                   ),
                 ],
@@ -127,25 +136,72 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                 final sortedNotes = List<ProjectNoteData>.from(notes)
                   ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
-                return SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.75,
+                return SliverLayoutBuilder(
+                  builder: (context, constraints) {
+                    final cw = constraints.crossAxisExtent;
+                    var gap = 14.0;
+                    var hPad = 16.0;
+                    var maxTileWidth = 320.0;
+                    var tileHeight = 320.0;
+                    final bottomPad = _bottomClearance(context);
+                    final useList = cw < 720;
+
+                    if (cw >= 1200) {
+                      maxTileWidth = 300;
+                      tileHeight = 328;
+                      hPad = 32;
+                    } else if (cw >= 900) {
+                      maxTileWidth = 300;
+                      tileHeight = 324;
+                      hPad = 28;
+                    } else if (cw >= 640) {
+                      maxTileWidth = 280;
+                      tileHeight = 316;
+                      hPad = 20;
+                    }
+
+                    if (useList) {
+                      return SliverPadding(
+                        padding: EdgeInsets.fromLTRB(hPad, 8, hPad, bottomPad),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index < sortedNotes.length - 1
+                                    ? gap
+                                    : 0,
+                              ),
+                              child: SocialJournalNoteCard(
+                                note: sortedNotes[index],
+                                layout: NoteCardLayout.list,
+                              ),
+                            ),
+                            childCount: sortedNotes.length,
+                          ),
                         ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) =>
-                          _SocialNoteCard(note: sortedNotes[index]),
-                      childCount: sortedNotes.length,
-                    ),
-                  ),
+                      );
+                    }
+
+                    return SliverPadding(
+                      padding: EdgeInsets.fromLTRB(hPad, 8, hPad, bottomPad),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: maxTileWidth,
+                          mainAxisExtent: tileHeight,
+                          crossAxisSpacing: gap,
+                          mainAxisSpacing: gap,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => SocialJournalNoteCard(
+                            note: sortedNotes[index],
+                            layout: NoteCardLayout.grid,
+                          ),
+                          childCount: sortedNotes.length,
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -159,46 +215,51 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     BuildContext context,
     ColorScheme colorScheme,
     TextTheme textTheme,
+    bool isDark,
   ) {
-    final personBlock = context.read<PersonBlock>();
-    final person = personBlock.information.value.profiles;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Row(
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 32 : 16,
+        vertical: isDesktop ? 12 : 16,
+      ),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 720 : double.infinity,
+          ),
+          child: Row(
         children: [
           Expanded(
             child: GestureDetector(
               onTap: () => _createNewNote(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 16 : 20,
+                  vertical: isDesktop ? 10 : 12,
                 ),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh.withValues(
-                    alpha: 0.5,
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-                  ),
+                decoration: HealthMetricColors.shellPanel(
+                  colorScheme,
+                  isDark: isDark,
+                  radius: 30,
+                  accent: HealthMetricColors.pillarViolet,
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.sentiment_satisfied_alt_rounded,
-                      size: 20,
-                      color: colorScheme.primary.withValues(alpha: 0.7),
+                      size: isDesktop ? 18 : 20,
+                      color: colorScheme.onSurface,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       AppLocalizations.of(context)!.mind_quick_entry_hint,
                       style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.8,
-                        ),
-                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface.withValues(alpha: 0.78),
+                        fontWeight: FontWeight.w600,
+                        fontSize: isDesktop ? 14 : null,
                       ),
                     ),
                   ],
@@ -209,7 +270,10 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
           const SizedBox(width: 12),
           IconButton.filledTonal(
             onPressed: () => _pickAndCreateImageNote(context),
-            icon: const Icon(Icons.add_photo_alternate_rounded, size: 22),
+            icon: Icon(
+              Icons.add_photo_alternate_rounded,
+              size: isDesktop ? 20 : 22,
+            ),
             style: IconButton.styleFrom(
               backgroundColor: colorScheme.secondaryContainer.withValues(
                 alpha: 0.4,
@@ -219,7 +283,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
           ),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildEmptyState(
@@ -280,8 +346,10 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     List<MindLogData> logs,
     String personId,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     // Sort by when the entry was saved (createdAt); logDate is only the day bucket.
     final sortedLogs = List<MindLogData>.from(logs)
@@ -299,7 +367,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
         final l10n = AppLocalizations.of(context)!;
 
         return SizedBox(
-          height: 100,
+          height: 112,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -307,25 +375,15 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
             itemBuilder: (context, index) {
               final log = sortedLogs[index];
 
-              final mood = mindMoodAccent(log.moodScore);
               return Container(
-                width: 160,
-                margin: const EdgeInsets.only(right: 12),
+                width: 168,
+                margin: EdgeInsets.only(right: index == sortedLogs.length - 1 ? 0 : 12),
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      mood.withValues(alpha: 0.18),
-                      colorScheme.surfaceContainerHigh.withValues(alpha: 0.45),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: mood.withValues(alpha: 0.45),
-                    width: 1,
-                  ),
+                decoration: HealthMetricColors.shellPanel(
+                  colorScheme,
+                  isDark: isDark,
+                  radius: 16,
+                  accent: HealthMetricColors.pillarViolet,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,9 +398,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                             DateFormat('MMM d, HH:mm')
                                 .format(log.createdAt.toLocal()),
                             style: textTheme.labelSmall?.copyWith(
-                              fontSize: 9,
-                              color: colorScheme.onSurface.withValues(alpha: 0.88),
-                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.w700,
                             ),
                             maxLines: 1,
                           ),
@@ -351,14 +409,12 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      MindActivityTokens.formatActivitiesJson(
-                        l10n,
-                        log.activities,
-                        optMap,
-                      ),
+                      _journalCardSubtitle(l10n, log, optMap),
                       style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 10,
+                        color: colorScheme.onSurface.withValues(alpha: 0.82),
+                        fontSize: 11,
+                        height: 1.25,
+                        fontWeight: FontWeight.w500,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -373,29 +429,27 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     );
   }
 
+  String _journalCardSubtitle(
+    AppLocalizations l10n,
+    MindLogData log,
+    Map<String, String> optionLabels,
+  ) {
+    final note = log.note?.trim();
+    if (isBoostMoodScore(log.moodScore) &&
+        note != null &&
+        note.isNotEmpty) {
+      return note;
+    }
+    return MindActivityTokens.formatJournalActivitiesJson(
+      l10n,
+      log.activities,
+      optionLabels,
+    );
+  }
+
   Widget _buildMoodIcon(BuildContext context, int score) {
     final Color color = mindMoodAccent(score);
-    final IconData icon;
-
-    switch (score) {
-      case 1:
-        icon = Icons.sentiment_very_dissatisfied_rounded;
-        break;
-      case 2:
-        icon = Icons.sentiment_dissatisfied_rounded;
-        break;
-      case 3:
-        icon = Icons.sentiment_neutral_rounded;
-        break;
-      case 4:
-        icon = Icons.sentiment_satisfied_alt_rounded;
-        break;
-      case 5:
-        icon = Icons.sentiment_very_satisfied_rounded;
-        break;
-      default:
-        icon = Icons.sentiment_neutral_rounded;
-    }
+    final icon = mindMoodIcon(score);
 
     return Container(
       padding: const EdgeInsets.all(4),
@@ -423,203 +477,519 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
   }
 
   void _createNewNote(BuildContext context) {
-    context.push('/projects/editor', extra: {'category': 'social'});
+    MindLogEntryDialog.show(context);
   }
 
   Future<void> _pickAndCreateImageNote(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 85,
     );
 
-    if (image != null && context.mounted) {
-      final personBlock = context.read<PersonBlock>();
-      final objectBlock = context.read<ObjectDatabaseBlock>();
-      final personId = personBlock.currentPersonID.value;
+    if (image == null || !context.mounted) return;
 
-      final savedPath = await objectBlock.saveAnyLocalImage(
+    final personBlock = context.read<PersonBlock>();
+    final objectBlock = context.read<ObjectDatabaseBlock>();
+    final personId = personBlock.currentPersonID.value;
+
+    if (!context.mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 16),
+              Expanded(child: Text(l10n.health_smart_scale_syncing)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    String savedPath;
+    try {
+      savedPath = await objectBlock.saveAnyLocalImage(
         image,
         subFolder: 'user_markdown_documentation',
         personId: personId,
+        awaitCloudSync: true,
       );
-
+    } catch (_) {
       if (context.mounted) {
-        context.push(
-          '/projects/editor',
-          extra: {'category': 'social', 'initialImage': savedPath},
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.achievement_story_save_failed)),
         );
       }
+      return;
     }
+
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      context.push(
+        '/projects/editor',
+        extra: {'category': 'social', 'initialImage': savedPath},
+      );
+    }
+  }
+
+  Widget _buildJournalMoodTrendsPanel(
+    BuildContext context,
+    String personId,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    bool isDark,
+  ) {
+    final mindBlock = context.read<MindBlock>();
+    final notesDao = context.read<ProjectNoteDAO>();
+
+    return StreamBuilder<List<ProjectNoteData>>(
+      stream: notesDao.watchNotesByCategory(personId, 'social'),
+      builder: (context, notesSnap) {
+        return StreamBuilder<List<MindLogData>>(
+          stream: mindBlock.watchMindLogsRange(
+            personId,
+            MindLogInsights.moodChartDays,
+          ),
+          builder: (context, logsSnap) {
+            final journalMindLogs = MindLogInsights.moodChartLogs(
+              logsSnap.data ?? const [],
+            );
+            final merged = MindLogInsights.mergeNotesWithMindLogs(
+              mindLogs: journalMindLogs,
+              journalNotes: notesSnap.data ?? const [],
+              days: MindLogInsights.moodChartDays,
+            );
+
+            if (merged.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              decoration: HealthMetricColors.shellPanel(
+                colorScheme,
+                isDark: isDark,
+                radius: 22,
+                accent: HealthMetricColors.pillarViolet,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!
+                        .mood_trends_title
+                        .toUpperCase(),
+                    style: textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.4,
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  MoodTrendsChart(logs: merged, groupByDay: true),
+                  const SizedBox(height: 16),
+                  _buildRecentLogsPreview(context, merged, personId),
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!
+                        .social_notes_title
+                        .toUpperCase(),
+                    style: textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.4,
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }
 
-class _SocialNoteCard extends StatelessWidget {
-  final ProjectNoteData note;
+enum NoteCardLayout { grid, list }
 
-  const _SocialNoteCard({required this.note});
+int _noteMoodScore(String? mood) {
+  return switch (mood?.toLowerCase()) {
+    'awful' => 1,
+    'bad' => 2,
+    'meh' => 3,
+    'good' => 4,
+    'awesome' => 5,
+    _ => 3,
+  };
+}
+
+IconData _noteMoodIcon(String? mood) {
+  return switch (mood?.toLowerCase()) {
+    'awesome' => Icons.sentiment_very_satisfied_rounded,
+    'good' => Icons.sentiment_satisfied_alt_rounded,
+    'meh' => Icons.sentiment_neutral_rounded,
+    'bad' => Icons.sentiment_dissatisfied_rounded,
+    'awful' => Icons.sentiment_very_dissatisfied_rounded,
+    _ => Icons.sentiment_neutral_rounded,
+  };
+}
+
+class SocialJournalNoteCard extends StatelessWidget {
+  final ProjectNoteData note;
+  final NoteCardLayout layout;
+
+  const SocialJournalNoteCard({
+    super.key,
+    required this.note,
+    this.layout = NoteCardLayout.grid,
+  });
+
+  Color get _moodColor => mindMoodAccent(_noteMoodScore(note.mood));
+
+  bool _hasGratitude(BuildContext context) {
+    final label = AppLocalizations.of(context)?.act_gratitude;
+    return MindActivityTokens.noteLooksLikeGratitude(
+      title: note.title,
+      content: note.content,
+      gratitudeLabel: label,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final imageUrl = _getPreviewImage(note.content);
+    return layout == NoteCardLayout.list
+        ? _buildListCard(context)
+        : _buildGridCard(context);
+  }
+
+  static const _gratitudeFlag = Color(0xFFE8A317);
+
+  Widget _flagBubble({double size = 28}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _gratitudeFlag,
+        boxShadow: [
+          BoxShadow(
+            color: _gratitudeFlag.withValues(alpha: 0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 1.5),
+      ),
+      child: Icon(Icons.flag_rounded, size: size * 0.5, color: Colors.white),
+    );
+  }
+
+  Widget _moodBubble({double size = 46}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(_moodColor, Colors.white, 0.15) ?? _moodColor,
+            _moodColor.withValues(alpha: 0.65),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _moodColor.withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Icon(
+        _noteMoodIcon(note.mood),
+        size: size * 0.48,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildListCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final imageUrl = note.localPath ??
+        _getPreviewImage(note.content) ??
+        note.remotePath;
+    final remoteKey = note.remotePath ??
+        JournalMedia.canonicalRemotePath(imageUrl, personId: note.personID);
+    final previewText = _getPreviewText(note.content);
+
+    return Hero(
+      tag: 'note_${note.id}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/projects/editor', extra: note),
+          borderRadius: BorderRadius.circular(22),
+          child: Ink(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              color: isDark
+                  ? colorScheme.surface.withValues(alpha: 0.55)
+                  : colorScheme.surface,
+              border: Border.all(
+                color: _moodColor.withValues(alpha: 0.22),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _moodColor.withValues(alpha: 0.1),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    _moodBubble(size: 50),
+                    if (_hasGratitude(context))
+                      Positioned(
+                        right: -4,
+                        bottom: -4,
+                        child: _flagBubble(size: 22),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              note.title,
+                              style: textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                color: colorScheme.onSurface,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('MMM d').format(note.updatedAt),
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (previewText.isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          previewText,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.72),
+                            height: 1.4,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      if (imageUrl != null) ...[
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: SizedBox(
+                            height: 88,
+                            width: double.infinity,
+                            child: LocalFirstImage(
+                              ownerId: note.personID ?? '',
+                              localPath: note.localPath ?? imageUrl,
+                              remoteUrl: _s3RemoteUrl(remoteKey, note.personID),
+                              subFolder: 'user_markdown_documentation',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final imageUrl = note.localPath ??
+        _getPreviewImage(note.content) ??
+        note.remotePath;
+    final remoteKey = note.remotePath ??
+        JournalMedia.canonicalRemotePath(imageUrl, personId: note.personID);
     final previewText = _getPreviewText(note.content);
 
     return Hero(
       tag: 'note_${note.id}',
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _moodColor.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: _moodColor.withValues(alpha: 0.12),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Material(
-              color: colorScheme.surfaceContainerLow.withValues(alpha: 0.7),
-              child: InkWell(
-                onTap: () => context.push('/projects/editor', extra: note),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          if (imageUrl != null)
-                            LocalFirstImage(
-                              ownerId: note.personID ?? "",
-                              localPath: imageUrl,
-                              remoteUrl: "",
-                              subFolder: "user_markdown_documentation",
-                              fit: BoxFit.cover,
-                            )
-                          else
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    colorScheme.primaryContainer.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                    colorScheme.secondaryContainer.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.auto_awesome_rounded,
-                                color: colorScheme.primary.withValues(
-                                  alpha: 0.2,
-                                ),
-                                size: 40,
-                              ),
-                            ),
-                          // Premium overlay gradient
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.black.withValues(alpha: 0.1),
-                                    Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.3),
-                                  ],
-                                  stops: const [0.0, 0.5, 1.0],
-                                ),
+          borderRadius: BorderRadius.circular(20),
+          child: Material(
+            color: isDark
+                ? colorScheme.surface.withValues(alpha: 0.62)
+                : colorScheme.surface,
+            child: InkWell(
+              onTap: () => context.push('/projects/editor', extra: note),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 2.2,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (imageUrl != null)
+                          LocalFirstImage(
+                            ownerId: note.personID ?? "",
+                            localPath: note.localPath ?? imageUrl,
+                            remoteUrl: _s3RemoteUrl(remoteKey, note.personID),
+                            subFolder: "user_markdown_documentation",
+                            fit: BoxFit.cover,
+                          )
+                        else
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  _moodColor.withValues(alpha: 0.38),
+                                  _moodColor.withValues(alpha: 0.12),
+                                  colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.5),
+                                ],
                               ),
                             ),
                           ),
-                          Positioned(
-                            bottom: 12,
-                            left: 12,
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              _moodBubble(size: 36),
+                              if (_hasGratitude(context))
+                                Positioned(
+                                  right: -6,
+                                  bottom: -6,
+                                  child: _flagBubble(size: 20),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
                             child: Text(
                               DateFormat('MMM d').format(note.updatedAt),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
-                          if (note.mood != null && note.mood!.isNotEmpty)
-                            Positioned(
-                              bottom: 12,
-                              right: 12,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  note.mood!.toUpperCase(),
-                                  style: TextStyle(
-                                    color: colorScheme.onPrimary,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      flex: 3,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              note.title,
-                              style: textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.2,
-                                height: 1.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            note.title,
+                            style: textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.15,
+                              height: 1.25,
+                              fontSize: 14,
+                              color: colorScheme.onSurface,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (previewText.isNotEmpty) ...[
                             const SizedBox(height: 6),
                             Expanded(
                               child: Text(
                                 previewText,
                                 style: textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.7),
-                                  height: 1.4,
-                                  fontSize: 11,
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.72,
+                                  ),
+                                  height: 1.45,
+                                  fontSize: 12.5,
                                 ),
-                                maxLines: 2,
+                                maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
-                        ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -631,31 +1001,12 @@ class _SocialNoteCard extends StatelessWidget {
   String _getPreviewText(String content) {
     if (content.isEmpty) return "";
 
-    String plainText = content;
-
-    // 1. Handle JSON (Quill Delta)
-    try {
-      final decoded = jsonDecode(content);
-      if (decoded is List) {
-        final buffer = StringBuffer();
-        for (final op in decoded) {
-          if (op is Map && op.containsKey('insert')) {
-            final insert = op['insert'];
-            if (insert is String) {
-              buffer.write(insert);
-            }
-          }
-        }
-        plainText = buffer.toString();
-      }
-    } catch (_) {}
-
-    // 2. STICKY FIX: Robust Markdown Strip
+    var plainText = JournalMedia.extractPlainBody(content);
     // Strip images: ![alt](url)
     plainText = plainText.replaceAll(RegExp(r'!\[.*?\]\((.*?)\)'), '');
     // Strip links: [text](url) -> text
     plainText = plainText.replaceAllMapped(
-      RegExp(r'\[(.*?)\]\(.*?\文明\)'),
+      RegExp(r'\[(.*?)\]\(.*?\)'),
       (match) => match.group(1) ?? '',
     );
     // Strip bold/italic: **bold**, __bold__, *italic*, _italic_
@@ -674,41 +1025,37 @@ class _SocialNoteCard extends StatelessWidget {
   }
 
   String? _getPreviewImage(String content) {
-    if (content.isEmpty) return null;
+    return JournalMedia.extractFirstImagePath(content);
+  }
 
-    String textToSearch = content;
+  static Widget _deviceBadge(String device) {
+    final icon = switch (device) {
+      'ios' => Icons.phone_iphone_rounded,
+      'mac' => Icons.laptop_mac_rounded,
+      'android' => Icons.phone_android_rounded,
+      _ => Icons.devices_rounded,
+    };
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Icon(icon, size: 12, color: Colors.white70),
+    );
+  }
 
-    // 1. Handle JSON (Quill Delta)
-    try {
-      final decoded = jsonDecode(content);
-      if (decoded is List) {
-        final buffer = StringBuffer();
-        for (final op in decoded) {
-          if (op is Map && op.containsKey('insert')) {
-            final insert = op['insert'];
-
-            // Check for direct image map
-            if (insert is Map && insert.containsKey('image')) {
-              return insert['image'] as String;
-            }
-
-            if (insert is String) {
-              buffer.write(insert);
-            }
-          }
-        }
-        textToSearch = buffer.toString();
-      }
-    } catch (_) {}
-
-    // 2. Robust Markdown extraction
-    // Also support standard markdown image
-    final regExp = RegExp(r'!\[.*?\]\((.*?)\)');
-    final match = regExp.firstMatch(textToSearch);
-    if (match != null && match.groupCount >= 1) {
-      return match.group(1);
+  static String _s3RemoteUrl(String? remoteKey, String? personId) {
+    if (remoteKey == null || remoteKey.isEmpty) return '';
+    if (remoteKey.startsWith('http://') || remoteKey.startsWith('https://')) {
+      return remoteKey;
     }
-
-    return null;
+    final normalized = remoteKey.replaceAll('\\', '/');
+    final key = normalized.contains('/')
+        ? normalized
+        : (personId != null && personId.isNotEmpty
+            ? '$personId/user_markdown_documentation/${p.basename(normalized)}'
+            : normalized);
+    return MinioService().publicUrlForKey(key);
   }
 }

@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'PluginList/AvailablePlugins.dart';
 import 'package:ice_gate/data_layer/Protocol/Plugin/BasePluginProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Home/PluginProtocol.dart'
+    show PluginCategory;
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 // --- DATA MODEL ---
 class FormData {
@@ -33,6 +36,7 @@ class AddPluginForm extends StatefulWidget {
 class _WidgetFormDataState extends State<AddPluginForm> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   late ExternalWidgetsDAO externalWidgetsDAO;
   late InternalWidgetsDAO internalWidgetsDAO;
@@ -43,6 +47,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   // Plugin selection state
   bool _isPluginMode = true; // true = plugin list, false = custom URL
   BasePluginProtocol? _selectedPlugin;
+  PluginCategory? _selectedCategory;
 
   @override
   void initState() {
@@ -55,7 +60,104 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   void dispose() {
     _nameController.dispose();
     _urlController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  List<BasePluginProtocol> _filterPlugins(List<BasePluginProtocol> plugins) {
+    final query = _searchController.text.trim().toLowerCase();
+    return plugins.where((p) {
+      final matchesQuery = query.isEmpty
+          ? true
+          : (p.name.toLowerCase().contains(query) ||
+              p.description.toLowerCase().contains(query) ||
+              p.tags.any((t) => t.toLowerCase().contains(query)));
+      final matchesCategory =
+          _selectedCategory == null ? true : p.category == _selectedCategory;
+      return matchesQuery && matchesCategory;
+    }).toList();
+  }
+
+  int _gridColumnsForWidth(double w) {
+    if (w >= 1100) return 6;
+    if (w >= 860) return 5;
+    if (w >= 680) return 4;
+    return 3;
+  }
+
+  Widget _buildSearchAndFilters(List<BasePluginProtocol> plugins) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final categories = plugins.map((p) => p.category).toSet().toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: _searchController,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            hintText: 'Search plugins…',
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: _searchController.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear',
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {});
+                    },
+                    icon: const Icon(Icons.clear_rounded),
+                  ),
+            filled: true,
+            fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: const Text('All'),
+                  selected: _selectedCategory == null,
+                  onSelected: (_) => setState(() => _selectedCategory = null),
+                ),
+              ),
+              for (final c in categories)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(c.name),
+                    selected: _selectedCategory == c,
+                    onSelected: (_) => setState(() {
+                      _selectedCategory = _selectedCategory == c ? null : c;
+                    }),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPluginBrowser(List<BasePluginProtocol> plugins) {
+    final filtered = _filterPlugins(plugins);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSearchAndFilters(plugins),
+        const SizedBox(height: 14),
+        _buildPluginGrid(filtered),
+      ],
+    );
   }
 
   Map<String, String> _parseUrl(String url) {
@@ -85,11 +187,17 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         final personId =
             context.read<PersonBlock>().information.value.profiles.id ?? "";
 
+        final widgetId = IDGen.UUIDV7();
+        final baseAlias =
+            _selectedPlugin!.name.toLowerCase().replaceAll(' ', '_');
+        final uniqueAlias = '${baseAlias}_${widgetId.substring(0, 8)}';
+
         await internalWidgetsDAO.insertInternalWidget(
+          widgetID: widgetId,
           personID: personId,
           name: _selectedPlugin!.name,
           url: _selectedPlugin!.url,
-          alias: _selectedPlugin!.name.toLowerCase().replaceAll(' ', '_'),
+          alias: uniqueAlias,
           imageUrl:
               _selectedPlugin!.imageUrl ??
               "assets/internalwidget/default_plugin.png",
@@ -143,9 +251,6 @@ class _WidgetFormDataState extends State<AddPluginForm> {
       }
 
       if (mounted) {
-        final urlToNavigate = _selectedPlugin?.url;
-        final isInternal = _selectedTab == 0;
-
         // 1. Close dialog
         Navigator.of(context).pop();
 
@@ -233,7 +338,6 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   }
 
   Widget _buildHeader() {
-    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -333,7 +437,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   }
 
   Widget _buildInternalGrid() {
-    return _buildPluginGrid(AvailablePlugins.internal);
+    return _buildPluginBrowser(AvailablePlugins.internal);
   }
 
   Widget _buildExternalToggle() {
@@ -399,18 +503,18 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   }
 
   Widget _buildExternalPluginGrid() {
-    return _buildPluginGrid(AvailablePlugins.all);
+    return _buildPluginBrowser(AvailablePlugins.all);
   }
 
   Widget _buildPluginGrid(List<BasePluginProtocol> plugins) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.85, // Decreased from 1.1 for more vertical space
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _gridColumnsForWidth(MediaQuery.sizeOf(context).width),
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.92,
       ),
       itemCount: plugins.length,
       itemBuilder: (context, index) {
@@ -441,7 +545,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
                       ? colorScheme.primary
                       : colorScheme.onSurface,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Text(
                   plugin.name,
                   style: TextStyle(
@@ -451,7 +555,26 @@ class _WidgetFormDataState extends State<AddPluginForm> {
                         ? colorScheme.primary
                         : colorScheme.onSurface,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                if (plugin.description.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      plugin.description,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        height: 1.2,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

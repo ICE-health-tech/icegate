@@ -4,9 +4,10 @@ import 'package:ice_gate/orchestration_layer/Services/SSHService.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/TalkSSH/SSHHostModel.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
 import 'package:provider/provider.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/CursorHubPanel.dart';
 
 class SSHManagerPage extends StatefulWidget {
   final String? initialPrompt;
@@ -162,6 +163,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
 
     return CustomScrollView(
       slivers: [
+        const CursorHubSliver(compact: true),
         if (!_sshService.isConnected && !_isLoading)
           SliverFillRemaining(
             hasScrollBody: false,
@@ -285,7 +287,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
             // const SizedBox(height: 32),
             const SizedBox(height: 16),
             Text(
-              'Connect to a host first to manage live sessions.',
+              l10n.ssh_connect_host_first,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -316,9 +318,9 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
                   ),
                 ),
                 icon: const Icon(Icons.terminal_rounded),
-                label: const Text(
-                  'GO TO TERMINAL',
-                  style: TextStyle(
+                label: Text(
+                  l10n.ssh_go_to_terminal,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2,
                   ),
@@ -333,11 +335,11 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
 
   Widget _buildLiveSessions(AppLocalizations l10n, ThemeData theme) {
     if (_sessions.isEmpty) {
-      return const SliverToBoxAdapter(
+      return SliverToBoxAdapter(
         child: Center(
           child: Padding(
-            padding: EdgeInsets.all(20.0),
-            child: Text('No active tmux sessions found.'),
+            padding: const EdgeInsets.all(20.0),
+            child: Text(l10n.ssh_no_tmux_sessions),
           ),
         ),
       );

@@ -16,13 +16,14 @@ class CaptureQueueDAO extends DatabaseAccessor<AppDatabase>
   Future<int> countCreatedToday(String personId) async {
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
-    final count = countQuery(captureQueueTable)
+    final rowCount = captureQueueTable.id.count();
+    final query = selectOnly(captureQueueTable)
+      ..addColumns([rowCount])
       ..where(
-        (t) =>
-            t.personID.equals(personId) &
-            t.createdAt.isBiggerOrEqualValue(startOfToday),
+        captureQueueTable.personID.equals(personId) &
+            captureQueueTable.createdAt.isBiggerOrEqualValue(startOfToday),
       );
-    return await count.getSingle();
+    return (await query.getSingle()).read(rowCount) ?? 0;
   }
 
   /// Pending rows, oldest first, so the queue drains in capture order.

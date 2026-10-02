@@ -2,12 +2,14 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class WidgetManagerBlock {
   final WidgetDAO? _widgetDao;
   final ReadonlySignal<String?> _personIdSignal;
   EffectCleanup? _effectCleanup;
+  bool _activated = false;
 
   // 1. STATE
   final widgets = listSignal<InternalWidgetDragProtocol>([]);
@@ -18,18 +20,24 @@ class WidgetManagerBlock {
     required ReadonlySignal<String?> personIdSignal,
   }) : _widgetDao = widgetDao,
        _personIdSignal = personIdSignal {
-    // print("widgets: ${widgets.value}");
     if (widgets.value.isEmpty) {
       _initializeGrid();
     }
 
-    // Use an effect to reactively load whenever the personId becomes available
     _effectCleanup = effect(() {
+      if (!_activated) return;
       final id = _personIdSignal.value;
       if (id != null && _widgetDao != null) {
         loadFromDatabase();
       }
     });
+  }
+
+  /// Called by [HubRegistry] when the canvas hub opens.
+  Future<void> activate() async {
+    if (_activated) return;
+    _activated = true;
+    await loadFromDatabase();
   }
 
   void dispose() {
@@ -75,7 +83,7 @@ class WidgetManagerBlock {
             );
             nextGrid[index] = InternalWidgetDragProtocol.fromJson(json);
           } catch (e) {
-            print("Error decoding: $e");
+            appLog("Error decoding: $e");
           }
         }
       }
@@ -88,7 +96,7 @@ class WidgetManagerBlock {
         });
       });
     } catch (e) {
-      print("Error loading widgets from database: $e");
+      appLog("Error loading widgets from database: $e");
     }
   }
 
@@ -110,7 +118,7 @@ class WidgetManagerBlock {
     try {
       await _widgetDao.saveAllWidgets(personId, widgets.value);
     } catch (e) {
-      print("Error persisting widgets: $e");
+      appLog("Error persisting widgets: $e");
     } finally {
       _isSaving = false;
       if (_needsSaveAgain) {
@@ -165,8 +173,8 @@ class WidgetManagerBlock {
 
   void addWidget(int index, InternalWidgetDragProtocol outSideWidget) {
     widgets[index] = outSideWidget;
-    print("widgets: ${widgets.value}");
-    print("Added widget: ${outSideWidget.alias}");
+    appLog("widgets: ${widgets.value}");
+    appLog("Added widget: ${outSideWidget.alias}");
     _persistToDatabase();
   }
 

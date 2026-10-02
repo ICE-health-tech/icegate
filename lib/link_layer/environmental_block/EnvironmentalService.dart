@@ -41,6 +41,24 @@ class EnvironmentalData {
     if (aqi <= 300) return 'Heavily Polluted';
     return 'Severely Polluted';
   }
+
+  Map<String, dynamic> toJson() => {
+    'temperature': temperature,
+    'weatherCode': weatherCode,
+    'aqi': aqi,
+    'pm25': pm25,
+    'pm10': pm10,
+  };
+
+  factory EnvironmentalData.fromJson(Map<String, dynamic> json) {
+    return EnvironmentalData(
+      temperature: (json['temperature'] as num?)?.toDouble() ?? 0,
+      weatherCode: (json['weatherCode'] as num?)?.toInt() ?? 0,
+      aqi: (json['aqi'] as num?)?.toInt() ?? 0,
+      pm25: (json['pm25'] as num?)?.toDouble() ?? 0,
+      pm10: (json['pm10'] as num?)?.toDouble() ?? 0,
+    );
+  }
 }
 
 class EnvironmentalService {

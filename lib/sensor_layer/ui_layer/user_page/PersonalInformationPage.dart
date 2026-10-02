@@ -15,7 +15,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBl
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/identity_page/widgets/PasskeySetupCard.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
 
@@ -105,11 +105,15 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final objectBlock = context.read<ObjectDatabaseBlock>();
-        objectBlock.updateUrlOfUser(context.read<PersonBlock>());
-        // Log folders for debugging on device
-        objectBlock.logFolderContents('profile_images');
-        objectBlock.logFolderContents('meals');
-        objectBlock.logFolderContents('quests');
+        final personBlock = context.read<PersonBlock>();
+        objectBlock.updateUrlOfUser(personBlock);
+        // Same paths as saveAnyLocalImage: {personId}/{subFolder}
+        final pid = personBlock.currentPersonID.value;
+        if (pid != null && pid.isNotEmpty) {
+          objectBlock.logFolderContents('profile_images', personId: pid);
+          objectBlock.logFolderContents('meals', personId: pid);
+          objectBlock.logFolderContents('quests', personId: pid);
+        }
       }
     });
 
@@ -304,13 +308,12 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       final success = localPath != null && localPath.isNotEmpty;
 
       if (success) {
-        // Evict Flutter's image cache for this path so the UI reloads from disk
-        final cacheKey = FileImage(File(localPath));
-        imageCache.evict(cacheKey);
+        imageCache.evict(FileImage(File(localPath)));
 
         final personBlock = context.read<PersonBlock>();
+        final remoteUrl = objectBlock.userObjectResource.value.avatarImage;
         personBlock.setAvatarImage(
-          remoteUrl: objectBlock.userObjectResource.value.avatarImage,
+          remoteUrl: remoteUrl,
           localPath: localPath,
         );
 
@@ -499,11 +502,16 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
           body: FadeTransition(
             opacity: _fadeAnimation,
             child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 980),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                     // Premium High-Tech Header
                     _buildModernHeader(
                       context,
@@ -776,7 +784,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
 
                             return _buildInfoGroup(
                               title: AppLocalizations.of(context)!.security_accuracy,
-                              icon: Icons.security_rounded,
+                              icon: Icons.shield,
                               children: [
                                 _buildSecurityItem(
                                   context: context,
@@ -784,17 +792,52 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                   subtitle: _authBlock.isPasskeyEnrolled.value
                                       ? AppLocalizations.of(context)!.fast_track_active
                                       : AppLocalizations.of(context)!.upgrade_biometric,
-                                  icon: Icons.fingerprint_rounded,
-                                  trailing: Icon(
-                                    _authBlock.isPasskeyEnrolled.value
-                                        ? Icons.verified_user_rounded
-                                        : Icons.chevron_right_rounded,
-                                    color: _authBlock.isPasskeyEnrolled.value
-                                        ? Colors.green
-                                        : colorScheme.primary.withValues(
-                                            alpha: 0.5,
+                                  icon: Icons.key_rounded,
+                                  trailing: _authBlock.isPasskeyEnrolled.value
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
                                           ),
-                                  ),
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(999),
+                                            color: Colors.green
+                                                .withValues(alpha: 0.12),
+                                            border: Border.all(
+                                              color: Colors.green
+                                                  .withValues(alpha: 0.35),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.check_circle_rounded,
+                                                size: 16,
+                                                color: Colors.green
+                                                    .withValues(alpha: 0.95),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'ACTIVE',
+                                                style: TextStyle(
+                                                  color: Colors.green
+                                                      .withValues(alpha: 0.95),
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w900,
+                                                  letterSpacing: 1.4,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.chevron_right_rounded,
+                                          color: colorScheme.primary
+                                              .withValues(alpha: 0.5),
+                                        ),
                                   onTap: () => _showPasskeySetupDialog(),
                                 ),
                                 // _buildSecurityItem(
@@ -882,7 +925,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         ],
                       ),
                     ),
-                  ],
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1088,7 +1134,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                             style: textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w900,
                               fontSize: 22,
-                              color: Colors.white,
+                              // Use theme-aware foreground to avoid invisible text
+                              // on light surfaces (desktop/web themes).
+                              color: colorScheme.onSurface,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -1307,7 +1355,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.5,
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.78),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1315,10 +1363,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         controller.text.isNotEmpty
                             ? controller.text
                             : AppLocalizations.of(context)!.hint_enter_your,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: colorScheme.onSurface,
                           letterSpacing: 0.2,
                         ),
                       ),
@@ -1337,11 +1385,31 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       keyboardType: keyboardType,
       maxLines: maxLines,
       minLines: minLines,
+      style: TextStyle(
+        color: colorScheme.onSurface,
+        fontWeight: FontWeight.w700,
+      ),
+      cursorColor: colorScheme.primary,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
         filled: true,
         fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
+        labelStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.2,
+        ),
+        floatingLabelStyle: TextStyle(
+          color: colorScheme.primary.withValues(alpha: 0.95),
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.2,
+        ),
+        hintStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+          fontWeight: FontWeight.w600,
+        ),
+        prefixIconColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -1412,7 +1480,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
               title,
               style: textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w900,
-                color: Colors.white,
+                color: colorScheme.onSurface,
                 letterSpacing: 0.5,
               ),
             ),

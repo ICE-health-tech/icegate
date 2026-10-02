@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_passkey/flutter_passkey.dart';
 import 'package:logging/logging.dart';
 
@@ -7,6 +10,20 @@ class PasskeyAuthService {
   final Logger _logger = Logger('PasskeyAuthService');
 
   PasskeyAuthService();
+
+  /// Wait until Flutter has presented a window (ASAuthorization needs a VC).
+  Future<void> _waitForPresentableWindow() async {
+    final completer = Completer<void>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!completer.isCompleted) completer.complete();
+    });
+    await completer.future;
+    final binding = SchedulerBinding.instance;
+    if (binding.schedulerPhase == SchedulerPhase.idle) {
+      await binding.endOfFrame;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+  }
 
   Future<bool> isSupported() async {
     return await _flutterPasskey.isSupported();
@@ -29,8 +46,7 @@ class PasskeyAuthService {
         throw Exception('Passkeys are not supported on this device.');
       }
 
-      // Increase delay to 1250ms to ensure the UI/Window/Scene is fully ready and Key status is gained
-      await Future.delayed(const Duration(milliseconds: 1250));
+      await _waitForPresentableWindow();
 
       // 1. Construct the creation options.
       final String finalOptionsJson;
@@ -70,21 +86,28 @@ class PasskeyAuthService {
       
       // 2. Invoke the platform passkey creation with a retry loop
       int attempts = 0;
-      const int maxAttempts = 2;
+      const int maxAttempts = 3;
       String? result;
 
       while (attempts < maxAttempts) {
         try {
           attempts++;
+          if (attempts > 1) await _waitForPresentableWindow();
           result = await _flutterPasskey.createCredential(finalOptionsJson);
           break; // Success!
         } catch (e) {
-          // Retry if the native system is struggling with the view controller/window focus
-          if (e.toString().contains('Root view controller') && attempts < maxAttempts) {
-             _logger.warning('UI Error: Native window not ready for Registration. Retrying in 800ms... (Attempt $attempts)');
-             await Future.delayed(const Duration(milliseconds: 800));
+          final msg = e.toString();
+          final retryable = attempts < maxAttempts &&
+              (msg.contains('Root view controller') ||
+                  msg.contains('not in window hierarchy') ||
+                  msg.contains('presentation'));
+          if (retryable) {
+            _logger.warning(
+              'Passkey registration UI not ready (attempt $attempts): $e',
+            );
+            await Future.delayed(Duration(milliseconds: 500 * attempts));
           } else {
-            rethrow; // Terminal failure
+            rethrow;
           }
         }
       }
@@ -113,9 +136,8 @@ class PasskeyAuthService {
         throw Exception('Passkeys are not supported on this device.');
       }
  
-      // Increase delay to 1250ms to ensure the UI/Window/Scene is fully ready and Key status is gained
-      await Future.delayed(const Duration(milliseconds: 1250));
- 
+      await _waitForPresentableWindow();
+
       // Standard WebAuthn PublicKeyCredentialRequestOptions
       final String finalOptionsJson;
       
@@ -138,20 +160,29 @@ class PasskeyAuthService {
       // 2. Invoke the platform passkey authentication with a retry loop
       // to handle any transient "Root view controller not found" window issues on iPad.
       int attempts = 0;
-      const int maxAttempts = 2;
+      const int maxAttempts = 3;
       String? result;
- 
+
       while (attempts < maxAttempts) {
         try {
           attempts++;
+          if (attempts > 1) await _waitForPresentableWindow();
           result = await _flutterPasskey.getCredential(finalOptionsJson);
-          break; // Success!
+          break;
         } catch (e) {
-          if (e.toString().contains('Root view controller') && attempts < maxAttempts) {
-             _logger.warning('UI Error: Native window not ready. Retrying in 500ms... (Attempt $attempts)');
-             await Future.delayed(const Duration(milliseconds: 500));
+          final msg = e.toString();
+          final retryable = attempts < maxAttempts &&
+              (msg.contains('Root view controller') ||
+                  msg.contains('not in window hierarchy') ||
+                  msg.contains('presentation') ||
+                  msg.contains('1001'));
+          if (retryable) {
+            _logger.warning(
+              'Passkey login UI not ready (attempt $attempts): $e',
+            );
+            await Future.delayed(Duration(milliseconds: 500 * attempts));
           } else {
-            rethrow; // Final failure or unrelated error
+            rethrow;
           }
         }
       }
