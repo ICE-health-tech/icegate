@@ -1,4 +1,4 @@
-part of '../database.dart';
+part of '../Database.dart';
 
 /// Local queue of screen captures pending upload + extraction.
 /// The daily capture budget is enforced by COUNTing rows rather than keeping

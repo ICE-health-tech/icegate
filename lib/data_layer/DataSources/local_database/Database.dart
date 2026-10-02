@@ -29,7 +29,7 @@ import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.d
 
 // 2. Part Directives (Crucial for generated code)
 // NOTE: You must run `flutter pub run build_runner build` to generate this file.
-part 'database.g.dart';
+part 'Database.g.dart';
 part 'daos/internal_widgets_dao.dart';
 part 'daos/hourly_activity_log_dao.dart';
 part 'daos/theme_dao.dart';

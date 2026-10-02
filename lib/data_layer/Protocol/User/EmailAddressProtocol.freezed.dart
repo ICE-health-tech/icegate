@@ -80,7 +80,7 @@ class _$EmailAddressProtocolCopyWithImpl<
     Object? emailAddress = null,
     Object? emailType = null,
     Object? isPrimary = null,
-    Object? status = null,
+    Object? status = freezed,
     Object? verifiedAt = freezed,
   }) {
     return _then(
@@ -105,7 +105,7 @@ class _$EmailAddressProtocolCopyWithImpl<
                 ? _value.isPrimary
                 : isPrimary // ignore: cast_nullable_to_non_nullable
                       as bool,
-            status: null == status
+            status: freezed == status
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                       as EmailStatus,
@@ -158,7 +158,7 @@ class __$$EmailAddressProtocolImplCopyWithImpl<$Res>
     Object? emailAddress = null,
     Object? emailType = null,
     Object? isPrimary = null,
-    Object? status = null,
+    Object? status = freezed,
     Object? verifiedAt = freezed,
   }) {
     return _then(
@@ -183,7 +183,7 @@ class __$$EmailAddressProtocolImplCopyWithImpl<$Res>
             ? _value.isPrimary
             : isPrimary // ignore: cast_nullable_to_non_nullable
                   as bool,
-        status: null == status
+        status: freezed == status
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
                   as EmailStatus,
@@ -250,7 +250,7 @@ class _$EmailAddressProtocolImpl implements _EmailAddressProtocol {
                 other.emailType == emailType) &&
             (identical(other.isPrimary, isPrimary) ||
                 other.isPrimary == isPrimary) &&
-            (identical(other.status, status) || other.status == status) &&
+            const DeepCollectionEquality().equals(other.status, status) &&
             (identical(other.verifiedAt, verifiedAt) ||
                 other.verifiedAt == verifiedAt));
   }
@@ -264,7 +264,7 @@ class _$EmailAddressProtocolImpl implements _EmailAddressProtocol {
     emailAddress,
     emailType,
     isPrimary,
-    status,
+    const DeepCollectionEquality().hash(status),
     verifiedAt,
   );
 

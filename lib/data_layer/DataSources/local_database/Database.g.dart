@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'database.dart';
+part of 'Database.dart';
 
 // ignore_for_file: type=lint
 mixin _$PersonDAOMixin on DatabaseAccessor<AppDatabase> {
@@ -34799,6 +34799,891 @@ class AppTimeSpendingTableCompanion
   }
 }
 
+class $AiMemoriesTableTable extends AiMemoriesTable
+    with TableInfo<$AiMemoriesTableTable, AiMemoryData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AiMemoriesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+    'content',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _summaryMeta = const VerificationMeta(
+    'summary',
+  );
+  @override
+  late final GeneratedColumn<String> summary = GeneratedColumn<String>(
+    'summary',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
+  @override
+  late final GeneratedColumn<String> tags = GeneratedColumn<String>(
+    'tags',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceImageUrlMeta = const VerificationMeta(
+    'sourceImageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> sourceImageUrl = GeneratedColumn<String>(
+    'source_image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceRouteMeta = const VerificationMeta(
+    'sourceRoute',
+  );
+  @override
+  late final GeneratedColumn<String> sourceRoute = GeneratedColumn<String>(
+    'source_route',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceKindMeta = const VerificationMeta(
+    'sourceKind',
+  );
+  @override
+  late final GeneratedColumn<String> sourceKind = GeneratedColumn<String>(
+    'source_kind',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('in_app'),
+  );
+  static const VerificationMeta _aiModelMeta = const VerificationMeta(
+    'aiModel',
+  );
+  @override
+  late final GeneratedColumn<String> aiModel = GeneratedColumn<String>(
+    'ai_model',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('draft'),
+  );
+  static const VerificationMeta _memoryWeightMeta = const VerificationMeta(
+    'memoryWeight',
+  );
+  @override
+  late final GeneratedColumn<double> memoryWeight = GeneratedColumn<double>(
+    'memory_weight',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime?>($AiMemoriesTableTable.$convertercreatedAtn);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime?>($AiMemoriesTableTable.$converterupdatedAtn);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tenantID,
+    personID,
+    title,
+    content,
+    summary,
+    tags,
+    sourceImageUrl,
+    sourceRoute,
+    sourceKind,
+    aiModel,
+    status,
+    memoryWeight,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ai_memories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AiMemoryData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('content')) {
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_contentMeta);
+    }
+    if (data.containsKey('summary')) {
+      context.handle(
+        _summaryMeta,
+        summary.isAcceptableOrUnknown(data['summary']!, _summaryMeta),
+      );
+    }
+    if (data.containsKey('tags')) {
+      context.handle(
+        _tagsMeta,
+        tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta),
+      );
+    }
+    if (data.containsKey('source_image_url')) {
+      context.handle(
+        _sourceImageUrlMeta,
+        sourceImageUrl.isAcceptableOrUnknown(
+          data['source_image_url']!,
+          _sourceImageUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_route')) {
+      context.handle(
+        _sourceRouteMeta,
+        sourceRoute.isAcceptableOrUnknown(
+          data['source_route']!,
+          _sourceRouteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_kind')) {
+      context.handle(
+        _sourceKindMeta,
+        sourceKind.isAcceptableOrUnknown(data['source_kind']!, _sourceKindMeta),
+      );
+    }
+    if (data.containsKey('ai_model')) {
+      context.handle(
+        _aiModelMeta,
+        aiModel.isAcceptableOrUnknown(data['ai_model']!, _aiModelMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('memory_weight')) {
+      context.handle(
+        _memoryWeightMeta,
+        memoryWeight.isAcceptableOrUnknown(
+          data['memory_weight']!,
+          _memoryWeightMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AiMemoryData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AiMemoryData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      )!,
+      summary: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}summary'],
+      ),
+      tags: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tags'],
+      ),
+      sourceImageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_image_url'],
+      ),
+      sourceRoute: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_route'],
+      ),
+      sourceKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_kind'],
+      ),
+      aiModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_model'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      memoryWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}memory_weight'],
+      ),
+      createdAt: $AiMemoriesTableTable.$convertercreatedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        ),
+      ),
+      updatedAt: $AiMemoriesTableTable.$converterupdatedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        ),
+      ),
+    );
+  }
+
+  @override
+  $AiMemoriesTableTable createAlias(String alias) {
+    return $AiMemoriesTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $convertercreatedAtn =
+      NullAwareTypeConverter.wrap($convertercreatedAt);
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterupdatedAtn =
+      NullAwareTypeConverter.wrap($converterupdatedAt);
+}
+
+class AiMemoryData extends DataClass implements Insertable<AiMemoryData> {
+  final String id;
+  final String? tenantID;
+  final String? personID;
+  final String title;
+  final String content;
+
+  /// Extracted memory text, delimited on retrieval because it is derived from
+  /// arbitrary on-screen content and must be treated as untrusted context.
+  final String? summary;
+
+  /// JSON array string, e.g. ["health","heart-rate"].
+  final String? tags;
+  final String? sourceImageUrl;
+  final String? sourceRoute;
+  final String? sourceKind;
+  final String? aiModel;
+
+  /// draft / confirmed / discarded
+  final String status;
+  final double? memoryWeight;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  const AiMemoryData({
+    required this.id,
+    this.tenantID,
+    this.personID,
+    required this.title,
+    required this.content,
+    this.summary,
+    this.tags,
+    this.sourceImageUrl,
+    this.sourceRoute,
+    this.sourceKind,
+    this.aiModel,
+    required this.status,
+    this.memoryWeight,
+    this.createdAt,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    map['title'] = Variable<String>(title);
+    map['content'] = Variable<String>(content);
+    if (!nullToAbsent || summary != null) {
+      map['summary'] = Variable<String>(summary);
+    }
+    if (!nullToAbsent || tags != null) {
+      map['tags'] = Variable<String>(tags);
+    }
+    if (!nullToAbsent || sourceImageUrl != null) {
+      map['source_image_url'] = Variable<String>(sourceImageUrl);
+    }
+    if (!nullToAbsent || sourceRoute != null) {
+      map['source_route'] = Variable<String>(sourceRoute);
+    }
+    if (!nullToAbsent || sourceKind != null) {
+      map['source_kind'] = Variable<String>(sourceKind);
+    }
+    if (!nullToAbsent || aiModel != null) {
+      map['ai_model'] = Variable<String>(aiModel);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || memoryWeight != null) {
+      map['memory_weight'] = Variable<double>(memoryWeight);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<DateTime>(
+        $AiMemoriesTableTable.$convertercreatedAtn.toSql(createdAt),
+      );
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(
+        $AiMemoriesTableTable.$converterupdatedAtn.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  AiMemoriesTableCompanion toCompanion(bool nullToAbsent) {
+    return AiMemoriesTableCompanion(
+      id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      title: Value(title),
+      content: Value(content),
+      summary: summary == null && nullToAbsent
+          ? const Value.absent()
+          : Value(summary),
+      tags: tags == null && nullToAbsent ? const Value.absent() : Value(tags),
+      sourceImageUrl: sourceImageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceImageUrl),
+      sourceRoute: sourceRoute == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceRoute),
+      sourceKind: sourceKind == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceKind),
+      aiModel: aiModel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(aiModel),
+      status: Value(status),
+      memoryWeight: memoryWeight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(memoryWeight),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory AiMemoryData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AiMemoryData(
+      id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      title: serializer.fromJson<String>(json['title']),
+      content: serializer.fromJson<String>(json['content']),
+      summary: serializer.fromJson<String?>(json['summary']),
+      tags: serializer.fromJson<String?>(json['tags']),
+      sourceImageUrl: serializer.fromJson<String?>(json['sourceImageUrl']),
+      sourceRoute: serializer.fromJson<String?>(json['sourceRoute']),
+      sourceKind: serializer.fromJson<String?>(json['sourceKind']),
+      aiModel: serializer.fromJson<String?>(json['aiModel']),
+      status: serializer.fromJson<String>(json['status']),
+      memoryWeight: serializer.fromJson<double?>(json['memoryWeight']),
+      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
+      'personID': serializer.toJson<String?>(personID),
+      'title': serializer.toJson<String>(title),
+      'content': serializer.toJson<String>(content),
+      'summary': serializer.toJson<String?>(summary),
+      'tags': serializer.toJson<String?>(tags),
+      'sourceImageUrl': serializer.toJson<String?>(sourceImageUrl),
+      'sourceRoute': serializer.toJson<String?>(sourceRoute),
+      'sourceKind': serializer.toJson<String?>(sourceKind),
+      'aiModel': serializer.toJson<String?>(aiModel),
+      'status': serializer.toJson<String>(status),
+      'memoryWeight': serializer.toJson<double?>(memoryWeight),
+      'createdAt': serializer.toJson<DateTime?>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+    };
+  }
+
+  AiMemoryData copyWith({
+    String? id,
+    Value<String?> tenantID = const Value.absent(),
+    Value<String?> personID = const Value.absent(),
+    String? title,
+    String? content,
+    Value<String?> summary = const Value.absent(),
+    Value<String?> tags = const Value.absent(),
+    Value<String?> sourceImageUrl = const Value.absent(),
+    Value<String?> sourceRoute = const Value.absent(),
+    Value<String?> sourceKind = const Value.absent(),
+    Value<String?> aiModel = const Value.absent(),
+    String? status,
+    Value<double?> memoryWeight = const Value.absent(),
+    Value<DateTime?> createdAt = const Value.absent(),
+    Value<DateTime?> updatedAt = const Value.absent(),
+  }) => AiMemoryData(
+    id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    personID: personID.present ? personID.value : this.personID,
+    title: title ?? this.title,
+    content: content ?? this.content,
+    summary: summary.present ? summary.value : this.summary,
+    tags: tags.present ? tags.value : this.tags,
+    sourceImageUrl: sourceImageUrl.present
+        ? sourceImageUrl.value
+        : this.sourceImageUrl,
+    sourceRoute: sourceRoute.present ? sourceRoute.value : this.sourceRoute,
+    sourceKind: sourceKind.present ? sourceKind.value : this.sourceKind,
+    aiModel: aiModel.present ? aiModel.value : this.aiModel,
+    status: status ?? this.status,
+    memoryWeight: memoryWeight.present ? memoryWeight.value : this.memoryWeight,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  AiMemoryData copyWithCompanion(AiMemoriesTableCompanion data) {
+    return AiMemoryData(
+      id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      title: data.title.present ? data.title.value : this.title,
+      content: data.content.present ? data.content.value : this.content,
+      summary: data.summary.present ? data.summary.value : this.summary,
+      tags: data.tags.present ? data.tags.value : this.tags,
+      sourceImageUrl: data.sourceImageUrl.present
+          ? data.sourceImageUrl.value
+          : this.sourceImageUrl,
+      sourceRoute: data.sourceRoute.present
+          ? data.sourceRoute.value
+          : this.sourceRoute,
+      sourceKind: data.sourceKind.present
+          ? data.sourceKind.value
+          : this.sourceKind,
+      aiModel: data.aiModel.present ? data.aiModel.value : this.aiModel,
+      status: data.status.present ? data.status.value : this.status,
+      memoryWeight: data.memoryWeight.present
+          ? data.memoryWeight.value
+          : this.memoryWeight,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiMemoryData(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('title: $title, ')
+          ..write('content: $content, ')
+          ..write('summary: $summary, ')
+          ..write('tags: $tags, ')
+          ..write('sourceImageUrl: $sourceImageUrl, ')
+          ..write('sourceRoute: $sourceRoute, ')
+          ..write('sourceKind: $sourceKind, ')
+          ..write('aiModel: $aiModel, ')
+          ..write('status: $status, ')
+          ..write('memoryWeight: $memoryWeight, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tenantID,
+    personID,
+    title,
+    content,
+    summary,
+    tags,
+    sourceImageUrl,
+    sourceRoute,
+    sourceKind,
+    aiModel,
+    status,
+    memoryWeight,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AiMemoryData &&
+          other.id == this.id &&
+          other.tenantID == this.tenantID &&
+          other.personID == this.personID &&
+          other.title == this.title &&
+          other.content == this.content &&
+          other.summary == this.summary &&
+          other.tags == this.tags &&
+          other.sourceImageUrl == this.sourceImageUrl &&
+          other.sourceRoute == this.sourceRoute &&
+          other.sourceKind == this.sourceKind &&
+          other.aiModel == this.aiModel &&
+          other.status == this.status &&
+          other.memoryWeight == this.memoryWeight &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AiMemoriesTableCompanion extends UpdateCompanion<AiMemoryData> {
+  final Value<String> id;
+  final Value<String?> tenantID;
+  final Value<String?> personID;
+  final Value<String> title;
+  final Value<String> content;
+  final Value<String?> summary;
+  final Value<String?> tags;
+  final Value<String?> sourceImageUrl;
+  final Value<String?> sourceRoute;
+  final Value<String?> sourceKind;
+  final Value<String?> aiModel;
+  final Value<String> status;
+  final Value<double?> memoryWeight;
+  final Value<DateTime?> createdAt;
+  final Value<DateTime?> updatedAt;
+  final Value<int> rowid;
+  const AiMemoriesTableCompanion({
+    this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.title = const Value.absent(),
+    this.content = const Value.absent(),
+    this.summary = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.sourceImageUrl = const Value.absent(),
+    this.sourceRoute = const Value.absent(),
+    this.sourceKind = const Value.absent(),
+    this.aiModel = const Value.absent(),
+    this.status = const Value.absent(),
+    this.memoryWeight = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AiMemoriesTableCompanion.insert({
+    required String id,
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    required String title,
+    required String content,
+    this.summary = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.sourceImageUrl = const Value.absent(),
+    this.sourceRoute = const Value.absent(),
+    this.sourceKind = const Value.absent(),
+    this.aiModel = const Value.absent(),
+    this.status = const Value.absent(),
+    this.memoryWeight = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       title = Value(title),
+       content = Value(content);
+  static Insertable<AiMemoryData> custom({
+    Expression<String>? id,
+    Expression<String>? tenantID,
+    Expression<String>? personID,
+    Expression<String>? title,
+    Expression<String>? content,
+    Expression<String>? summary,
+    Expression<String>? tags,
+    Expression<String>? sourceImageUrl,
+    Expression<String>? sourceRoute,
+    Expression<String>? sourceKind,
+    Expression<String>? aiModel,
+    Expression<String>? status,
+    Expression<double>? memoryWeight,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
+      if (personID != null) 'person_id': personID,
+      if (title != null) 'title': title,
+      if (content != null) 'content': content,
+      if (summary != null) 'summary': summary,
+      if (tags != null) 'tags': tags,
+      if (sourceImageUrl != null) 'source_image_url': sourceImageUrl,
+      if (sourceRoute != null) 'source_route': sourceRoute,
+      if (sourceKind != null) 'source_kind': sourceKind,
+      if (aiModel != null) 'ai_model': aiModel,
+      if (status != null) 'status': status,
+      if (memoryWeight != null) 'memory_weight': memoryWeight,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AiMemoriesTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? tenantID,
+    Value<String?>? personID,
+    Value<String>? title,
+    Value<String>? content,
+    Value<String?>? summary,
+    Value<String?>? tags,
+    Value<String?>? sourceImageUrl,
+    Value<String?>? sourceRoute,
+    Value<String?>? sourceKind,
+    Value<String?>? aiModel,
+    Value<String>? status,
+    Value<double?>? memoryWeight,
+    Value<DateTime?>? createdAt,
+    Value<DateTime?>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return AiMemoriesTableCompanion(
+      id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
+      personID: personID ?? this.personID,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      summary: summary ?? this.summary,
+      tags: tags ?? this.tags,
+      sourceImageUrl: sourceImageUrl ?? this.sourceImageUrl,
+      sourceRoute: sourceRoute ?? this.sourceRoute,
+      sourceKind: sourceKind ?? this.sourceKind,
+      aiModel: aiModel ?? this.aiModel,
+      status: status ?? this.status,
+      memoryWeight: memoryWeight ?? this.memoryWeight,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (content.present) {
+      map['content'] = Variable<String>(content.value);
+    }
+    if (summary.present) {
+      map['summary'] = Variable<String>(summary.value);
+    }
+    if (tags.present) {
+      map['tags'] = Variable<String>(tags.value);
+    }
+    if (sourceImageUrl.present) {
+      map['source_image_url'] = Variable<String>(sourceImageUrl.value);
+    }
+    if (sourceRoute.present) {
+      map['source_route'] = Variable<String>(sourceRoute.value);
+    }
+    if (sourceKind.present) {
+      map['source_kind'] = Variable<String>(sourceKind.value);
+    }
+    if (aiModel.present) {
+      map['ai_model'] = Variable<String>(aiModel.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (memoryWeight.present) {
+      map['memory_weight'] = Variable<double>(memoryWeight.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(
+        $AiMemoriesTableTable.$convertercreatedAtn.toSql(createdAt.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $AiMemoriesTableTable.$converterupdatedAtn.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiMemoriesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('title: $title, ')
+          ..write('content: $content, ')
+          ..write('summary: $summary, ')
+          ..write('tags: $tags, ')
+          ..write('sourceImageUrl: $sourceImageUrl, ')
+          ..write('sourceRoute: $sourceRoute, ')
+          ..write('sourceKind: $sourceKind, ')
+          ..write('aiModel: $aiModel, ')
+          ..write('status: $status, ')
+          ..write('memoryWeight: $memoryWeight, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -34887,6 +35772,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $AppUsageHistoryTableTable(this);
   late final $AppTimeSpendingTableTable appTimeSpendingTable =
       $AppTimeSpendingTableTable(this);
+  late final $AiMemoriesTableTable aiMemoriesTable = $AiMemoriesTableTable(
+    this,
+  );
   late final ThemeDAO themeDAO = ThemeDAO(this as AppDatabase);
   late final ExternalWidgetsDAO externalWidgetsDAO = ExternalWidgetsDAO(
     this as AppDatabase,
@@ -34939,6 +35827,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final MindLogsDAO mindLogsDAO = MindLogsDAO(this as AppDatabase);
   late final JournalActivityOptionsDAO journalActivityOptionsDAO =
       JournalActivityOptionsDAO(this as AppDatabase);
+  late final AiMemoryDAO aiMemoryDAO = AiMemoryDAO(this as AppDatabase);
+  late final CaptureQueueDAO captureQueueDAO = CaptureQueueDAO(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -34995,6 +35887,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     oxygenSaturationLogsTable,
     appUsageHistoryTable,
     appTimeSpendingTable,
+    aiMemoriesTable,
   ];
 }
 
@@ -51780,6 +52673,408 @@ typedef $$AppTimeSpendingTableTableProcessedTableManager =
       AppTimeSpendingData,
       PrefetchHooks Function()
     >;
+typedef $$AiMemoriesTableTableCreateCompanionBuilder =
+    AiMemoriesTableCompanion Function({
+      required String id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      required String title,
+      required String content,
+      Value<String?> summary,
+      Value<String?> tags,
+      Value<String?> sourceImageUrl,
+      Value<String?> sourceRoute,
+      Value<String?> sourceKind,
+      Value<String?> aiModel,
+      Value<String> status,
+      Value<double?> memoryWeight,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$AiMemoriesTableTableUpdateCompanionBuilder =
+    AiMemoriesTableCompanion Function({
+      Value<String> id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      Value<String> title,
+      Value<String> content,
+      Value<String?> summary,
+      Value<String?> tags,
+      Value<String?> sourceImageUrl,
+      Value<String?> sourceRoute,
+      Value<String?> sourceKind,
+      Value<String?> aiModel,
+      Value<String> status,
+      Value<double?> memoryWeight,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$AiMemoriesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $AiMemoriesTableTable> {
+  $$AiMemoriesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tags => $composableBuilder(
+    column: $table.tags,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceImageUrl => $composableBuilder(
+    column: $table.sourceImageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceRoute => $composableBuilder(
+    column: $table.sourceRoute,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceKind => $composableBuilder(
+    column: $table.sourceKind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiModel => $composableBuilder(
+    column: $table.aiModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get memoryWeight => $composableBuilder(
+    column: $table.memoryWeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$AiMemoriesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $AiMemoriesTableTable> {
+  $$AiMemoriesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tags => $composableBuilder(
+    column: $table.tags,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceImageUrl => $composableBuilder(
+    column: $table.sourceImageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceRoute => $composableBuilder(
+    column: $table.sourceRoute,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceKind => $composableBuilder(
+    column: $table.sourceKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiModel => $composableBuilder(
+    column: $table.aiModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get memoryWeight => $composableBuilder(
+    column: $table.memoryWeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AiMemoriesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AiMemoriesTableTable> {
+  $$AiMemoriesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tenantID =>
+      $composableBuilder(column: $table.tenantID, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumn<String> get summary =>
+      $composableBuilder(column: $table.summary, builder: (column) => column);
+
+  GeneratedColumn<String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceImageUrl => $composableBuilder(
+    column: $table.sourceImageUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceRoute => $composableBuilder(
+    column: $table.sourceRoute,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceKind => $composableBuilder(
+    column: $table.sourceKind,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aiModel =>
+      $composableBuilder(column: $table.aiModel, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<double> get memoryWeight => $composableBuilder(
+    column: $table.memoryWeight,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$AiMemoriesTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AiMemoriesTableTable,
+          AiMemoryData,
+          $$AiMemoriesTableTableFilterComposer,
+          $$AiMemoriesTableTableOrderingComposer,
+          $$AiMemoriesTableTableAnnotationComposer,
+          $$AiMemoriesTableTableCreateCompanionBuilder,
+          $$AiMemoriesTableTableUpdateCompanionBuilder,
+          (
+            AiMemoryData,
+            BaseReferences<_$AppDatabase, $AiMemoriesTableTable, AiMemoryData>,
+          ),
+          AiMemoryData,
+          PrefetchHooks Function()
+        > {
+  $$AiMemoriesTableTableTableManager(
+    _$AppDatabase db,
+    $AiMemoriesTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AiMemoriesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AiMemoriesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AiMemoriesTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> content = const Value.absent(),
+                Value<String?> summary = const Value.absent(),
+                Value<String?> tags = const Value.absent(),
+                Value<String?> sourceImageUrl = const Value.absent(),
+                Value<String?> sourceRoute = const Value.absent(),
+                Value<String?> sourceKind = const Value.absent(),
+                Value<String?> aiModel = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<double?> memoryWeight = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AiMemoriesTableCompanion(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                title: title,
+                content: content,
+                summary: summary,
+                tags: tags,
+                sourceImageUrl: sourceImageUrl,
+                sourceRoute: sourceRoute,
+                sourceKind: sourceKind,
+                aiModel: aiModel,
+                status: status,
+                memoryWeight: memoryWeight,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                required String title,
+                required String content,
+                Value<String?> summary = const Value.absent(),
+                Value<String?> tags = const Value.absent(),
+                Value<String?> sourceImageUrl = const Value.absent(),
+                Value<String?> sourceRoute = const Value.absent(),
+                Value<String?> sourceKind = const Value.absent(),
+                Value<String?> aiModel = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<double?> memoryWeight = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AiMemoriesTableCompanion.insert(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                title: title,
+                content: content,
+                summary: summary,
+                tags: tags,
+                sourceImageUrl: sourceImageUrl,
+                sourceRoute: sourceRoute,
+                sourceKind: sourceKind,
+                aiModel: aiModel,
+                status: status,
+                memoryWeight: memoryWeight,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AiMemoriesTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AiMemoriesTableTable,
+      AiMemoryData,
+      $$AiMemoriesTableTableFilterComposer,
+      $$AiMemoriesTableTableOrderingComposer,
+      $$AiMemoriesTableTableAnnotationComposer,
+      $$AiMemoriesTableTableCreateCompanionBuilder,
+      $$AiMemoriesTableTableUpdateCompanionBuilder,
+      (
+        AiMemoryData,
+        BaseReferences<_$AppDatabase, $AiMemoriesTableTable, AiMemoryData>,
+      ),
+      AiMemoryData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -51905,6 +53200,8 @@ class $AppDatabaseManager {
       $$AppUsageHistoryTableTableTableManager(_db, _db.appUsageHistoryTable);
   $$AppTimeSpendingTableTableTableManager get appTimeSpendingTable =>
       $$AppTimeSpendingTableTableTableManager(_db, _db.appTimeSpendingTable);
+  $$AiMemoriesTableTableTableManager get aiMemoriesTable =>
+      $$AiMemoriesTableTableTableManager(_db, _db.aiMemoriesTable);
 }
 
 mixin _$ThemeDAOMixin on DatabaseAccessor<AppDatabase> {
@@ -51955,3 +53252,7 @@ mixin _$JournalActivityOptionsDAOMixin on DatabaseAccessor<AppDatabase> {
   $JournalActivityOptionsTableTable get journalActivityOptionsTable =>
       attachedDatabase.journalActivityOptionsTable;
 }
+mixin _$AiMemoryDAOMixin on DatabaseAccessor<AppDatabase> {
+  $AiMemoriesTableTable get aiMemoriesTable => attachedDatabase.aiMemoriesTable;
+}
+mixin _$CaptureQueueDAOMixin on DatabaseAccessor<AppDatabase> {}

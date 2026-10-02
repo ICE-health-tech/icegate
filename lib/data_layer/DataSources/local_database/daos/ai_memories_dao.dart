@@ -1,4 +1,4 @@
-part of '../database.dart';
+part of '../Database.dart';
 
 /// CRUD + prompt-injection retrieval for extracted screen memory.
 /// Only rows with status = 'confirmed' are ever returned by [buildContext];
